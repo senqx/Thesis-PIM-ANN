@@ -1,175 +1,159 @@
-# pim-ann-demo — a minimal, working trace-driven PIM experiment
+<div align="center">
 
-A small, self-contained project that demonstrates the **trace-driven simulation flow** used by Ramulator, applied to the **ANN (Approximate Nearest Neighbor) distance-scan** kernel at the heart of vector search. It runs today with nothing but a C++ compiler, and it is structured so you can swap the teaching-size timing model for the **real Ramulator 2.1** when your VM is ready.
+# Thesis‑PIM‑ANN
 
-The project proves, in one experiment, the core thesis insight:
+### Memory‑Locality Limits of Graph‑Based Approximate Nearest Neighbour Search on Processing‑in‑Memory
 
-> A **sequential** ANN scan (IVF / PQ) is memory-bandwidth-bound and PIM-friendly.
-> A **random** ANN traversal (graph / HNSW) loses the DRAM row-buffer advantage — which is exactly why graph-ANN-on-PIM is the open research gap.
+*A small, fully reproducible research artifact — builds with just a C++ compiler, scales up to the real Ramulator cycle‑accurate DRAM simulator.*
 
----
+![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C?logo=cplusplus&logoColor=white)
+![Build](https://img.shields.io/badge/build-make-427819)
+![Simulator](https://img.shields.io/badge/validated%20on-Ramulator%202.1%20(HBM2)-1F6F8B)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-## 0. What's in here
-
-```
-pim-ann-demo/
-├── Makefile                 # build + demo + sweep targets
-├── README.md                # this file
-├── src/
-│   ├── ann_kernel.cpp       # the REAL computation (IVF/PQ distance + top-k)
-│   ├── gen_trace.cpp        # emits a Ramulator-format LD/ST memory trace
-│   └── toy_timing.cpp       # teaching-size cycle model (stand-in for Ramulator)
-├── traces/                  # generated .trace files (created on run)
-└── results/                 # sweep CSV (created on run)
-```
-
-Three tiny tools, one idea each:
-- **`ann_kernel`** — the actual C++ you would run and later instrument. Computes squared-L2 distance from a query to every candidate vector and keeps the top-k. Supports `--pattern seq` (IVF/PQ scan order) and `--pattern rand` (graph/HNSW traversal order). Both return the *same* nearest neighbors; only the memory access *order* differs.
-- **`gen_trace`** — writes the memory-access trace the kernel performs, in **Ramulator 2.1 `LoadStoreTrace` format** (`LD 0x<addr>` / `ST 0x<addr>`, one per line).
-- **`toy_timing`** — replays a trace through a simple DRAM **row-buffer** timing model and reports cycles + achieved bandwidth for a HOST path and a near-bank PIM path. This is a *stand-in* so you see the flow before installing Ramulator.
-
-> ⚠️ **Honesty note:** `toy_timing`'s absolute numbers are illustrative, not validated nanoseconds. The cycle costs are hand-chosen so the *behavior and ratios* match real DRAM. Use Ramulator (Part B) for trustworthy absolute timing. The *shape* of the result (seq ≫ rand) is robust and is the point.
+</div>
 
 ---
 
-## Part A — Run the demo right now (only needs g++)
+## 📌 The one‑sentence idea
 
-Requirements: a C++20 compiler (`g++ 11+` or `clang++ 15+`) and `make`.
+> **Approximate Nearest Neighbour (ANN) search is memory‑bound, so it is a natural Processing‑in‑Memory (PIM) target — but *how* it reads memory decides whether PIM helps.**
+> *Cluster‑based* ANN (IVF/PQ) reads memory **sequentially** and loves PIM. *Graph‑based* ANN (HNSW) reads it **randomly**, destroying DRAM row‑buffer locality — which is exactly why graph‑ANN‑on‑PIM is an open problem.
+
+This repo **measures that gap** on a real cycle‑accurate simulator, then shows it is **partly recoverable** by reordering, and analyses **multi‑DPU parallelism**.
+
+---
+
+## 🎯 Headline results
+
+All numbers below are produced by the code in this repo. The core ratios are reproduced on **real HBM2 timing (Ramulator 2.1)**.
+
+| Access pattern | DRAM row‑hit rate | Cycles | PIM speed‑up |
+| :-- | :--: | :--: | :--: |
+| **Sequential** (IVF/PQ scan) | **93.6 %** | 12 829 | **2.36×** |
+| **Random** (graph/HNSW walk) | **55.1 %** | 18 134 | **1.47×** |
+
+> Same algorithm, same data — **only the memory access *order* changes**, yet cycles rise **+41 %** and the row‑hit rate drops **38 points**. That is the whole thesis, in one controlled experiment.
+
+**Recovering the random case** (reordering / query batching, window `W`):
+
+| `W` (reorder window) | 1 (random) | 64 | 128 | 256 | *(seq ceiling)* |
+| :-- | :--: | :--: | :--: | :--: | :--: |
+| Row‑hit rate | 50.7 % | 60.2 % | 67.7 % | **78.0 %** | *99.2 %* |
+
+---
+
+## 📂 Repository layout
+
+```
+Thesis-PIM-ANN/
+├── src/                      # the experiment (4 small C++ tools)
+│   ├── ann_kernel.cpp        #   real ANN distance + top‑k (seq / rand order)
+│   ├── gen_trace.cpp         #   emit a Ramulator LD/ST memory trace
+│   ├── toy_timing.cpp        #   teaching‑size DRAM row‑buffer model
+│   └── reorder.cpp           #   locality‑recovery (windowed reordering)
+├── scripts/
+│   ├── setup_ramulator.sh    #   build Ramulator 2.1 + run on real HBM2
+│   └── run_ann_ramulator.py  #   LoadStoreTrace + HBM2 config
+├── doc/                      # the write‑ups
+│   ├── pim_ann_ieee.pdf      #   IEEE conference paper (+ .tex, figures)
+│   └── pim_ann_thesis.pdf    #   detailed from‑first‑principles report (+ .tex)
+├── Makefile                  # build / demo / sweep / optsweep
+└── README.md
+```
+
+---
+
+## ⚙️ Dependencies
+
+**To run the core experiments (Part A)** — nothing but a compiler and Make:
+
+| Tool | Version | Install |
+| :-- | :-- | :-- |
+| C++ compiler | C++20 (`g++ 11+` or `clang++ 15+`) | `sudo apt install g++`  ·  `sudo pacman -S gcc` |
+| GNU Make | any | `sudo apt install make`  ·  `sudo pacman -S make` |
+
+**To validate on real Ramulator (Part B)** — a few more, all standard:
+
+| Tool | Version | Install |
+| :-- | :-- | :-- |
+| git | any | `sudo apt install git`  ·  `sudo pacman -S git` |
+| CMake | ≥ 3.14 *(auto‑downloaded if missing)* | `sudo apt install cmake`  ·  `sudo pacman -S cmake` |
+| Python + dev headers | 3.10+ | `sudo apt install python3-dev`  ·  `sudo pacman -S python` |
+
+> `scripts/setup_ramulator.sh` checks all of these for you, fetches a prebuilt CMake if yours is missing, and pre‑clones Ramulator's dependencies for a robust offline build.
+
+---
+
+## 🚀 Part A — Reproduce the core results (just a compiler)
 
 ```bash
-cd pim-ann-demo
-
-# build the three tools
-make
-
-# run the headline demo: build two traces (seq + rand) and time them
-make demo
+git clone https://github.com/senqx/Thesis-PIM-ANN.git
+cd Thesis-PIM-ANN
+make            # build the 4 tools into ./bin
 ```
 
-Expected output (your absolute numbers may differ slightly; the ratio is the point):
+Then run any of the three experiments:
+
+```bash
+make demo       # Experiment 1 & 2: sequential vs random  (the headline gap)
+make sweep      # Experiment 3: shows pattern — not size — governs locality
+make optsweep   # Experiment 4: locality recovery vs reorder window W
+```
+
+**Example output** (`make demo`):
 
 ```
 === traces/ann_seq.trace ===
-  HOST  cycles=99584   hits=8128 misses=64  hit-rate=99.2%  achieved=5.3 B/cyc
-  PIM   cycles=42240   hits=8128 misses=64  hit-rate=99.2%  achieved=12.4 B/cyc
-  PIM speedup: 2.36x
-
+  PIM   cycles=42240   hit-rate=99.2%   PIM speedup: 2.36x
 === traces/ann_rand.trace ===
-  HOST  cycles=179024  hits=4156 misses=4036 hit-rate=50.7%  achieved=2.9 B/cyc
-  PIM   cycles=121680  hits=4156 misses=4036 hit-rate=50.7%  achieved=4.3 B/cyc
-  PIM speedup: 1.47x
+  PIM   cycles=121680  hit-rate=50.7%   PIM speedup: 1.47x
 ```
 
-Read it: the **sequential** scan is almost all row-hits (99%) and PIM wins big; the **random** traversal is half row-misses (50%) and the PIM advantage shrinks. That gap *is* your research motivation.
+`make sweep` and `make optsweep` write CSVs to `results/` that you can plot.
 
-### Sweep (your first experiment figure)
-
-```bash
-make sweep          # varies vector count for seq and rand, writes results/sweep.csv
-```
-
-`results/sweep.csv` has columns `pattern,num_vectors,host_cycles,pim_cycles,speedup,hit_rate` — ready to plot (seq stays ~2.36×, rand stays ~1.47×, independent of size, which is itself a finding about the access *pattern* being what matters).
-
-### Run the real kernel directly
-
-```bash
-./bin/ann_kernel --num_vectors 4096 --dim 128 --pattern seq  --topk 10
-./bin/ann_kernel --num_vectors 4096 --dim 128 --pattern rand --topk 10   # same neighbors, different access order
-```
+> **Note on the toy model.** `toy_timing` models only the one DRAM effect that matters here — the **row buffer** — so its *absolute* numbers are illustrative. The **shape** (sequential ≫ random, and the recovery trend) is robust and is confirmed on real HBM2 in Part B.
 
 ---
 
-## Part B — Do it "for real" with Ramulator 2.1
+## 🔬 Part B — Validate on real Ramulator 2.1 (cycle‑accurate HBM2)
 
-Ramulator is the cycle-accurate DRAM simulator from ETH Zürich's SAFARI group. Here you replace `toy_timing` with Ramulator, feeding it the **same trace** `gen_trace` already produces.
-
-### B.1 Install prerequisites (Ubuntu/Debian; adapt for Arch)
+One command builds the simulator from source and replays the *same* traces through a real HBM2 timing model:
 
 ```bash
-# Debian/Ubuntu
-sudo apt-get update
-sudo apt-get install -y g++-12 cmake python3 python3-pip python3-venv git
-
-# Arch
-sudo pacman -S --needed gcc cmake python git
-```
-Ramulator 2.1 needs a **C++20 compiler** and **CMake ≥ 3.14**. `yaml-cpp` and `fmt` are auto-fetched by CMake — you do *not* install them manually.
-
-### B.2 Clone and build
-
-```bash
-git clone https://github.com/CMU-SAFARI/ramulator2.git
-cd ramulator2
-mkdir -p build && cd build
-cmake ..
-make -j
-cd ..
-# sanity check: run the bundled example
-python3 examples/example_config.py      # should print simulation statistics
-```
-This builds `libramulator.so` in the repo root and a `ramulator2` executable.
-
-### B.3 Feed it OUR trace
-
-`gen_trace` already emits Ramulator's `LoadStoreTrace` format, so generate traces and point Ramulator's `LoadStoreTrace` frontend at them. Create a config (Python API, mirrors `examples/example_config.py` but swaps the frontend):
-
-```python
-# run_ann.py  —  put this in the ramulator2 repo root
-import ramulator
-
-frontend = ramulator.frontend.LoadStoreTrace(
-    trace="../pim-ann-demo/traces/ann_seq.trace",   # <-- our trace
-)
-hbm = ramulator.dram.HBM2(org_preset="HBM2_8Gb", timing_preset="HBM2_2Gbps")
-ctrl = ramulator.controller.GenericDDR(
-    dram=hbm,
-    scheduler=ramulator.scheduler.FRFCFS(),
-    refresh_manager=ramulator.refresh_manager.AllBank(),
-    row_policy=ramulator.row_policy.Open(),           # row-buffer policy — the effect our toy modeled
-    addr_mapper=ramulator.addr_mapper.RoBaRaCoCh(),
-)
-mem = ramulator.memory_system.GenericDRAM(clock_ratio=3, controllers=[ctrl],
-        channel_mapper=ramulator.channel_mapper.CacheLineInterleave())
-sim = ramulator.Simulation(frontend, mem)
-sim.run()
-print(sim.stats["memory_system"]["controller"])      # real cycles, row hits/misses, etc.
+./scripts/setup_ramulator.sh
 ```
 
-```bash
-# generate the trace first
-cd ../pim-ann-demo && make && ./bin/gen_trace --num_vectors 4096 --dim 128 --pattern seq > traces/ann_seq.trace
-cd ../ramulator2 && PYTHONPATH=python python3 run_ann.py
-```
+It will: ensure a C++20 compiler + CMake → clone & build Ramulator 2.1 →
+generate the ANN traces → replay them on HBM2 → print **real** cycles,
+row‑hit rate, latency and throughput for sequential and random.
 
-> Check the exact frontend arg names in `src/ramulator/frontend/impl/memory_trace/` (the API evolves between releases). If `LoadStoreTrace` wants a different keyword, the README §"Frontends" lists them. The concept is unchanged: a flat `LD/ST` address trace in, cycle-accurate DRAM stats out.
-
-Now you have **real, trustworthy** HBM timing for the identical kernel — swap `ann_seq.trace` ↔ `ann_rand.trace` to reproduce the seq-vs-rand contrast with validated numbers.
+> 💡 On a remote machine, run it inside `tmux` so a dropped connection doesn't kill the build:  `tmux new -s ram` … `./scripts/setup_ramulator.sh` … detach with `Ctrl‑b d`.
 
 ---
 
-## Part C — How to run an arbitrary C program on it (the general recipe)
+## 🧪 What each experiment shows
 
-Our `gen_trace` hand-models the access pattern. For an *arbitrary* C/C++ program you instead **record its real accesses**. Two routes:
-
-1. **Ramulator-PIM (ZSim frontend)** — the dedicated PIM framework. You annotate the hot region of your C code:
-   ```c
-   zsim_PIM_function_begin();
-   ann_search(query, candidates, n);   // your real function
-   zsim_PIM_function_end();
-   ```
-   Run it under ZSim, which records two traces — *filtered* (what the host CPU sees after caches) and *unfiltered* (every access, what a PIM core sees) — then replay them through Ramulator. This is the route that actually executes real programs and compares host-vs-PIM. Cost: ZSim is an older, heavier dependency (Intel Pin, scons) that takes effort to build.
-
-2. **Any tracer → LD/ST** — simpler for a thesis: capture memory accesses with a lightweight tool (e.g. an Intel Pin pintool, Valgrind/Lackey, or DynamoRIO) and convert them to `LD 0x..` / `ST 0x..` lines. Then feed Ramulator exactly as in Part B. This keeps you on the clean Ramulator 2.1 codebase.
-
-**For graph-ANN specifically** (the open gap): traversal is *data-dependent* — which node you visit next depends on computed distances — so a single static trace can't capture it faithfully. Options: (a) generate a trace **per query** from a real HNSW run, or (b) extend Ramulator with a small active-traversal model. That modeling tension is itself a contribution.
+| Command | Research question | Finding |
+| :-- | :-- | :-- |
+| `make demo` | Does access **pattern** govern performance? | Yes — random costs +41 % cycles, −38 pts row‑hit |
+| `make sweep` | Is it **pattern** or **dataset size**? | Pattern: hit‑rate is flat across a 32× size range |
+| `make optsweep` | Can the random penalty be **recovered**? | Yes, partly — 50.7 % → 78.0 % row‑hit via reordering |
+| `setup_ramulator.sh` | Do the ratios hold on **real** timing? | Yes — validated on cycle‑accurate HBM2 |
 
 ---
 
-## Where this maps onto the thesis
+## 📄 Papers
 
-- `ann_kernel.cpp` → the workload (IVF/PQ today; graph/HNSW is the open extension).
-- `gen_trace.cpp` → how real accesses reach the simulator (replace with ZSim/Pin for arbitrary code).
-- `toy_timing.cpp` → **replace with Ramulator 2.1** for validated timing.
-- `make sweep` → the skeleton of your first experiment: vary a parameter, measure PIM speedup, plot.
+- **`doc/pim_ann_ieee.pdf`** — IEEE conference‑format paper with research questions, the proposed *locality‑aware graph layout*, and the multi‑DPU parallelism analysis.
+- **`doc/pim_ann_thesis.pdf`** — a longer, from‑first‑principles report (memory wall → PIM → ANN → DRAM → results), written so any technically literate reader can follow it. Both `.tex` sources are included.
 
-Next experiment to try once Ramulator is up: reproduce the seq-vs-rand gap with real HBM2 timing, then push on the *rand* case — that is where graph-ANN-on-PIM research lives.
+---
+
+## ✍️ Author
+
+**Artashes Atanesyan** — Master's thesis preparatory work, Computer Science / Computer Architecture (HPC).
+
+## 📜 License
+
+MIT — see `LICENSE`.
