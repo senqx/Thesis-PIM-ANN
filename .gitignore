@@ -1,0 +1,22 @@
+# build artifacts
+bin/
+*.o
+*.out
+
+# generated experiment outputs
+traces/
+results/
+*.trace
+*.csv
+
+# editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
