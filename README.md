@@ -20,7 +20,7 @@
 > **Approximate Nearest Neighbour (ANN) search is memory‑bound, so it is a natural Processing‑in‑Memory (PIM) target — but *how* it reads memory decides whether PIM helps.**
 > *Cluster‑based* ANN (IVF/PQ) reads memory **sequentially** and loves PIM. *Graph‑based* ANN (HNSW) reads it **randomly**, destroying DRAM row‑buffer locality — which is exactly why graph‑ANN‑on‑PIM is an open problem.
 
-This repo **measures that gap** on a real cycle‑accurate simulator, then shows it is **partly recoverable** by reordering, and analyses **multi‑DPU parallelism**.
+This repo **measures that gap** on a real cycle‑accurate simulator, shows that software **reordering does *not* fix it** (the memory controller already reorders), and that **data layout fixes it completely** — co‑locating just ~16 vectors per cluster recovers full sequential‑scan locality.
 
 ---
 
@@ -35,11 +35,21 @@ All numbers below are produced by the code in this repo. The core ratios are rep
 
 > Same algorithm, same data — **only the memory access *order* changes**, yet cycles rise **+41 %** and the row‑hit rate drops **38 points**. That is the whole thesis, in one controlled experiment.
 
-**Recovering the random case** (reordering / query batching, window `W`):
+**Which lever recovers the random case?** (real HBM2)
 
-| `W` (reorder window) | 1 (random) | 64 | 128 | 256 | *(seq ceiling)* |
+| Intervention | Row‑hit rate | Verdict |
+| :-- | :--: | :-- |
+| Random baseline | 55.1 % | the problem |
+| Random **+ reordering** (window `W`≤256) | 56.2 % | ❌ no help — controller already reorders |
+| Random **+ cluster layout** | **93.6 %** | ✅ full recovery (= sequential) |
+
+**How much layout is enough?** Row‑hit vs cluster size `C` (real HBM2):
+
+| `C` (vectors co‑located) | 1 | 4 | 16 | 32 | 64 |
 | :-- | :--: | :--: | :--: | :--: | :--: |
-| Row‑hit rate | 50.7 % | 60.2 % | 67.7 % | **78.0 %** | *99.2 %* |
+| Row‑hit rate | 55.4 % | 87.6 % | **93.6 %** | 93.6 % | 93.6 % |
+
+> Grouping just **16 co‑visited vectors** makes graph‑ANN read memory exactly as well as a sequential scan — a cheap, one‑time index‑build transformation.
 
 ---
 
@@ -51,7 +61,8 @@ Thesis-PIM-ANN/
 │   ├── ann_kernel.cpp        #   real ANN distance + top‑k (seq / rand order)
 │   ├── gen_trace.cpp         #   emit a Ramulator LD/ST memory trace
 │   ├── toy_timing.cpp        #   teaching‑size DRAM row‑buffer model
-│   └── reorder.cpp           #   locality‑recovery (windowed reordering)
+│   ├── reorder.cpp           #   access reordering (tested — does NOT help)
+│   └── gen_layout.cpp        #   cluster‑ordered layout (the fix that works)
 ├── scripts/
 │   ├── setup_ramulator.sh    #   build Ramulator 2.1 + run on real HBM2
 │   └── run_ann_ramulator.py  #   LoadStoreTrace + HBM2 config
@@ -138,7 +149,8 @@ row‑hit rate, latency and throughput for sequential and random.
 | :-- | :-- | :-- |
 | `make demo` | Does access **pattern** govern performance? | Yes — random costs +41 % cycles, −38 pts row‑hit |
 | `make sweep` | Is it **pattern** or **dataset size**? | Pattern: hit‑rate is flat across a 32× size range |
-| `make optsweep` | Can the random penalty be **recovered**? | Yes, partly — 50.7 % → 78.0 % row‑hit via reordering |
+| `make optsweep` | Does **reordering** recover it? | No — ~55 % → ~56 %, redundant with the controller |
+| `make layoutsweep` | Does **layout** recover it? | Yes — fully, by cluster size `C`≈16 |
 | `setup_ramulator.sh` | Do the ratios hold on **real** timing? | Yes — validated on cycle‑accurate HBM2 |
 
 ---

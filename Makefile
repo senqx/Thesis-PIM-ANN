@@ -3,7 +3,7 @@ CXX      ?= g++
 CXXFLAGS ?= -std=c++20 -O2 -Wall
 BIN      := bin
 
-TOOLS := $(BIN)/ann_kernel $(BIN)/gen_trace $(BIN)/toy_timing $(BIN)/reorder
+TOOLS := $(BIN)/ann_kernel $(BIN)/gen_trace $(BIN)/toy_timing $(BIN)/reorder $(BIN)/gen_layout
 
 all: $(TOOLS)
 
@@ -55,6 +55,20 @@ optsweep: all
 	  echo "random+reorder,$$W,$$(echo $$line|cut -d, -f2),$$(echo $$line|cut -d, -f3),$$(echo $$line|cut -d, -f4),$$(echo $$line|cut -d, -f5)" >> results/optsweep.csv; \
 	done
 	@echo "wrote results/optsweep.csv"; cat results/optsweep.csv
+
+# Experiment 5 (THE FIX): cluster-ordered layout. Visit clusters in random order
+# but co-locate vectors within a cluster; sweep cluster size C and watch row-hit
+# recover toward the sequential ceiling. On real HBM2 it saturates by C ~ 16.
+.PHONY: layoutsweep
+layoutsweep: all
+	mkdir -p traces results
+	@echo "cluster_C,host_cycles,pim_cycles,speedup,hit_rate" > results/layoutsweep.csv
+	@for C in 1 2 4 8 16 32 64 128 256; do \
+	  ./$(BIN)/gen_layout --num_vectors 4096 --dim 128 --cluster $$C > traces/layout_c.trace 2>/dev/null; \
+	  line=$$(./$(BIN)/toy_timing traces/layout_c.trace --csv); \
+	  echo "$$C,$$(echo $$line|cut -d, -f2),$$(echo $$line|cut -d, -f3),$$(echo $$line|cut -d, -f4),$$(echo $$line|cut -d, -f5)" >> results/layoutsweep.csv; \
+	done
+	@echo "wrote results/layoutsweep.csv"; cat results/layoutsweep.csv
 
 clean:
 	rm -rf $(BIN) traces results

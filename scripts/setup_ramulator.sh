@@ -20,6 +20,10 @@
 # =============================================================================
 set -euo pipefail
 
+# Resolve the project directory ONCE, absolute, before any cd.
+# (BASH_SOURCE is relative when invoked as ./scripts/..., so resolve it here.)
+PROJ="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+
 # ---- config ----------------------------------------------------------------
 RAMULATOR_REPO="https://github.com/CMU-SAFARI/ramulator2.git"
 RAMULATOR_DIR="${RAMULATOR_DIR:-$PWD/ramulator2}"
@@ -131,8 +135,7 @@ say "Build OK: libramulator.so + Python module present"
 
 # ---- 5. generate ANN traces + run through real Ramulator -------------------
 say "Generating ANN traces and running them through Ramulator"
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"            # Thesis-PIM-ANN/scripts
-PROJ="$(dirname "$HERE")"                                        # Thesis-PIM-ANN
+# (PROJ was resolved at the top of the script, as an absolute path.)
 # build our trace generator if needed
 if [ ! -x "$PROJ/bin/gen_trace" ]; then (cd "$PROJ" && make >/dev/null); fi
 mkdir -p "$PROJ/traces"

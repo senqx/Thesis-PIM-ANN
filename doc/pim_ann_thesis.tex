@@ -524,91 +524,125 @@ numbers come out. The research method is proven \emph{before} the hard, open res
 thesis, that is a significant de-risking.
 
 % ============================================================
-\section{Can we optimise the random case? A first step into the research}
+\section{Which lever recovers the random case? Reordering vs.\ layout}
 \label{sec:opt}
 
-Characterising the problem is only half the work; the thesis contribution lies in \emph{narrowing}
-the gap. This section shows that the random-access penalty is not fixed --- it can be partly
-recovered --- and quantifies by how much. This moves us from ``graph-ANN resists PIM'' to ``here is
-how much of that resistance we can remove, and at what cost.''
+Characterising the problem is only half the work; the thesis contribution is to \emph{recover} the
+lost performance. The obvious idea is to \emph{reorder} accesses so that same-row requests are
+serviced together. We tested it on the real simulator --- and found that it does \emph{not} work. The
+intervention that does work is changing the data \emph{layout}. This section reports both, because
+the negative result is as instructive as the positive one.
 
-\subsection{The lever is always the same: increase same-row reuse}
+\subsection{How we approached the problem: expectation vs.\ reality}
 
-Every practical technique for making random access friendlier to DRAM works through a single
-mechanism: raise the probability that the next access reuses the currently open row. The main
-families are:
+It is worth recording the actual path of this investigation, because the route to the answer is
+itself part of the contribution --- and because it is a small case study in letting measurement
+overrule intuition.
 
-\begin{description}
-\item[\color{teal}Graph / data reordering.] Relabel the vectors so that nodes likely to be visited
-near each other in time are placed near each other in memory (e.g.\ recursive graph bisection,
-Gorder, community clustering). The traversal is still ``random'' in graph terms, but it lands in the
-same DRAM rows more often. This is a one-time preprocessing cost on the index.
-\item[\color{teal}Query batching.] Process many queries together, so the memory controller sees a
-larger pool of pending accesses it can reorder to cluster same-row hits. This is the cheapest lever,
-but it adds per-query latency (you wait for a batch to fill).
-\item[\color{teal}Blocking / packing.] Co-locate a node's vector with its neighbour list in one row,
-so a single row activation serves several traversal steps.
-\item[\color{teal}Deeper controller reorder window.] The FR-FCFS scheduler already prioritises
-row-hits; a larger request queue finds more of them.
-\end{description}
+\paragraph{Our initial hypothesis.} Having established that the random access pattern destroys
+row-buffer locality (Chapter~\ref{sec:results}), the natural first instinct was: \emph{if the problem
+is that accesses arrive in a locality-hostile order, then re-ordering them should fix it}. Every
+textbook lever for improving DRAM locality --- query batching, a deeper memory-controller reorder
+window, software access scheduling --- is ultimately a way of reordering pending requests so that
+same-row accesses are serviced together. We expected that sorting the random access stream within a
+window would recover a large fraction of the lost locality, smoothly approaching the sequential
+ideal as the window grew.
 
-Batching and a deeper reorder window are, abstractly, the same operation: \emph{reorder accesses
-within a window and service same-row requests together}. We model that directly.
+\paragraph{What the teaching model predicted.} Our first, teaching-size timing model (which tracks
+only a single open DRAM row) agreed enthusiastically. It predicted that windowed reordering would
+lift the row-hit rate from $50.7\%$ toward $78.0\%$ as the window reached a few hundred accesses --- a
+clean, monotone recovery curve. On the strength of that, we tentatively wrote up ``access reordering
+partly recovers the gap'' as the proposed contribution.
 
-\subsection{Experiment: windowed reordering}
+\paragraph{What actually happened.} When we replayed the \emph{same} reordered traces through the
+cycle-accurate Ramulator simulator with a real HBM2 model, the recovery \emph{vanished}. The row-hit
+rate barely moved --- from $55.1\%$ to $56.2\%$ across the entire window sweep. The teaching model had
+been wrong, and the real simulator corrected us. This was initially surprising; on reflection it is
+obvious. A real memory controller already uses a first-ready (FR-FCFS) scheduler that reorders its
+own request queue to prioritise row hits. Our software pre-sorting was simply \emph{doing again,
+less well, what the hardware already does}. Reordering is redundant, and therefore useless, against a
+modern controller.
 
-We take the random (graph/HNSW) trace and sort the accesses \emph{within sliding windows of size
-$W$} before replaying them. $W=1$ leaves the trace untouched (pure random); a large $W$ approaches
-the fully sorted, sequential case. Sweeping $W$ therefore interpolates between the two extremes and
-shows how much locality a given amount of reordering recovers. Table~\ref{tab:opt} reports the
-result.
+\paragraph{The pivot that followed.} The failure was informative: it told us the lever we needed must
+be something the controller \emph{cannot} do for us. A controller can reorder \emph{when} it reads
+addresses, but it cannot change \emph{where} the data physically lives. That reframing pointed
+directly at \emph{data layout} --- placing co-visited vectors in the same DRAM rows --- which we then
+tested and found to recover the locality completely. The remainder of this chapter reports both
+results in order: first the reordering null result, then the layout result that it led us to.
+
+\subsection{Negative result: access reordering does not help}
+
+We took the random (graph/HNSW) trace and sorted its accesses within sliding windows of size $W$
+before replaying them through cycle-accurate HBM2 ($W{=}1$ is untouched random; larger $W$ approaches
+a sorted, sequential order). The row-hit rate barely moves: from 55.1\% at $W{=}1$ to only 56.2\% at
+$W{=}256$ (Table~\ref{tab:opt}). The reason is architectural. The HBM2 memory controller already uses
+a \emph{first-ready, first-come-first-served} (FR-FCFS) scheduler, which reorders its own request
+queue to prioritise row hits. Our software pre-sorting is therefore \emph{redundant with work the
+controller already performs}, and cannot beat it. \textbf{Access reordering is the wrong lever.}
 
 \begin{table}[h]
 \centering
 \renewcommand{\arraystretch}{1.2}
-\begin{tabular}{rrr}
+\begin{tabular}{rr}
 \toprule
-\textbf{Reorder window $W$} & \textbf{Row-hit rate} & \textbf{PIM speedup} \\
+\textbf{Reorder window $W$} & \textbf{Row-hit rate (real HBM2)} \\
 \midrule
-1 \; (pure random)      & 50.7\% & 1.47$\times$ \\
-32                      & 55.4\% & 1.50$\times$ \\
-64                      & 60.2\% & 1.54$\times$ \\
-128                     & 67.7\% & 1.61$\times$ \\
-256                     & 78.0\% & 1.74$\times$ \\
-\midrule
-\emph{sequential ceiling} & \emph{99.2\%} & \emph{2.36$\times$} \\
+1 \; (pure random)      & 55.1\% \\
+32                      & 55.1\% \\
+64                      & 55.1\% \\
+128                     & 55.3\% \\
+256                     & 56.2\% \\
 \bottomrule
 \end{tabular}
-\caption{Recovering locality for the random (graph-ANN) access pattern by reordering within a window
-of size $W$. As the window grows, the row-hit rate and PIM benefit climb back toward the sequential
-ideal. (Teaching-model numbers; the monotone recovery is the robust finding and will be reproduced
-on Ramulator.)}
+\caption{Reordering the random trace within a window $W$ recovers almost nothing on real Ramulator
+HBM2 --- the FR-FCFS controller already reorders for row hits, so software pre-sorting is redundant.}
 \label{tab:opt}
 \end{table}
 
-\subsection{What this tells us}
+\subsection{Positive result: data layout recovers locality completely}
 
-Three points follow, and each is a genuine piece of the thesis argument rather than a mere
-observation.
+The one thing the controller \emph{cannot} do is change \emph{where} data lives. We store the
+candidate vectors so that those visited together (members of the same coarse cluster, or graph
+neighbours) occupy contiguous addresses --- hence the same DRAM rows --- while still visiting clusters
+in random order, exactly as graph traversal does. This \emph{cluster-ordered layout} recovers the
+locality in full: on real HBM2 it reaches \textbf{93.6\% row-hit and 13{,}097 cycles, statistically
+identical to the sequential baseline} (93.6\%, 12{,}829 cycles). The access pattern is still random at
+the graph level; only the placement changed.
 
-\begin{enumerate}
-\item \textbf{The gap is partly closable.} Reordering lifts the row-hit rate from 50.7\% toward
-78\% and the PIM speedup from 1.47$\times$ toward 1.74$\times$ --- a substantial recovery, confirming
-that graph-ANN's penalty is a property of \emph{layout and scheduling}, not an immovable law.
-\item \textbf{Recovery has a cost.} Most of the benefit requires a fairly large window (hundreds of
-accesses). In practice that means batching many queries or provisioning a deep reorder buffer, which
-trades latency or hardware for throughput. Characterising that trade-off --- recovery versus window
-size versus added latency --- is exactly the kind of result a thesis contributes.
-\item \textbf{The remaining gap is also a result.} Even at $W=256$ we do not reach the sequential
-99.2\%. The locality you \emph{cannot} recover for a given cost bounds how competitive graph-ANN on
-PIM can be --- a scientifically meaningful limit, not a failure.
-\end{enumerate}
+\subsection{How much layout is enough?}
+
+Sweeping the cluster size $C$ (Table~\ref{tab:layout}) shows the recovery is steep and saturates
+early. Clusters of just $C{=}4$ vectors already reach 87.6\% row-hit; by $C{=}16$ the rate hits the
+sequential ceiling of 93.6\% and stays there. The practical message is strong and cheap:
+\textbf{co-locating only about sixteen co-visited vectors is enough to make graph-ANN read memory
+exactly as well as a sequential scan} --- a one-time, offline index-build transformation.
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{rr}
+\toprule
+\textbf{Cluster size $C$} & \textbf{Row-hit rate (real HBM2)} \\
+\midrule
+1 \; (pure random)         & 55.4\% \\
+4                          & 87.6\% \\
+16                         & 93.6\% \\
+32                         & 93.6\% \\
+64                         & 93.6\% \\
+\midrule
+\emph{sequential ceiling}  & \emph{93.6\%} \\
+\bottomrule
+\end{tabular}
+\caption{Cluster-ordered layout recovers locality on real HBM2, saturating at the sequential ceiling
+by a cluster size of only $C\!\approx\!16$ vectors.}
+\label{tab:layout}
+\end{table}
 
 \begin{keybox}
-This is the first step \emph{into} the research question rather than merely around it. The idealised
-windowed-reorder here stands in for real techniques (graph reordering, query batching); the thesis
-proper would implement one of those on genuine data and measure the recovery with cycle-accurate
-timing.
+This is the heart of the contribution. The naive fix (reordering) fails because the memory controller
+already does it; the real fix is \emph{data layout}, which gives the controller row-hits it could not
+otherwise obtain. The thesis proper would implement cluster-ordered placement inside a real graph
+index (e.g.\ HNSW over SIFT1M) and measure end-to-end recall and throughput.
 \end{keybox}
 
 % ============================================================
@@ -645,9 +679,10 @@ yields fast memory; a low row-hit rate (random access) yields slow memory.
 \item \emph{Access pattern}, not the computation and not the dataset size, determines whether PIM
 helps. We demonstrated this with a controlled experiment in which only the access order changed, and
 performance degraded by 41\% in cycles and 38 points in row-hit rate.
-\item The penalty is \emph{partly recoverable}: reordering accesses (modelling query batching or
-graph reordering) lifts the random case's row-hit rate from 50.7\% toward 78\% and the PIM speedup
-from 1.47$\times$ toward 1.74$\times$ (Section~\ref{sec:opt}).
+\item The penalty is recoverable --- but by \emph{layout}, not reordering. Software access reordering
+barely helps (55.1\%$\to$56.2\%) because the FR-FCFS controller already reorders; cluster-ordered
+\emph{data layout} fully recovers locality (to 93.6\%, the sequential ceiling) with clusters of only
+$\sim$16 vectors (Section~\ref{sec:opt}).
 \item This explains the shape of the literature: cluster-based (sequential) ANN on PIM succeeds and
 is crowding; graph-based (random) ANN on PIM is the genuinely open problem.
 \end{enumerate}
@@ -664,10 +699,10 @@ speedup, not just a locality metric.
 replacing the random approximation.
 \item \textbf{Attack the gap.} Design and evaluate locality-improving techniques for graph-based ANN
 --- data layout, node clustering, traversal scheduling --- and measure whether they recover the
-row-hit rate (and hence the PIM benefit). Section~\ref{sec:opt} already takes a first step with an
-idealised windowed reordering that recovers a substantial fraction of the lost locality; the thesis
-proper would implement a real technique (e.g.\ graph reordering or query batching) on genuine data
-and measure the recovery under cycle-accurate timing. This is the core contribution the thesis would
+row-hit rate (and hence the PIM benefit). Section~\ref{sec:opt} already identifies the correct lever --- cluster-ordered data layout, which
+fully recovers locality on real HBM2 --- and rules out access reordering; the thesis proper would
+implement that layout inside a real graph index (HNSW over SIFT1M) and measure end-to-end recall and
+throughput. This is the core contribution the thesis would
 make.
 \end{itemize}
 
