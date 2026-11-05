@@ -47,7 +47,13 @@ memory controller's first-ready scheduler already reorders for row hits. In
 contrast, \emph{data layout} --- physically co-locating vectors that are visited
 together --- recovers the locality \emph{completely}: with clusters of only
 $\geq\!16$ vectors the random workload reaches 93.6\% row-hit, identical to a
-sequential scan. The study is fully reproducible and identifies the correct
+sequential scan. Pushing further, we show that this threshold is really a
+\emph{byte} budget --- co-locating $\approx\!1$\,KB of contiguous data (one DRAM
+row) saturates locality at \emph{any} vector dimension, giving a predictive
+design rule $C^\star\!\approx\!1024/(\mathrm{dim}\times\mathrm{dtype})$ --- that
+the benefit degrades gracefully but requires $\sim\!90\%$ placement accuracy to
+be worthwhile, and that the entire effect is contingent on an open-page policy.
+The study is fully reproducible and identifies the correct
 lever for an under-explored problem: layout-aware graph-ANN on PIM.
 \end{abstract}
 
@@ -104,6 +110,11 @@ and the reason (Sec.~\ref{sec:lever}).
 \item A \emph{positive result}: cluster-ordered data layout fully recovers
 locality, saturating at a cluster size of only $\sim$16 vectors
 (Sec.~\ref{sec:lever}).
+\item A predictive \emph{design rule} and its boundaries
+(Sec.~\ref{sec:deep}): the saturation point is a $\sim$1\,KB byte budget
+($C^\star\!\approx\!1024/(\mathrm{dim}\times\mathrm{dtype})$); partial layouts
+degrade gracefully but need $\sim$90\% accuracy; and the whole row-buffer
+advantage holds only under an open-page policy.
 \item An open, reproducible artifact (Sec.~\ref{sec:repro}).
 \end{itemize}
 
@@ -257,6 +268,105 @@ sequential ceiling by $C\!\approx\!16$.}
 \end{figure}
 
 % =====================================================================
+\section{A design rule and its boundaries}
+\label{sec:deep}
+Having identified layout as the lever, we characterise it more sharply on the
+same cycle-accurate HBM2 model, to turn ``$C\!\approx\!16$'' into an actionable
+rule and to map where it stops working.
+
+\subsection{The threshold is a byte budget, not a vector count}
+Table~\ref{tab:bytelaw} and Fig.~\ref{fig:bytelaw} sweep cluster size $C$ across
+three vector dimensions. The row-hit rate always saturates at the same 93.6\%
+ceiling, but the \emph{knee} moves: a $64$-byte vector needs $C\!=\!16$, a
+$128$-byte vector needs $C\!=\!8$, and a $256$-byte vector needs only $C\!=\!4$.
+In every case the product $\mathrm{dim}\times C$ at saturation is
+$\approx\!1024$ bytes --- exactly one DRAM row's worth of contiguous data. The
+``magic number 16'' was therefore an artifact of our $128$-byte vectors; the
+real invariant is a \emph{byte budget}. This yields a predictive design rule:
+\begin{equation}
+C^\star \;\approx\; \frac{S_\text{row}}{\mathrm{dim}\times\mathrm{dtype}}
+\;\approx\; \frac{1024\,\text{B}}{\mathrm{dim}\times\mathrm{dtype}},
+\label{eq:cstar}
+\end{equation}
+the number of co-visited vectors an index must place contiguously to fully
+recover row-buffer locality. A consistency check confirms the mechanism: even at
+$C\!=\!1$ (no co-location) the row-hit rate rises with dimension ($29.9\%,
+55.1\%, 75.6\%$ for dim $64, 128, 256$), because a larger vector already spans
+several contiguous $64$-byte bursts and so captures intra-vector hits for free.
+
+\begin{table}[t]
+\caption{Row-hit rate (\%) vs.\ cluster size and vector dimension
+(cycle-accurate HBM2). Saturation (\textbf{bold}) occurs at
+$\mathrm{dim}\times C\!\approx\!1$\,KB in every row.}
+\label{tab:bytelaw}
+\centering
+\footnotesize
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{6}{c}{cluster size $C$} \\
+\cmidrule(l){2-7}
+\textbf{dim} & 1 & 4 & 8 & 16 & 32 & 64 \\
+\midrule
+64  & 29.9 & 78.8 & 88.3 & \textbf{93.6} & 93.6 & 93.6 \\
+128 & 55.1 & 87.8 & \textbf{93.5} & 93.6 & 93.6 & 93.6 \\
+256 & 75.6 & \textbf{93.5} & 93.6 & 93.6 & 93.6 & 93.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\columnwidth]{fig_bytelaw.pdf}
+\caption{Row-hit vs.\ cluster size for three dimensions. The saturation knee
+(dotted) shifts left as vectors grow, always landing where
+$\mathrm{dim}\times C\!\approx\!1$\,KB (one DRAM row).}
+\label{fig:bytelaw}
+\end{figure}
+
+\subsection{How good must the layout be?}
+A real index cannot place every co-visited vector perfectly. We model an
+\emph{imperfect} layout with a quality knob $Q$: the fraction of vectors actually
+co-located with their cluster (the rest scattered randomly).
+Fig.~\ref{fig:quality} shows the result for dim $128$, $C\!=\!16$. The
+degradation is graceful --- no cliff --- but \emph{back-loaded}: row-hit climbs
+$56.2\%\!\to\!60.8\%\!\to\!71.4\%\!\to\!82.5\%\!\to\!88.9\%\!\to\!93.6\%$ as $Q$
+goes $0\!\to\!100\%$, so one must reach $Q\!\approx\!90\%$ to land within five
+points of the ceiling. This sets a concrete feasibility bar for any
+graph-reordering heuristic: partial co-location helps, but the bulk of the payoff
+arrives only near-perfect placement.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\columnwidth]{fig_quality.pdf}
+\caption{Imperfect layout (dim $128$, $C\!=\!16$): row-hit vs.\ the fraction $Q$
+of correctly co-located vectors. Graceful but back-loaded; $\sim$90\% placement
+is needed to approach the ceiling.}
+\label{fig:quality}
+\end{figure}
+
+\subsection{Scope: the gain is contingent on open-page policy}
+Finally we test whether the effect survives a different controller setting. Under
+a \emph{closed-page} policy, which auto-precharges the row after each access, the
+picture changes markedly (Fig.~\ref{fig:policy}): sequential access collapses
+($20{,}076$ vs.\ $18{,}227$ cycles), because the would-be row hits now pay a
+fresh activation each time; random access, already missing, barely moves
+($55.1\%\!\to\!54.7\%$). The row-buffer advantage --- and therefore the entire
+payoff of the layout fix --- is thus \emph{contingent on an open-page policy}.
+This is a favourable condition for the target domain: bandwidth-bound,
+streaming-friendly workloads such as PIM-based ANN are precisely where open-page
+controllers are the sensible default. We state it explicitly as a scope
+boundary rather than leave it implicit.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.80\columnwidth]{fig_policy.pdf}
+\caption{Open vs.\ closed page policy. Closed-page auto-precharge erases the
+sequential row-hit advantage, so the layout optimisation only pays off under an
+open-page controller.}
+\label{fig:policy}
+\end{figure}
+
+% =====================================================================
 \section{Outlook: multi-DPU parallelism}
 \label{sec:parallel}
 A real PIM system has thousands of DPUs, so parallelisation matters. We note
@@ -290,7 +400,9 @@ memory performance; (RQ2) the DRAM row buffer is the mechanism, confirmed on a
 cycle-accurate simulator; (RQ3) the recovering lever is \emph{data layout}, not
 access reordering --- reordering is redundant with the FR-FCFS controller, whereas
 cluster-ordered placement fully recovers locality with clusters of only
-$\sim$16 vectors. Future work: generate per-query SIFT1M HNSW traces to replace
+$\sim$16 vectors --- more precisely, with $\approx$1\,KB of contiguous data per
+cluster (Eq.~\ref{eq:cstar}), provided the controller uses an open-page policy.
+Future work: generate per-query SIFT1M HNSW traces to replace
 the approximation; implement cluster-ordered layout inside a real graph index and
 measure end-to-end recall/throughput; add a near-bank compute model for a true
 host-vs-PIM speedup; and validate the query-parallel $+$ layout combination on a
@@ -306,8 +418,7 @@ All figures regenerate from the open artifact
 git clone https://github.com/senqx/Thesis-PIM-ANN
 cd Thesis-PIM-ANN && make
 ./scripts/setup_ramulator.sh   # build Ramulator, run on real HBM2
-# sequential / random / reorder / layout traces
-# are replayed through the cycle-accurate model
+./scripts/deep_experiments.sh  # byte-law, layout-quality, policy sweeps
 \end{lstlisting}
 
 % =====================================================================

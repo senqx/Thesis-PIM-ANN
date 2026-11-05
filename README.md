@@ -53,11 +53,40 @@ All numbers below are produced by the code in this repo. The core ratios are rep
 
 ---
 
+## 🔎 Deeper results — a design rule and its limits
+
+Three further sweeps on real HBM2 (`scripts/deep_experiments.sh`) sharpen the layout finding into something a real index‑builder can use.
+
+**1. The threshold is a *byte budget*, not a vector count.** Sweeping cluster size `C` across vector dimensions, row‑hit always saturates where `dim × C ≈ 1 KB` — one DRAM row:
+
+| dim \ `C` | 1 | 4 | 8 | 16 | 32 | 64 |
+| :-- | :--: | :--: | :--: | :--: | :--: | :--: |
+| **64 B** | 29.9 | 78.8 | 88.3 | **93.6** | 93.6 | 93.6 |
+| **128 B** | 55.1 | 87.8 | **93.5** | 93.6 | 93.6 | 93.6 |
+| **256 B** | 75.6 | **93.5** | 93.6 | 93.6 | 93.6 | 93.6 |
+
+> This gives a predictive design rule: **`C* ≈ 1024 / (dim × dtype_bytes)`** — co‑locate ~1 KB of co‑visited data and locality is fully recovered at any dimension.
+
+**2. Imperfect layouts degrade gracefully — but need ~90 % accuracy.** Row‑hit vs the fraction `Q` of correctly co‑located vectors (dim 128, `C`=16):
+
+| `Q` | 0 % | 25 % | 50 % | 75 % | 90 % | 100 % |
+| :-- | :--: | :--: | :--: | :--: | :--: | :--: |
+| Row‑hit | 56.2 | 60.8 | 71.4 | 82.5 | 88.9 | 93.6 |
+
+**3. The gain is contingent on an *open‑page* policy.** Under closed‑page auto‑precharge, sequential access collapses (93.6 % → 75.0 %) and even becomes *slower* than random — so the layout fix only pays off on open‑page controllers (the sensible default for bandwidth‑bound PIM):
+
+| Policy | Sequential row‑hit | Random row‑hit |
+| :-- | :--: | :--: |
+| **Open page** | 93.6 % | 55.1 % |
+| **Closed page** | 75.0 % | 54.7 % |
+
+---
+
 ## 📂 Repository layout
 
 ```
 Thesis-PIM-ANN/
-├── src/                      # the experiment (4 small C++ tools)
+├── src/                      # the experiment (5 small C++ tools)
 │   ├── ann_kernel.cpp        #   real ANN distance + top‑k (seq / rand order)
 │   ├── gen_trace.cpp         #   emit a Ramulator LD/ST memory trace
 │   ├── toy_timing.cpp        #   teaching‑size DRAM row‑buffer model
@@ -65,11 +94,12 @@ Thesis-PIM-ANN/
 │   └── gen_layout.cpp        #   cluster‑ordered layout (the fix that works)
 ├── scripts/
 │   ├── setup_ramulator.sh    #   build Ramulator 2.1 + run on real HBM2
+│   ├── deep_experiments.sh   #   byte‑law + layout‑quality + policy sweeps
 │   └── run_ann_ramulator.py  #   LoadStoreTrace + HBM2 config
 ├── doc/                      # the write‑ups
 │   ├── pim_ann_ieee.pdf      #   IEEE conference paper (+ .tex, figures)
 │   └── pim_ann_thesis.pdf    #   detailed from‑first‑principles report (+ .tex)
-├── Makefile                  # build / demo / sweep / optsweep
+├── Makefile                  # build / demo / sweep / optsweep / layoutsweep
 └── README.md
 ```
 
@@ -101,15 +131,16 @@ Thesis-PIM-ANN/
 ```bash
 git clone https://github.com/senqx/Thesis-PIM-ANN.git
 cd Thesis-PIM-ANN
-make            # build the 4 tools into ./bin
+make            # build the tools into ./bin
 ```
 
-Then run any of the three experiments:
+Then run any of the experiments:
 
 ```bash
-make demo       # Experiment 1 & 2: sequential vs random  (the headline gap)
-make sweep      # Experiment 3: shows pattern — not size — governs locality
-make optsweep   # Experiment 4: locality recovery vs reorder window W
+make demo        # Experiment 1 & 2: sequential vs random  (the headline gap)
+make sweep       # Experiment 3: shows pattern — not size — governs locality
+make optsweep    # Experiment 4: reordering does NOT recover it
+make layoutsweep # Experiment 5: cluster‑ordered layout fully recovers it
 ```
 
 **Example output** (`make demo`):
@@ -121,7 +152,7 @@ make optsweep   # Experiment 4: locality recovery vs reorder window W
   PIM   cycles=121680  hit-rate=50.7%   PIM speedup: 1.47x
 ```
 
-`make sweep` and `make optsweep` write CSVs to `results/` that you can plot.
+`make sweep`, `make optsweep` and `make layoutsweep` write CSVs to `results/` that you can plot.
 
 > **Note on the toy model.** `toy_timing` models only the one DRAM effect that matters here — the **row buffer** — so its *absolute* numbers are illustrative. The **shape** (sequential ≫ random, and the recovery trend) is robust and is confirmed on real HBM2 in Part B.
 
@@ -139,6 +170,12 @@ It will: ensure a C++20 compiler + CMake → clone & build Ramulator 2.1 →
 generate the ANN traces → replay them on HBM2 → print **real** cycles,
 row‑hit rate, latency and throughput for sequential and random.
 
+Then, for the deeper design‑rule sweeps (byte budget, layout quality, page policy):
+
+```bash
+./scripts/deep_experiments.sh   # writes ~/deep_results.txt
+```
+
 > 💡 On a remote machine, run it inside `tmux` so a dropped connection doesn't kill the build:  `tmux new -s ram` … `./scripts/setup_ramulator.sh` … detach with `Ctrl‑b d`.
 
 ---
@@ -152,19 +189,20 @@ row‑hit rate, latency and throughput for sequential and random.
 | `make optsweep` | Does **reordering** recover it? | No — ~55 % → ~56 %, redundant with the controller |
 | `make layoutsweep` | Does **layout** recover it? | Yes — fully, by cluster size `C`≈16 |
 | `setup_ramulator.sh` | Do the ratios hold on **real** timing? | Yes — validated on cycle‑accurate HBM2 |
+| `deep_experiments.sh` | What's the **design rule** and its limits? | ~1 KB byte budget; needs ~90 % layout accuracy; open‑page only |
 
 ---
 
 ## 📄 Papers
 
-- **`doc/pim_ann_ieee.pdf`** — IEEE conference‑format paper with research questions, the proposed *locality‑aware graph layout*, and the multi‑DPU parallelism analysis.
+- **`doc/pim_ann_ieee.pdf`** — IEEE conference‑format paper with research questions, the proposed *locality‑aware graph layout*, the design rule, and the multi‑DPU parallelism analysis.
 - **`doc/pim_ann_thesis.pdf`** — a longer, from‑first‑principles report (memory wall → PIM → ANN → DRAM → results), written so any technically literate reader can follow it. Both `.tex` sources are included.
 
 ---
 
 ## ✍️ Author
 
-**Artashes Atanesyan** — Master's thesis preparatory work, Computer Science / Computer Architecture (HPC).
+**senqx** — Master's thesis preparatory work, Computer Science / Computer Architecture (HPC).
 
 ## 📜 License
 

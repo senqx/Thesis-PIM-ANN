@@ -31,7 +31,7 @@ try:
         dev = ramulator.dram.HBM2(org_preset="HBM2_8Gb", timing_preset="HBM2_2000Mbps")
     if policy=="Close":
         rp=None
-        for name in ("Close","Closed","ClosePage"):
+        for name in ("ClosedCAP","Closed","Close","ClosePage"):
             if hasattr(ramulator.row_policy,name):
                 rp=getattr(ramulator.row_policy,name)(); break
         if rp is None: print("SKIP"); sys.exit(0)

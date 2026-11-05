@@ -7,6 +7,7 @@
 \usepackage[margin=2.4cm]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
+\usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{microtype}
 \usepackage{listings}
@@ -646,6 +647,133 @@ index (e.g.\ HNSW over SIFT1M) and measure end-to-end recall and throughput.
 \end{keybox}
 
 % ============================================================
+\section{Sharpening the layout result: a design rule and its limits}
+\label{sec:deep}
+
+The layout finding above is the key positive result, but on its own it only says
+``clusters of about sixteen vectors work.'' We ran three further sweeps on the
+same cycle-accurate HBM2 model to turn that observation into something a future
+index-builder can actually use --- and to find out where it stops working. All
+numbers in this section come from \texttt{scripts/deep\_experiments.sh} in the
+artifact.
+
+\subsection{The threshold is a byte budget, not a vector count}
+
+Why sixteen? To find out we swept the cluster size $C$ at three different vector
+dimensions (Table~\ref{tab:bytelaw}, Fig.~\ref{fig:bytelaw}). The row-hit rate
+always climbs to the same 93.6\% ceiling, but the point where it \emph{reaches}
+that ceiling moves: a 64-byte vector needs $C{=}16$, a 128-byte vector needs
+$C{=}8$, and a 256-byte vector needs only $C{=}4$. Multiply it out and the same
+number falls out every time: at saturation, $\mathrm{dim}\times C \approx 1024$
+bytes --- exactly the amount of contiguous data that fills one DRAM row.
+
+So ``sixteen'' was never fundamental; it was an artifact of our particular
+128-byte vectors. The real invariant is a \emph{byte budget}: co-locate about one
+DRAM row's worth of data that is visited together, and locality is fully
+recovered. This gives a predictive design rule,
+\begin{equation}
+C^\star \;\approx\; \frac{S_\text{row}}{\mathrm{dim}\times\mathrm{dtype}}
+\;\approx\; \frac{1024\ \text{bytes}}{\mathrm{dim}\times\mathrm{dtype}},
+\label{eq:cstar}
+\end{equation}
+which tells an index designer, for any vector width, how many co-visited vectors
+to place contiguously. As a sanity check that this is really the row buffer at
+work, notice the leftmost column of Table~\ref{tab:bytelaw}: even with
+\emph{no} co-location ($C{=}1$) the row-hit rate rises with dimension
+($29.9\%, 55.1\%, 75.6\%$), because a bigger vector already occupies several
+contiguous 64-byte bursts and so collects some row-hits ``for free.''
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{rrrrrrr}
+\toprule
+ & \multicolumn{6}{c}{\textbf{cluster size $C$}} \\
+\cmidrule(l){2-7}
+\textbf{dim (bytes)} & 1 & 4 & 8 & 16 & 32 & 64 \\
+\midrule
+64  & 29.9 & 78.8 & 88.3 & \textbf{93.6} & 93.6 & 93.6 \\
+128 & 55.1 & 87.8 & \textbf{93.5} & 93.6 & 93.6 & 93.6 \\
+256 & 75.6 & \textbf{93.5} & 93.6 & 93.6 & 93.6 & 93.6 \\
+\bottomrule
+\end{tabular}
+\caption{Row-hit rate (\%) versus cluster size and vector dimension on real HBM2.
+Saturation (\textbf{bold}) always occurs where $\mathrm{dim}\times C\approx1$\,KB
+--- one DRAM row.}
+\label{tab:bytelaw}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.72\textwidth]{fig_bytelaw.pdf}
+\caption{The saturation knee shifts left as vectors grow larger, always landing
+at $\approx\!1$\,KB of contiguous data. The ``magic number 16'' is really a
+fixed \emph{byte} budget.}
+\label{fig:bytelaw}
+\end{figure}
+
+\subsection{How good does the layout have to be?}
+
+A real index will never place every co-visited vector perfectly. To see how much
+that matters we modelled an \emph{imperfect} layout with a quality knob $Q$: the
+percentage of vectors actually co-located with their cluster, the rest left
+scattered at random. Fig.~\ref{fig:quality} shows the outcome. The good news is
+there is no cliff --- quality degrades gracefully. The sobering news is that the
+curve is \emph{back-loaded}: the row-hit rate only climbs from 56\% to 93.6\% as
+$Q$ goes from 0 to 100\%, and you have to reach roughly $Q{=}90\%$ before you
+land within five points of the ceiling. The lesson for a practical graph-layout
+heuristic is concrete: partial co-location helps a little, but most of the payoff
+only arrives when placement is nearly perfect.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.72\textwidth]{fig_quality.pdf}
+\caption{Imperfect layout (dimension 128, $C{=}16$): row-hit rate versus the
+fraction $Q$ of vectors correctly co-located. Graceful, but about 90\% accuracy
+is needed to approach the sequential ceiling.}
+\label{fig:quality}
+\end{figure}
+
+\subsection{A boundary condition: the gain needs an open-page policy}
+
+Finally, an honest result should say where it stops holding. The memory
+controller can be run in two modes. An \emph{open-page} policy leaves a row
+active after an access, betting the next access hits the same row --- which is
+what makes sequential scans fast. A \emph{closed-page} policy immediately
+precharges the row after each access, giving up that bet. When we switch to
+closed-page (Fig.~\ref{fig:policy}), the whole picture changes: sequential access
+collapses from 93.6\% to 75.0\% row-hit and actually becomes \emph{slower} than
+random (20{,}076 versus 18{,}227 cycles), because every would-be row-hit now pays
+a fresh activation; random access, which was missing anyway, barely moves
+(55.1\% to 54.7\%).
+
+In other words, the entire row-buffer advantage --- and therefore the entire
+value of our layout optimisation --- depends on the controller using an open-page
+policy. This is worth stating plainly as a scope condition rather than hiding it.
+Fortunately it points the same way as the application: bandwidth-bound,
+streaming-friendly workloads like PIM-based vector search are exactly the setting
+where an open-page controller is the natural choice, so the assumption is
+realistic for the target domain.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.62\textwidth]{fig_policy.pdf}
+\caption{Open versus closed page policy. Closed-page auto-precharge erases the
+sequential row-hit advantage entirely, so the layout fix only pays off under an
+open-page controller.}
+\label{fig:policy}
+\end{figure}
+
+\begin{keybox}
+Three sharpenings of the layout result: (1) the real threshold is a
+\emph{$\sim$1\,KB byte budget}, captured by the design rule
+$C^\star\approx1024/(\mathrm{dim}\times\mathrm{dtype})$, not a fixed count of
+sixteen; (2) imperfect layouts degrade gracefully but need $\sim$90\% placement
+accuracy to be worthwhile; (3) the whole effect is \emph{contingent on an
+open-page policy} --- a realistic assumption for bandwidth-bound PIM workloads.
+\end{keybox}
+
+% ============================================================
 \section{Limitations (stated honestly)}
 
 A result is only as useful as its caveats are clear.
@@ -683,6 +811,11 @@ performance degraded by 41\% in cycles and 38 points in row-hit rate.
 barely helps (55.1\%$\to$56.2\%) because the FR-FCFS controller already reorders; cluster-ordered
 \emph{data layout} fully recovers locality (to 93.6\%, the sequential ceiling) with clusters of only
 $\sim$16 vectors (Section~\ref{sec:opt}).
+\item The layout lever obeys a simple \emph{design rule}. Co-locating about one DRAM row's worth of
+co-visited data ($\sim$1\,KB, i.e.\ $C^\star\approx1024/(\mathrm{dim}\times\mathrm{dtype})$) fully
+recovers locality at any vector dimension; partial layouts degrade gracefully but need $\sim$90\%
+placement accuracy; and the whole effect holds only under an open-page controller policy
+(Section~\ref{sec:deep}).
 \item This explains the shape of the literature: cluster-based (sequential) ANN on PIM succeeds and
 is crowding; graph-based (random) ANN on PIM is the genuinely open problem.
 \end{enumerate}
@@ -720,6 +853,7 @@ cd Thesis-PIM-ANN
 make demo          # Experiments 1-2 (sequential vs random)
 make optsweep      # Section 11 (windowed-reorder recovery)
 ./scripts/setup_ramulator.sh    # builds Ramulator 2.1 and runs on real HBM2
+./scripts/deep_experiments.sh   # byte-law, layout-quality, and policy sweeps
 \end{lstlisting}
 
 The script downloads a prebuilt CMake if needed, clones and builds Ramulator (pre-fetching its
