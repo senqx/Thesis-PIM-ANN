@@ -1,0 +1,7 @@
+# Real SIFT1M (100k base, dim128 float32), ef64, 500 train / 200 test held-out.
+# Cycle-accurate Ramulator HBM2 (HBM2_8Gb@2000Mbps, FRFCFS, Open, RoBaRaCoCh).
+layout,cycles,row_hit_pct,avg_read_latency,inter_vector_row_hit_pct
+random,2482246,86.28,75.099258,0.004
+community,2479971,86.32,75.042404,0.129
+query_aware,2479476,86.66,74.977753,1.005
+bfs,2471117,86.61,74.79435,1.365

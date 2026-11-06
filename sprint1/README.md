@@ -6,6 +6,17 @@ including the proposed **query-aware** layout - at no cost to Recall@k.
 
 Builds with just a C++20 compiler; hnswlib is vendored under `third_party/`.
 
+## Headline result (see `docs/findings.md`)
+
+On **real SIFT1M**, the proposed query-aware layout **does not beat a simple BFS
+traversal-order layout** - BFS has the fewest cycles, lowest latency, and the
+best inter-vector row-hit rate. The query-aware advantage seen on *synthetic*
+data did not transfer, because on real HNSW the graph adjacency already encodes
+which nodes are co-visited, so BFS co-locates them for free. This is a
+**negative result with a mechanism**, plus the finding that layout gains are
+marginal (<0.5% cycles) on real float32 dim-128 graph-ANN. Raw numbers in
+`results_sift_real.csv`; full discussion in `docs/findings.md`.
+
 ## Build
 
 ```bash
