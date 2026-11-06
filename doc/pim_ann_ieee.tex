@@ -387,11 +387,30 @@ real UPMEM hardware is future work.
 Our results explain the literature's shape: IVF/PQ-on-PIM succeeds because it is
 sequential; graph-ANN-on-PIM is open because it is random --- but the fix is
 layout, not scheduling. Limitations: (i) Ramulator models the DRAM path, so we
-report locality metrics, not a near-bank-PIM speedup; (ii) our random and
-clustered traces \emph{approximate} data-dependent HNSW traversal --- a faithful
-study needs per-query traces from a real index over SIFT1M; (iii) the parallelism
+report locality metrics, not a near-bank-PIM speedup; (ii) the core experiments' random and
+clustered traces \emph{approximate} data-dependent HNSW traversal; we address this
+in Sec.~\ref{sec:realval} with per-query traces from a real index over SIFT1M; (iii) the parallelism
 discussion is analytical; (iv) the mapping should be cross-checked against real
 UPMEM/HBM-PIM measurement.
+
+\subsection{Validation on a real HNSW index}
+\label{sec:realval}
+To test limitation (ii) directly, we instrumented a real HNSW index
+(\texttt{hnswlib}) to emit per-query base-layer traces over SIFT1M and replayed
+them through the same HBM2 model, comparing four placements at fixed Recall@10:
+random, community (graph partitioning), BFS (traversal order), and a
+\emph{query-aware} layout that learns co-visitation from a training query set and
+is scored on a held-out set. The honest outcome: on real data a learned
+query-aware layout \emph{does not beat} a simple BFS traversal-order layout; BFS
+gives the best inter-vector row-hit, cycles, and latency. The reason is that on a
+real graph the traversed neighbours already are the co-visited vectors, so BFS
+co-locates them for free. Re-running at the encoding where the byte budget is
+largest (int8, $\sim$16 vectors/row) only widens BFS's lead. This is a negative
+result with a mechanism: it confirms the byte-budget law on real data while
+showing that \emph{learned} placement adds nothing over free traversal-order
+placement --- and it illustrates the paper's methodological thread, that
+convenient results from simplified settings must be checked against reality. Full
+details are in the artifact's \texttt{sprint1/} study.
 
 % =====================================================================
 \section{Conclusion and future work}
@@ -402,11 +421,11 @@ access reordering --- reordering is redundant with the FR-FCFS controller, where
 cluster-ordered placement fully recovers locality with clusters of only
 $\sim$16 vectors --- more precisely, with $\approx$1\,KB of contiguous data per
 cluster (Eq.~\ref{eq:cstar}), provided the controller uses an open-page policy.
-Future work: generate per-query SIFT1M HNSW traces to replace
-the approximation; implement cluster-ordered layout inside a real graph index and
-measure end-to-end recall/throughput; add a near-bank compute model for a true
-host-vs-PIM speedup; and validate the query-parallel $+$ layout combination on a
-multi-DPU platform. That combination --- \emph{layout-aware, query-parallel
+Future work: having replaced the random approximation with per-query SIFT1M HNSW
+traces (Sec.~\ref{sec:realval}), the open directions are to add a near-bank
+compute model for a true host-vs-PIM speedup, to test larger scales and
+dimensions (1M vectors, GIST), and validate the query-parallel $+$ layout
+combination on a multi-DPU platform. That combination --- \emph{layout-aware, query-parallel
 graph-ANN on PIM} --- is the core contribution the full thesis will make.
 
 % =====================================================================

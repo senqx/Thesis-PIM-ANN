@@ -1,0 +1,11 @@
+# Synthetic (15k base, dim128), ef64. interVector row-hit % by dtype/layout.
+# float32=512B/vec=4 vecs/row ; int8=128B/vec=16 vecs/row (byte-budget test).
+dtype,vectors_per_row,layout,inter_vector_row_hit_pct,covisit_colocation_pct
+float32,4,random,0.017,0.021
+float32,4,bfs,5.178,0.232
+float32,4,community,1.935,0.206
+float32,4,query_aware,8.875,0.337
+int8,16,random,0.091,0.101
+int8,16,bfs,7.980,0.889
+int8,16,community,8.470,1.075
+int8,16,query_aware,9.718,0.743

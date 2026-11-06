@@ -103,20 +103,55 @@ flattered a layout that real data does not support. The consistent lesson -
 *distrust the convenient result and verify on reality* - is the thing I am most
 confident defending.
 
-## Honest open questions (not rescue attempts)
+## Testing the one place the law says layout *should* help: int8
 
-I am deliberately not tuning parameters to try to make query-aware win; that
-would be the overfitting trap this thesis argues against. But two legitimately
-*different* questions remain open:
+The result above is at dim 128 **float32**, where a 512-byte vector means only
+about four fit in a 2 KB DRAM row - a tiny co-location budget. My own
+byte-budget law predicts that if vectors were *smaller*, more would fit per row
+and layout should matter *more*. Product Quantization and int8 storage do
+exactly that: a 128-byte int8 vector lets ~16 fit per row. So this is not a
+parameter I tuned to rescue the method - it is the single place the theory says
+layout has the most to work with. If the learned layout were ever going to win,
+here is where.
 
-- **Smaller vectors, bigger budget.** With int8 or product-quantised vectors,
-  many more vectors fit per DRAM row, so the co-location budget is larger. The
-  byte-budget law predicts layout should matter more there. The right question is
-  "does layout ever matter for real graph-ANN, and under what vector encoding?",
-  not "how do I make query-aware win."
+I re-ran all four layouts on real SIFT1M at both encodings (same honest
+inter-vector row-hit metric):
+
+| Layout | float32 (4 vec/row) | int8 (16 vec/row) |
+| :-- | --: | --: |
+| Random | 0.004 | 0.020 |
+| Community | 0.129 | 0.609 |
+| Query-aware (proposed) | 1.005 | 1.151 |
+| **BFS** | **1.365** | **2.103** |
+
+Two things happen, and both are informative.
+
+**The byte-budget law holds on real data.** Every layout improves with the
+larger int8 budget - confirming, on real graph traces, the same mechanism the
+main thesis found synthetically: more co-visited data per row means more
+recoverable locality.
+
+**But the bigger budget does not rescue the proposed method - it widens BFS's
+lead.** BFS is best at *both* encodings, and its margin over query-aware
+*grows*: BFS beats query-aware by 0.36 points at float32 and by 0.95 points at
+int8. BFS soaks up almost all of the extra budget (1.37 -> 2.10) while
+query-aware barely moves (1.01 -> 1.15). The reason is the same as before: on a
+real graph the neighbours you traverse already *are* the co-visited nodes, so
+giving BFS more room per row simply lets it co-locate more of them for free. The
+learned model has nothing extra to capture.
+
+This settles the central question. We have now tested the proposed layout on
+real data at the encoding where it had the best chance, and it still does not
+beat the simplest baseline. The negative result is robust across vector
+encoding, not an artefact of one setting. (See `results_dtype_real.csv` and
+`fig_dtype_byte_budget.png`.)
+
+## Remaining open question (not a rescue attempt)
+
+One genuinely *different* question is still open, and I frame it as
+characterisation, not as a way to make query-aware win:
+
 - **Full-scale and other datasets.** 1M vectors and higher-dimensional sets
-  (GIST, dim 960) would test whether the marginal-gain finding holds across
-  scale and dimension.
-
-Both are framed as new characterisation questions, with no expectation that the
-proposed layout should come out ahead.
+  (GIST, dim 960) would test whether the marginal-gain finding and BFS's
+  strength hold across scale and dimension. The expectation, given everything
+  above, is that simple traversal-order placement remains the baseline to beat.
