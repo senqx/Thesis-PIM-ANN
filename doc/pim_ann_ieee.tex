@@ -53,8 +53,13 @@ row) saturates locality at \emph{any} vector dimension, giving a predictive
 design rule $C^\star\!\approx\!1024/(\mathrm{dim}\times\mathrm{dtype})$ --- that
 the benefit degrades gracefully but requires $\sim\!90\%$ placement accuracy to
 be worthwhile, and that the entire effect is contingent on an open-page policy.
-The study is fully reproducible and identifies the correct
-lever for an under-explored problem: layout-aware graph-ANN on PIM.
+Finally, we validate the idea on a \emph{real} HNSW index over the real SIFT1M
+dataset (Sec.~\ref{sec:realval}) and report an honest \emph{negative} result: a
+learned, workload-aware layout does \emph{not} beat a simple breadth-first
+traversal-order layout, because on a real graph the traversed neighbours already
+are the co-visited vectors. The study is fully reproducible and identifies the
+correct lever --- and its limits --- for an under-explored problem:
+layout-aware graph-ANN on PIM.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -100,9 +105,10 @@ cycle-accurate simulator?}
 
 \subsection{Contributions}
 \begin{itemize}
-\item A controlled, reproducible experiment, grounded in the standard SIFT1M
-benchmark~\cite{jegou2011sift}, isolating access pattern as the lone variable
-(RQ1--RQ2).
+\item A controlled, reproducible experiment --- using SIFT-dimensioned
+($d{=}128$, int8) synthetic candidates in the core sweeps, and the real SIFT1M
+dataset with a real HNSW index in the validation of Sec.~\ref{sec:realval} ---
+isolating access pattern as the lone variable (RQ1--RQ2).
 \item Cycle-accurate HBM2 evidence (Ramulator~2.1~\cite{ramulator2}) of a 41\%
 cycle increase and 38-point row-hit drop (Sec.~\ref{sec:gap}).
 \item A \emph{negative result}: access reordering does not help on real hardware,
@@ -165,13 +171,18 @@ intuition they share transfers, while \emph{access reordering} does not.
 \label{sec:method}
 Our kernel is the inner loop of ANN distance search: for a contiguous batch of
 candidate vectors, compute squared-L2 distance to the query and keep the $k$
-smallest. We use $4{,}096$ candidates of dimension $128$ (SIFT's dimension),
-int8 (PQ-style), giving $8{,}192$ reads in $64$-byte bursts. We follow a
-trace-driven method: the kernel defines computation; we record
-\texttt{LD}/\texttt{ST} accesses; we replay them through \textbf{Ramulator~2.1}
-~\cite{ramulator2} with its \texttt{LoadStoreTrace} front-end, an HBM2 device
-($8$\,Gb/channel, $2.0$\,Gbps), an \texttt{Open} row policy, and an FR-FCFS
-scheduler. All numbers in this paper are produced on this cycle-accurate model.
+smallest. The core sweeps use $4{,}096$ \emph{synthetic} candidates at SIFT's
+dimension ($d{=}128$, int8, PQ-style), giving $8{,}192$ reads in $64$-byte
+bursts; this isolates access pattern cleanly, and Sec.~\ref{sec:realval}
+re-runs the layout comparison on the \emph{real} SIFT1M dataset through a real
+HNSW index. We follow a trace-driven method: the kernel defines computation; we
+record \texttt{LD}/\texttt{ST} accesses; we replay them through
+\textbf{Ramulator~2.1}~\cite{ramulator2} with its \texttt{LoadStoreTrace}
+front-end, an HBM2 device ($8$\,Gb/channel, $2.0$\,Gbps), an \texttt{Open} row
+policy, and an FR-FCFS scheduler. The row-hit, cycle, and latency numbers in
+this paper are produced on this cycle-accurate model; reported PIM \emph{speed-up}
+figures are analytical estimates under stated bandwidth assumptions, not
+near-memory measurements (see Sec.~\ref{sec:limits}).
 
 We compare four memory-access variants of the \emph{same} computation:
 \emph{Sequential} (IVF/PQ order); \emph{Random} (graph/HNSW order);
@@ -384,14 +395,19 @@ real UPMEM hardware is future work.
 
 % =====================================================================
 \section{Discussion and limitations}
+\label{sec:limits}
 Our results explain the literature's shape: IVF/PQ-on-PIM succeeds because it is
 sequential; graph-ANN-on-PIM is open because it is random --- but the fix is
 layout, not scheduling. Limitations: (i) Ramulator models the DRAM path, so we
-report locality metrics, not a near-bank-PIM speedup; (ii) the core experiments' random and
-clustered traces \emph{approximate} data-dependent HNSW traversal; we address this
-in Sec.~\ref{sec:realval} with per-query traces from a real index over SIFT1M; (iii) the parallelism
-discussion is analytical; (iv) the mapping should be cross-checked against real
-UPMEM/HBM-PIM measurement.
+report cycle-accurate \emph{locality} metrics (row-hit, cycles, latency), not a
+near-bank-PIM speedup --- any PIM speed-up figure (e.g.\ the $2.36\times$ a simple
+analytical model prints under assumed $8$ vs $64$\,GB/s host/PIM bandwidths) is an
+estimate, not a measurement; (ii) the core experiments' random and clustered
+traces \emph{approximate} data-dependent HNSW traversal; we address this in
+Sec.~\ref{sec:realval} with per-query traces from a real index over SIFT1M;
+(iii) the parallelism discussion is analytical; (iv) single-seed runs ---
+repeated-seed variance is future work; (v) the mapping should be cross-checked
+against real UPMEM/HBM-PIM measurement.
 
 \subsection{Validation on a real HNSW index}
 \label{sec:realval}

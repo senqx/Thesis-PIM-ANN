@@ -19,6 +19,17 @@
 > plain‑language tour of the whole project (no background needed): what we did,
 > the questions we asked, what worked, and what honestly did **not**.
 
+> 📁 **This repo has two layers — read both before judging the claims.**
+> **(1) Root (`src/`, `doc/`)** — the core study: a *controlled microbenchmark* that
+> isolates access‑pattern effects on DRAM locality, using SIFT‑dimensioned
+> **synthetic** traces, validated cycle‑accurately on Ramulator HBM2.
+> **(2) [`sprint1/`](sprint1/)** — the follow‑up that closes the realism gap:
+> a **real HNSW index** (hnswlib) over the **real SIFT1M** dataset, with
+> graph‑aware layouts, recall held fixed, replayed through the same simulator.
+> The root establishes the *mechanism*; sprint1 tests whether it survives on real
+> graph‑ANN. **Its headline is an honest negative result** (a learned layout does
+> not beat simple BFS on real data) — see [`sprint1/docs/findings.md`](sprint1/docs/findings.md).
+
 ---
 
 ## 📌 The one‑sentence idea
@@ -32,14 +43,16 @@ This repo **measures that gap** on a real cycle‑accurate simulator, shows that
 
 ## 🎯 Headline results
 
-All numbers below are produced by the code in this repo. The core ratios are reproduced on **real HBM2 timing (Ramulator 2.1)**.
+The **DRAM‑locality numbers below are measured on real HBM2 timing (Ramulator 2.1)** — row‑hit rate, cycles, and latency. They are the load‑bearing evidence of this project.
 
-| Access pattern | DRAM row‑hit rate | Cycles | PIM speed‑up |
-| :-- | :--: | :--: | :--: |
-| **Sequential** (IVF/PQ scan) | **93.6 %** | 12 829 | **2.36×** |
-| **Random** (graph/HNSW walk) | **55.1 %** | 18 134 | **1.47×** |
+| Access pattern | DRAM row‑hit rate | Cycles (Ramulator HBM2) |
+| :-- | :--: | :--: |
+| **Sequential** (IVF/PQ scan) | **93.6 %** | 12 829 |
+| **Random** (graph/HNSW walk) | **55.1 %** | 18 134 |
 
-> Same algorithm, same data — **only the memory access *order* changes**, yet cycles rise **+41 %** and the row‑hit rate drops **38 points**. That is the whole thesis, in one controlled experiment.
+> Same algorithm, same data — **only the memory access *order* changes**, yet cycles rise **+41 %** and the row‑hit rate drops **38 points**. That is the whole thesis, in one controlled experiment, on a cycle‑accurate simulator.
+
+> ⚠️ **On "PIM speed‑up."** Ramulator models the **DRAM path only** — it does *not* simulate a near‑memory compute unit, so this project does **not** measure an end‑to‑end host‑vs‑PIM speed‑up. The figures of **2.36× / 1.47×** that appear in `make demo` come from an *analytical* model (`toy_timing`) under **explicitly assumed** host/PIM bandwidths (8 vs 64 GB/s) and are **illustrative estimates, not measurements**. Treat the row‑hit/cycle numbers as the validated result; treat the speed‑up as a back‑of‑envelope projection pending a real near‑bank compute model.
 
 **Which lever recovers the random case?** (real HBM2)
 
@@ -173,14 +186,14 @@ make layoutsweep # Experiment 5: cluster‑ordered layout fully recovers it
 
 ```
 === traces/ann_seq.trace ===
-  PIM   cycles=42240   hit-rate=99.2%   PIM speedup: 2.36x
+  PIM   cycles=42240   hit-rate=99.2%   PIM speedup: 2.36x   (analytical est.)
 === traces/ann_rand.trace ===
-  PIM   cycles=121680  hit-rate=50.7%   PIM speedup: 1.47x
+  PIM   cycles=121680  hit-rate=50.7%   PIM speedup: 1.47x   (analytical est.)
 ```
 
 `make sweep`, `make optsweep` and `make layoutsweep` write CSVs to `results/` that you can plot.
 
-> **Note on the toy model.** `toy_timing` models only the one DRAM effect that matters here — the **row buffer** — so its *absolute* numbers are illustrative. The **shape** (sequential ≫ random, and the recovery trend) is robust and is confirmed on real HBM2 in Part B.
+> **Note on the toy model (and the speed‑up numbers).** `toy_timing` models only the one DRAM effect that matters here — the **row buffer** — so its *absolute* numbers are illustrative. The **shape** (sequential ≫ random, and the recovery trend) is robust and is confirmed on real HBM2 in Part B. The `PIM speedup` it prints is an **analytical estimate** under assumed host/PIM bandwidths (8 vs 64 GB/s), **not** a measured near‑memory speed‑up; only the row‑hit and cycle behaviour is validated cycle‑accurately.
 
 ---
 

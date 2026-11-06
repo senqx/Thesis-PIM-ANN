@@ -885,7 +885,11 @@ A result is only as useful as its caveats are clear.
 \item[DRAM path only.] Ramulator models the memory timing, not a near-memory compute unit. We
 therefore report the \emph{locality degradation} (row-hit rate, latency, cycles), not a direct
 host-versus-PIM speedup. Producing a true PIM speedup number requires additionally modelling a
-near-bank compute datapath.
+near-bank compute datapath. Any speed-up figure printed by the teaching model (e.g.\ $2.36\times$) is
+an analytical estimate under assumed host/PIM bandwidths, not a measured result.
+\item[Single-seed runs.] The reported comparisons use one random seed each. The effects are large
+relative to run-to-run noise, but a rigorous study would repeat each configuration across several
+seeds and report variance; that is future work.
 \item[Static trace.] Real graph traversal is \emph{data-dependent}: the next node visited depends on
 distances computed at run time. The core experiments use a random trace that \emph{approximates} that
 irregularity; Section~\ref{sec:realhnsw} closes this gap with per-query traces from a real executing
