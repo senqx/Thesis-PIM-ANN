@@ -15,6 +15,12 @@
 
 ---
 
+> 🧭 **New here?** Read **[`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md)** first — a
+> plain‑language tour of the whole project (no background needed): what we did,
+> the questions we asked, what worked, and what honestly did **not**.
+
+---
+
 ## 📌 The one‑sentence idea
 
 > **Approximate Nearest Neighbour (ANN) search is memory‑bound, so it is a natural Processing‑in‑Memory (PIM) target — but *how* it reads memory decides whether PIM helps.**
@@ -82,11 +88,30 @@ Three further sweeps on real HBM2 (`scripts/deep_experiments.sh`) sharpen the la
 
 ---
 
+## 🔬 Follow‑up study: does a smart layout help on *real* data? (`sprint1/`)
+
+The results above use a synthetic memory trace. The companion study in
+[`sprint1/`](sprint1/) tests the layout idea on a **real HNSW index searching
+real SIFT1M data**, comparing four layouts (random, community, BFS, and a
+proposed *query‑aware* method) through the same cycle‑accurate simulator — with
+a proper train/test split, so any gain reflects generalisation.
+
+**Honest headline:** on real data, a **learned query‑aware layout does *not*
+beat a simple BFS traversal‑order layout** — because on a real graph, the
+neighbours you walk to are already the vectors read together, so BFS co‑locates
+them for free. This is a **negative result with a clear mechanism**, and it
+reinforces the byte‑budget finding above (layout gains are marginal at dim‑128
+float32). Full write‑up: [`sprint1/docs/findings.md`](sprint1/docs/findings.md);
+the picture that tells the story: `sprint1/fig_synth_vs_real.png`.
+
+---
+
 ## 📂 Repository layout
 
 ```
 Thesis-PIM-ANN/
-├── src/                      # the experiment (5 small C++ tools)
+├── PROJECT_OVERVIEW.md       # ← start here: plain-language tour of everything
+├── src/                      # the main experiment (5 small C++ tools)
 │   ├── ann_kernel.cpp        #   real ANN distance + top‑k (seq / rand order)
 │   ├── gen_trace.cpp         #   emit a Ramulator LD/ST memory trace
 │   ├── toy_timing.cpp        #   teaching‑size DRAM row‑buffer model
@@ -99,6 +124,7 @@ Thesis-PIM-ANN/
 ├── doc/                      # the write‑ups
 │   ├── pim_ann_ieee.pdf      #   IEEE conference paper (+ .tex, figures)
 │   └── pim_ann_thesis.pdf    #   detailed from‑first‑principles report (+ .tex)
+├── sprint1/                  # follow‑up: real‑HNSW layout study (negative result)
 ├── Makefile                  # build / demo / sweep / optsweep / layoutsweep
 └── README.md
 ```
@@ -190,6 +216,7 @@ Then, for the deeper design‑rule sweeps (byte budget, layout quality, page pol
 | `make layoutsweep` | Does **layout** recover it? | Yes — fully, by cluster size `C`≈16 |
 | `setup_ramulator.sh` | Do the ratios hold on **real** timing? | Yes — validated on cycle‑accurate HBM2 |
 | `deep_experiments.sh` | What's the **design rule** and its limits? | ~1 KB byte budget; needs ~90 % layout accuracy; open‑page only |
+| `sprint1/` (real HNSW) | Does a **learned layout** beat BFS on **real** data? | No — BFS is already strong; negative result with a mechanism |
 
 ---
 
