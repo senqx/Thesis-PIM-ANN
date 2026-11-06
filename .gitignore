@@ -20,3 +20,8 @@ results/
 *.log
 *.out
 *.toc
+
+# heavy local artifacts (never commit)
+data/
+ramulator2/
+.toolchain/
