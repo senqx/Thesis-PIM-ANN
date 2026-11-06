@@ -26,6 +26,12 @@ PROJ="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
 
 # ---- config ----------------------------------------------------------------
 RAMULATOR_REPO="https://github.com/CMU-SAFARI/ramulator2.git"
+# Reproducibility: pin an exact Ramulator commit so two people building at
+# different times get the SAME simulator. Set RAMULATOR_COMMIT to the SHA you
+# want (recommended); leave empty to track upstream HEAD, in which case the
+# script still RECORDS the built commit to ramulator2_commit.txt so the run is
+# at least auditable after the fact.
+RAMULATOR_COMMIT="${RAMULATOR_COMMIT:-}"  # e.g. export RAMULATOR_COMMIT=<sha>
 RAMULATOR_DIR="${RAMULATOR_DIR:-$PWD/ramulator2}"
 TOOLCHAIN_DIR="$PWD/.toolchain"
 CMAKE_VER="3.30.5"
@@ -72,12 +78,22 @@ fi
 
 # ---- 2. clone Ramulator ----------------------------------------------------
 if [ ! -d "$RAMULATOR_DIR/.git" ]; then
-  say "Cloning Ramulator 2.1 -> $RAMULATOR_DIR"
-  git clone --depth 1 "$RAMULATOR_REPO" "$RAMULATOR_DIR"
+  if [ -n "$RAMULATOR_COMMIT" ]; then
+    say "Cloning Ramulator 2.1 (pinned @ $RAMULATOR_COMMIT) -> $RAMULATOR_DIR"
+    # full clone so an arbitrary pinned SHA is reachable, then check it out
+    git clone "$RAMULATOR_REPO" "$RAMULATOR_DIR"
+    git -C "$RAMULATOR_DIR" checkout --quiet "$RAMULATOR_COMMIT"
+  else
+    say "Cloning Ramulator 2.1 (upstream HEAD) -> $RAMULATOR_DIR"
+    git clone --depth 1 "$RAMULATOR_REPO" "$RAMULATOR_DIR"
+  fi
 else
   say "Ramulator already present at $RAMULATOR_DIR"
 fi
 cd "$RAMULATOR_DIR"
+# Record the exact built commit for provenance (auditable reproducibility).
+git rev-parse HEAD > "$PROJ/ramulator2_commit.txt" 2>/dev/null || true
+say "Ramulator commit: $(cat "$PROJ/ramulator2_commit.txt" 2>/dev/null || echo unknown)"
 
 # ---- 3. pre-clone deps into ext/ and switch CMake to add_subdirectory ------
 # Why: Ramulator's CMakeLists uses FetchContent (git clone at configure time),
@@ -133,22 +149,4 @@ cd "$RAMULATOR_DIR"
 ls python/ramulator/_ramulator*.so >/dev/null 2>&1 || die "Python module not built."
 say "Build OK: libramulator.so + Python module present"
 
-# ---- 5. generate ANN traces + run through real Ramulator -------------------
-say "Generating ANN traces and running them through Ramulator"
-# (PROJ was resolved at the top of the script, as an absolute path.)
-# build our trace generator if needed
-if [ ! -x "$PROJ/bin/gen_trace" ]; then (cd "$PROJ" && make >/dev/null); fi
-mkdir -p "$PROJ/traces"
-"$PROJ/bin/gen_trace" --num_vectors 4096 --dim 128 --pattern seq  > "$PROJ/traces/ann_seq.trace"
-"$PROJ/bin/gen_trace" --num_vectors 4096 --dim 128 --pattern rand > "$PROJ/traces/ann_rand.trace"
-
-export PYTHONPATH="$RAMULATOR_DIR/python"
-export LD_LIBRARY_PATH="$RAMULATOR_DIR"
-echo
-echo "================= SEQUENTIAL (IVF/PQ scan) ================="
-python3 "$PROJ/scripts/run_ann_ramulator.py" "$PROJ/traces/ann_seq.trace"
-echo
-echo "================= RANDOM (graph/HNSW traversal) ============"
-python3 "$PROJ/scripts/run_ann_ramulator.py" "$PROJ/traces/ann_rand.trace"
-echo
-say "Done. Expected shape: sequential ~94% row-hit (fast), random ~55% row-hit (slow, +~40% cycles)."
+# ---- 5. generate ANN traces 

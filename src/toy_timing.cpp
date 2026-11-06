@@ -65,8 +65,16 @@ int main(int argc, char** argv) {
     bool csv = (argc > 2 && std::string(argv[2]) == "--csv");
     Config c;
     Result h = simulate(argv[1], c, false), p = simulate(argv[1], c, true);
-    double hr = 100.0 * h.hits / (h.hits + h.misses);
-    double speedup = (double)h.cycles / p.cycles;
+    const uint64_t accesses = h.hits + h.misses;
+    if (accesses == 0) {
+        std::fprintf(stderr,
+            "[toy_timing] error: trace '%s' has no LD/ST records (empty or malformed)\n",
+            argv[1]);
+        return 1;
+    }
+    // accesses>0 guarantees nonzero cycles here, so these divisions are safe.
+    double hr = 100.0 * h.hits / accesses;
+    double speedup = p.cycles ? (double)h.cycles / p.cycles : 0.0;
 
     if (csv) {
         // trace,host_cycles,pim_cycles,speedup,hit_rate
@@ -77,8 +85,9 @@ int main(int argc, char** argv) {
     auto row = [&](const char* n, const Result& r){
         std::printf("  %-5s cycles=%-10llu hits=%llu misses=%llu hit-rate=%.1f%% achieved=%.1f B/cyc\n",
             n, (unsigned long long)r.cycles, (unsigned long long)r.hits,
-            (unsigned long long)r.misses, 100.0*r.hits/(r.hits+r.misses),
-            (double)r.bytes/r.cycles);
+            (unsigned long long)r.misses,
+            (r.hits+r.misses) ? 100.0*r.hits/(r.hits+r.misses) : 0.0,
+            r.cycles ? (double)r.bytes/r.cycles : 0.0);
     };
     std::printf("=== %s ===\n", argv[1]);
     row("HOST", h); row("PIM", p);

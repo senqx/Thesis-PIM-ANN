@@ -36,17 +36,35 @@ struct Args {
     uint64_t seed        = 1;
 };
 
+[[noreturn]] static void die(const std::string& msg) {
+    fprintf(stderr, "[ann_kernel] error: %s\n", msg.c_str());
+    std::exit(1);
+}
+
 static Args parse(int argc, char** argv) {
     Args a;
     for (int i = 1; i < argc; i++) {
         std::string k = argv[i];
-        auto v = [&]{ return std::string(argv[++i]); };
-        if      (k == "--num_vectors") a.num_vectors = std::strtoull(v().c_str(),0,0);
-        else if (k == "--dim")         a.dim         = std::strtoull(v().c_str(),0,0);
-        else if (k == "--pattern")     a.pattern     = v();
-        else if (k == "--topk")        a.topk        = std::strtoull(v().c_str(),0,0);
-        else if (k == "--seed")        a.seed        = std::strtoull(v().c_str(),0,0);
+        auto v = [&](const char* flag) -> std::string {
+            if (i + 1 >= argc) die(std::string("missing value for ") + flag);
+            return std::string(argv[++i]);
+        };
+        if      (k == "--num_vectors") a.num_vectors = std::strtoull(v("--num_vectors").c_str(),0,0);
+        else if (k == "--dim")         a.dim         = std::strtoull(v("--dim").c_str(),0,0);
+        else if (k == "--pattern")     a.pattern     = v("--pattern");
+        else if (k == "--topk")        a.topk        = std::strtoull(v("--topk").c_str(),0,0);
+        else if (k == "--seed")        a.seed        = std::strtoull(v("--seed").c_str(),0,0);
+        else die("unknown argument: " + k);
     }
+    // Input validation.
+    if (a.num_vectors == 0) die("--num_vectors must be > 0");
+    if (a.dim == 0)         die("--dim must be > 0");
+    if (a.topk == 0)        die("--topk must be > 0");
+    if (a.pattern != "seq" && a.pattern != "rand")
+        die("--pattern must be 'seq' or 'rand' (got '" + a.pattern + "')");
+    if (a.topk > a.num_vectors) a.topk = a.num_vectors;  // cannot return more than exist
+    if (a.dim > (SIZE_MAX / a.num_vectors))
+        die("num_vectors * dim overflows allocation size");
     return a;
 }
 

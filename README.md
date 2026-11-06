@@ -43,16 +43,36 @@ This repo **measures that gap** on a real cycle‑accurate simulator, shows that
 
 ## 🎯 Headline results
 
-The **DRAM‑locality numbers below are measured on real HBM2 timing (Ramulator 2.1)** — row‑hit rate, cycles, and latency. They are the load‑bearing evidence of this project.
+The **DRAM‑locality numbers below are measured on real HBM2 timing (Ramulator 2.1)** — row‑hit rate and cycles. They are the load‑bearing evidence of this project, and they are reproduced by **`make demo-ramulator`** (which replays the traces through the real simulator). The fast **`make demo`** target runs only the *analytical toy model* and prints illustrative ratios — it does **not** reproduce these numbers. See [Reproducing the numbers](#-which-command-produces-which-number) below.
 
 | Access pattern | DRAM row‑hit rate | Cycles (Ramulator HBM2) |
 | :-- | :--: | :--: |
 | **Sequential** (IVF/PQ scan) | **93.6 %** | 12 829 |
 | **Random** (graph/HNSW walk) | **55.1 %** | 18 134 |
 
-> Same algorithm, same data — **only the memory access *order* changes**, yet cycles rise **+41 %** and the row‑hit rate drops **38 points**. That is the whole thesis, in one controlled experiment, on a cycle‑accurate simulator.
+> A **trace‑driven memory experiment**: the same *address population* (4 096 vectors) is visited under two different orders — sequential vs. a random permutation. The trace generator emits the memory addresses a read would touch; it does **not** execute the ANN distance arithmetic. Changing **only the visitation order**, cycles rise **+41 %** and the row‑hit rate drops **38 points**, on a cycle‑accurate simulator. (The random permutation is a controlled stand‑in for graph traversal, *not* a real HNSW access sequence — for that, see [`sprint1/`](sprint1/).)
 
 > ⚠️ **On "PIM speed‑up."** Ramulator models the **DRAM path only** — it does *not* simulate a near‑memory compute unit, so this project does **not** measure an end‑to‑end host‑vs‑PIM speed‑up. The figures of **2.36× / 1.47×** that appear in `make demo` come from an *analytical* model (`toy_timing`) under **explicitly assumed** host/PIM bandwidths (8 vs 64 GB/s) and are **illustrative estimates, not measurements**. Treat the row‑hit/cycle numbers as the validated result; treat the speed‑up as a back‑of‑envelope projection pending a real near‑bank compute model.
+
+### What each claim is actually backed by
+
+| Claim | Evidence tier | How to reproduce |
+| :-- | :-- | :-- |
+| Access *ordering* changes DRAM locality | Cycle‑accurate Ramulator HBM2 | `make demo-ramulator` |
+| Physical *layout* changes DRAM locality | Cycle‑accurate Ramulator (synthetic traces) | `make layoutsweep-ramulator` |
+| Layout result holds on a **real HNSW index** over SIFT1M | Cycle‑accurate Ramulator (real‑workload traces) | [`sprint1/`](sprint1/) |
+| A specific **PIM application speed‑up** (2.36×) | **Analytical model only** (assumed bandwidths) | `make demo-toy` — *not a measurement* |
+
+### <a name="-which-command-produces-which-number"></a>🔁 Which command produces which number
+
+| Command | Timing model | Status of its numbers |
+| :-- | :-- | :-- |
+| `make demo-toy` (alias: `make demo`) | `toy_timing` (analytical) | **Illustrative ratios** — not measured hardware |
+| `make demo-ramulator` | Ramulator 2.1 HBM2 | **The headline row‑hit / cycle numbers** |
+| `make layoutsweep-ramulator` | Ramulator 2.1 HBM2 | Cycle‑accurate layout sweep |
+| `sprint1/` drivers | Ramulator 2.1 HBM2 | Real‑HNSW / real‑SIFT1M validation |
+
+The `-ramulator` targets require `./scripts/setup_ramulator.sh` to have built the simulator first.
 
 **Which lever recovers the random case?** (real HBM2)
 
@@ -76,7 +96,7 @@ The **DRAM‑locality numbers below are measured on real HBM2 timing (Ramulator 
 
 Three further sweeps on real HBM2 (`scripts/deep_experiments.sh`) sharpen the layout finding into something a real index‑builder can use.
 
-**1. The threshold is a *byte budget*, not a vector count.** Sweeping cluster size `C` across vector dimensions, row‑hit always saturates where `dim × C ≈ 1 KB` — one DRAM row:
+**1. The threshold is a *byte budget*, not a vector count.** Sweeping cluster size `C` across vector dimensions, row‑hit always saturates where `dim × C ≈ 1 KB` — the measured effective row granularity (see the DRAM‑geometry table above):
 
 | dim \ `C` | 1 | 4 | 8 | 16 | 32 | 64 |
 | :-- | :--: | :--: | :--: | :--: | :--: | :--: |
@@ -84,7 +104,7 @@ Three further sweeps on real HBM2 (`scripts/deep_experiments.sh`) sharpen the la
 | **128 B** | 55.1 | 87.8 | **93.5** | 93.6 | 93.6 | 93.6 |
 | **256 B** | 75.6 | **93.5** | 93.6 | 93.6 | 93.6 | 93.6 |
 
-> This gives a predictive design rule: **`C* ≈ 1024 / (dim × dtype_bytes)`** — co‑locate ~1 KB of co‑visited data and locality is fully recovered at any dimension.
+> This gives a predictive design rule: **`C* ≈ 1024 / (dim × dtype_bytes)`** — co‑locate ~1 KB of co‑visited data (the empirical granularity, not a universal constant) and locality is fully recovered at any dimension.
 
 **2. Imperfect layouts degrade gracefully — but need ~90 % accuracy.** Row‑hit vs the fraction `Q` of correctly co‑located vectors (dim 128, `C`=16):
 
@@ -165,7 +185,9 @@ Thesis-PIM-ANN/
 
 ---
 
-## 🚀 Part A — Reproduce the core results (just a compiler)
+## 🚀 Part A — The fast analytical tour (just a compiler)
+
+> ⚠️ These `-toy` targets run the **analytical model only**. They build intuition and show the *shape* of every effect in seconds, but their numbers are **illustrative ratios, not measured hardware**. To reproduce the headline numbers you must run the **`-ramulator`** targets in Part B.
 
 ```bash
 git clone https://github.com/senqx/Thesis-PIM-ANN.git
@@ -173,43 +195,48 @@ cd Thesis-PIM-ANN
 make            # build the tools into ./bin
 ```
 
-Then run any of the experiments:
+Then run any of the toy‑model experiments:
 
 ```bash
-make demo        # Experiment 1 & 2: sequential vs random  (the headline gap)
-make sweep       # Experiment 3: shows pattern — not size — governs locality
-make optsweep    # Experiment 4: reordering does NOT recover it
-make layoutsweep # Experiment 5: cluster‑ordered layout fully recovers it
+make demo-toy        # Experiments 1 & 2: sequential vs random  (the gap, analytically)
+make sweep-toy       # Experiment 3: pattern — not size — governs locality
+make optsweep-toy    # Experiment 4: reordering does NOT recover it
+make layoutsweep-toy # Experiment 5: cluster‑ordered layout recovers it
 ```
 
-**Example output** (`make demo`):
+(The bare `make demo` etc. are kept as aliases for `*-toy`.)
+
+**Example output** (`make demo-toy`):
 
 ```
+## ANALYTICAL TOY MODEL (illustrative ratios, NOT measured HBM2)
 === traces/ann_seq.trace ===
   PIM   cycles=42240   hit-rate=99.2%   PIM speedup: 2.36x   (analytical est.)
 === traces/ann_rand.trace ===
   PIM   cycles=121680  hit-rate=50.7%   PIM speedup: 1.47x   (analytical est.)
 ```
 
-`make sweep`, `make optsweep` and `make layoutsweep` write CSVs to `results/` that you can plot.
-
-> **Note on the toy model (and the speed‑up numbers).** `toy_timing` models only the one DRAM effect that matters here — the **row buffer** — so its *absolute* numbers are illustrative. The **shape** (sequential ≫ random, and the recovery trend) is robust and is confirmed on real HBM2 in Part B. The `PIM speedup` it prints is an **analytical estimate** under assumed host/PIM bandwidths (8 vs 64 GB/s), **not** a measured near‑memory speed‑up; only the row‑hit and cycle behaviour is validated cycle‑accurately.
+> **Why these differ from the headline table.** `toy_timing` models only the **row buffer**, with hand‑chosen latencies, an illustrative 8 KB row, and *assumed* host/PIM bandwidths — so its absolute cycles and its `PIM speedup` are **not** measurements. The headline 93.6 %/55.1 % row‑hit and 12 829/18 134 cycles come from **real Ramulator HBM2** (`make demo-ramulator`, Part B), where the toy's *shape* is confirmed but its absolute numbers are replaced by cycle‑accurate ones.
 
 ---
 
 ## 🔬 Part B — Validate on real Ramulator 2.1 (cycle‑accurate HBM2)
 
-One command builds the simulator from source and replays the *same* traces through a real HBM2 timing model:
+First build the simulator from source (once):
 
 ```bash
-./scripts/setup_ramulator.sh
+./scripts/setup_ramulator.sh    # clone + build Ramulator 2.1 (records the exact
+                                # commit to ramulator2_commit.txt for provenance)
 ```
 
-It will: ensure a C++20 compiler + CMake → clone & build Ramulator 2.1 →
-generate the ANN traces → replay them on HBM2 → print **real** cycles,
-row‑hit rate, latency and throughput for sequential and random.
+Then reproduce the **headline numbers** and the cycle‑accurate layout sweep:
 
-Then, for the deeper design‑rule sweeps (byte budget, layout quality, page policy):
+```bash
+make demo-ramulator          # -> the 93.6%/55.1% row‑hit, 12829/18134 cycles
+make layoutsweep-ramulator   # -> row‑hit vs cluster size C, on real HBM2
+```
+
+For the deeper design‑rule sweeps (byte budget, layout quality, page policy):
 
 ```bash
 ./scripts/deep_experiments.sh   # writes ~/deep_results.txt
@@ -217,19 +244,32 @@ Then, for the deeper design‑rule sweeps (byte budget, layout quality, page pol
 
 > 💡 On a remote machine, run it inside `tmux` so a dropped connection doesn't kill the build:  `tmux new -s ram` … `./scripts/setup_ramulator.sh` … detach with `Ctrl‑b d`.
 
+### DRAM geometry — one authoritative reference
+
+Three byte figures appear in this repo; they are **different quantities**, not an inconsistency:
+
+| Parameter | Toy model (`toy_timing`) | Ramulator HBM2 (the real result) |
+| :-- | :-- | :-- |
+| Row size | 8 KB (illustrative, hand‑set) | fixed by the `HBM2_8Gb` org preset |
+| Burst size | 64 B | 64 B (cache line) |
+| Page policy | one open row | `Open` |
+| Address mapping | simplified `addr / row_bytes` | `RoBaRaCoCh` + cache‑line channel interleave |
+| Timing | hand‑selected (`t_rowhit=4`, `t_rowmiss=24`) | full HBM2 timing model (`HBM2_2000Mbps`) |
+
+The **byte‑budget rule `C* ≈ 1024/(dim×dtype)`** is *not* the raw row size. The ~1 KB constant is the **empirically measured** effective contiguous‑run granularity of the Ramulator config above — the span of addresses that stay in one open row before the mapping/interleave diverts the next access. It is an **empirical result under this configuration**, not a universal law; `sprint1/` models a nominal 2 KB row for its own row‑hit accounting (which only rescales the vectors‑per‑row constant and changes no layout ordering).
+
 ---
 
 ## 🧪 What each experiment shows
 
-| Command | Research question | Finding |
-| :-- | :-- | :-- |
-| `make demo` | Does access **pattern** govern performance? | Yes — random costs +41 % cycles, −38 pts row‑hit |
-| `make sweep` | Is it **pattern** or **dataset size**? | Pattern: hit‑rate is flat across a 32× size range |
-| `make optsweep` | Does **reordering** recover it? | No — ~55 % → ~56 %, redundant with the controller |
-| `make layoutsweep` | Does **layout** recover it? | Yes — fully, by cluster size `C`≈16 |
-| `setup_ramulator.sh` | Do the ratios hold on **real** timing? | Yes — validated on cycle‑accurate HBM2 |
-| `deep_experiments.sh` | What's the **design rule** and its limits? | ~1 KB byte budget; needs ~90 % layout accuracy; open‑page only |
-| `sprint1/` (real HNSW) | Does a **learned layout** beat BFS on **real** data? | No — BFS is already strong; negative result with a mechanism |
+| Command | Timing | Research question | Finding |
+| :-- | :-- | :-- | :-- |
+| `make demo-ramulator` | HBM2 | Does access **pattern** govern performance? | Yes — random costs +41 % cycles, −38 pts row‑hit |
+| `make sweep-toy` | toy | Is it **pattern** or **dataset size**? | Pattern: hit‑rate is flat across a 32× size range |
+| `make optsweep-toy` | toy | Does **reordering** recover it? | No — ~55 % → ~56 %, redundant with the controller *(confirmed on HBM2 in the thesis)* |
+| `make layoutsweep-ramulator` | HBM2 | Does **layout** recover it? | Yes — fully, by cluster size `C`≈16 |
+| `deep_experiments.sh` | HBM2 | What's the **design rule** and its limits? | ~1 KB effective byte budget; needs ~90 % layout accuracy; open‑page only |
+| `sprint1/` (real HNSW) | HBM2 | Does a **learned layout** beat BFS on **real** data? | No — BFS is already strong; negative result with a mechanism |
 
 ---
 

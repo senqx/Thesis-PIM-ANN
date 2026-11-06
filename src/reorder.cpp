@@ -27,7 +27,14 @@
 
 int main(int argc, char** argv) {
     if (argc < 2) { std::fprintf(stderr, "usage: %s <window> < in.trace > out.trace\n", argv[0]); return 1; }
-    const size_t W = std::max<size_t>(1, std::strtoull(argv[1], nullptr, 0));
+    // Validate the window argument is a positive integer (reject "abc", "-5", "0").
+    char* end = nullptr;
+    const unsigned long long w_in = std::strtoull(argv[1], &end, 0);
+    if (end == argv[1] || *end != '\0' || w_in == 0) {
+        std::fprintf(stderr, "[reorder] error: <window> must be a positive integer (got '%s')\n", argv[1]);
+        return 1;
+    }
+    const size_t W = (size_t)w_in;
 
     // read all records: (op, addr, original_line)
     struct Rec { uint64_t addr; std::string line; };

@@ -17,6 +17,15 @@
 //   C large -> big contiguous runs = approaches a sequential scan
 // On real HBM2 the row-hit rate recovers to the sequential ceiling by C ~ 16.
 //
+// SCOPE (important caveat): this tool CONSTRUCTS the co-location it then
+// measures -- it assigns vectors to clusters by sequential id and reads each
+// cluster contiguously. It therefore tests the HYPOTHESIS "if co-visited vectors
+// are physically contiguous, row-buffer locality improves", which is a valid
+// controlled experiment. It is NOT evidence that a real HNSW graph naturally
+// yields such clusters. Whether a real graph-aware layout achieves this on real
+// queries (and whether it beats a simple BFS ordering) is tested separately in
+// the sprint1/ study -- where the honest answer is a negative result.
+//
 // Output: Ramulator LoadStoreTrace format (one "LD 0x<addr>" per 64-byte burst),
 // identical to gen_trace.cpp, so it plugs straight into run_ann_ramulator.py.
 //
@@ -32,24 +41,46 @@
 #include <random>
 #include <algorithm>
 
+namespace {
+
+[[noreturn]] void die(const std::string& msg) {
+    fprintf(stderr, "[gen_layout] error: %s\n", msg.c_str());
+    std::exit(1);
+}
+
+}  // namespace
+
 int main(int argc, char** argv) {
     uint64_t num_vectors = 4096, dim = 128, dtype_bytes = 1, base = 0x100000, seed = 1;
-    uint64_t cluster = 16, burst = 64;   // cluster = vectors co-located per DRAM-friendly block
+    uint64_t cluster = 16, burst = 64;   // cluster = vectors co-located per block
 
     for (int i = 1; i < argc; i++) {
         std::string k = argv[i];
-        auto nn = [&]{ return std::strtoull(argv[++i], 0, 0); };
-        if      (k == "--num_vectors") num_vectors = nn();
-        else if (k == "--dim")         dim         = nn();
-        else if (k == "--dtype")       dtype_bytes = nn();
-        else if (k == "--cluster")     cluster     = nn();
-        else if (k == "--base")        base        = nn();
-        else if (k == "--seed")        seed        = nn();
+        auto next = [&](const char* flag) -> const char* {
+            if (i + 1 >= argc) die(std::string("missing value for ") + flag);
+            return argv[++i];
+        };
+        auto nn = [&](const char* flag) { return std::strtoull(next(flag), nullptr, 0); };
+        if      (k == "--num_vectors") num_vectors = nn("--num_vectors");
+        else if (k == "--dim")         dim         = nn("--dim");
+        else if (k == "--dtype")       dtype_bytes = nn("--dtype");
+        else if (k == "--cluster")     cluster     = nn("--cluster");
+        else if (k == "--base")        base        = nn("--base");
+        else if (k == "--seed")        seed        = nn("--seed");
+        else die("unknown argument: " + k);
     }
-    if (cluster < 1) cluster = 1;
-    const uint64_t vec_bytes = dim * dtype_bytes;
 
-    // cluster ids in random visitation order; vectors within a cluster are contiguous
+    // Input validation.
+    if (num_vectors == 0) die("--num_vectors must be > 0");
+    if (dim == 0)         die("--dim must be > 0");
+    if (dtype_bytes == 0) die("--dtype must be > 0");
+    if (cluster == 0)     die("--cluster must be > 0");
+    if (dim > UINT64_MAX / dtype_bytes) die("dim * dtype overflows");
+    const uint64_t vec_bytes = dim * dtype_bytes;
+    if (num_vectors > (UINT64_MAX - base) / vec_bytes)
+        die("num_vectors * vec_bytes overflows the address space");
+
+    // cluster ids in random visitation order; vectors within a cluster contiguous
     const uint64_t n_clusters = (num_vectors + cluster - 1) / cluster;
     std::vector<uint64_t> cl(n_clusters);
     std::iota(cl.begin(), cl.end(), 0ULL);
