@@ -273,6 +273,28 @@ The **byte‑budget rule `C* ≈ 1024/(dim×dtype)`** is *not* the raw row size.
 
 ---
 
+## ✅ Tests & CI
+
+The root tools have an automated test suite (argument validation, record‑count and
+determinism checks, and the core sequential‑≫‑random row‑hit claim):
+
+```bash
+make test        # builds the tools and runs tests/run_tests.sh (27 checks)
+```
+
+It runs on every push/PR via GitHub Actions (`.github/workflows/ci.yml`).
+
+For the real‑HNSW study, `sprint1/` includes a **multi‑seed harness** that reports
+mean / stddev / 95 % CI per layout, so the BFS‑vs‑query‑aware comparison can be
+read with error bars rather than a single run:
+
+```bash
+cd sprint1 && make run_multiseed
+./scripts/multiseed.sh 10          # 10 seeds -> mean +/- CI per layout
+```
+
+---
+
 ## 📄 Papers
 
 - **`doc/pim_ann_ieee.pdf`** — IEEE conference‑format paper with research questions, the proposed *locality‑aware graph layout*, the design rule, and the multi‑DPU parallelism analysis.

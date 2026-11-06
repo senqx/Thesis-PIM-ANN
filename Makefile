@@ -111,5 +111,10 @@ sweep: sweep-toy
 optsweep: optsweep-toy
 layoutsweep: layoutsweep-toy
 
+# Run the automated test suite (builds tools, checks validation + core claims).
+.PHONY: test
+test: all
+	./tests/run_tests.sh
+
 clean:
 	rm -rf $(BIN) traces results

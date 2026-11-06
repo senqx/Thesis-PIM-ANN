@@ -20,9 +20,9 @@ CORE := \
   src/memory/address_emitter.cpp \
   src/metrics/recall_evaluator.cpp
 
-.PHONY: all clean bench sift synth dtype figures
+.PHONY: all clean bench sift synth dtype multiseed figures
 
-all: run_bench run_synth run_sift run_dtype
+all: run_bench run_synth run_sift run_dtype run_multiseed
 
 # Synthetic benchmark (no dataset needed): 4 layouts + efSearch sweep.
 run_bench: src/run_bench.cpp $(CORE)
@@ -38,4 +38,41 @@ run_sift: src/run_sift.cpp $(CORE)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
 
 # Byte-budget sweep: float32 vs int8 vectors-per-row. Pass .fvecs paths for the
-# real test (recommended
+# real test (recommended), or no paths for a synthetic fallback.
+run_dtype: src/run_dtype.cpp $(CORE)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
+
+# Multi-seed statistical harness: one seeded run per invocation; aggregate with
+# scripts/multiseed.sh to get mean/stddev/95%CI per layout across seeds.
+run_multiseed: src/run_multiseed.cpp $(CORE)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
+
+# Convenience: run the synthetic benchmark and regenerate figures.
+bench: run_bench
+	./run_bench 8000 300 150 | tee bench_human.txt
+
+# Synthetic run that emits the 4 layout traces for Ramulator replay.
+synth: run_synth
+	./run_synth 20000 400 200 64
+
+figures: bench.csv
+	python3 make_figs.py
+
+# Run on real SIFT1M. Expects data/sift_base.fvecs + data/sift_query.fvecs
+# (download: ftp://ftp.irisa.fr/local/texmex/corpus/sift.tar.gz).
+# Override subset size with MAXBASE=...
+MAXBASE ?= 100000
+sift: run_sift
+	./run_sift data/sift_base.fvecs data/sift_query.fvecs $(MAXBASE) 500 200 64
+
+# Byte-budget test on real SIFT1M (float32 vs int8). Writes a CSV.
+dtype: run_dtype
+	./run_dtype data/sift_base.fvecs data/sift_query.fvecs $(MAXBASE) 500 200 64 \
+	  | tee results_dtype_real.csv
+
+# Multi-seed comparison with confidence intervals (synthetic by default).
+multiseed: run_multiseed
+	./scripts/multiseed.sh 10 15000 300 150 64
+
+clean:
+	rm -f run_bench run_synth run_sift run_dtype run_multiseed *.ldst *.png bench_human.txt
