@@ -18,9 +18,9 @@ CORE := \
   src/memory/address_emitter.cpp \
   src/metrics/recall_evaluator.cpp
 
-.PHONY: all clean bench sift synth figures
+.PHONY: all clean bench sift synth dtype figures
 
-all: run_bench run_synth run_sift
+all: run_bench run_synth run_sift run_dtype
 
 # Synthetic benchmark (no dataset needed): 4 layouts + efSearch sweep.
 run_bench: src/run_bench.cpp $(CORE)
@@ -33,6 +33,11 @@ run_synth: src/run_synth.cpp $(CORE)
 
 # Real-dataset driver: pass SIFT1M .fvecs paths (see `make sift`).
 run_sift: src/run_sift.cpp $(CORE)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
+
+# Byte-budget sweep: float32 vs int8 vectors-per-row. Pass .fvecs paths for the
+# real test (recommended), or no paths for a synthetic fallback.
+run_dtype: src/run_dtype.cpp $(CORE)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
 
 # Convenience: run the synthetic benchmark and regenerate figures.
@@ -53,5 +58,10 @@ MAXBASE ?= 100000
 sift: run_sift
 	./run_sift data/sift_base.fvecs data/sift_query.fvecs $(MAXBASE) 500 200 64
 
+# Byte-budget test on real SIFT1M (float32 vs int8). Writes a CSV.
+dtype: run_dtype
+	./run_dtype data/sift_base.fvecs data/sift_query.fvecs $(MAXBASE) 500 200 64 \
+	  | tee results_dtype_real.csv
+
 clean:
-	rm -f run_bench run_sift *.ldst *.png bench_human.txt
+	rm -f run_bench run_synth run_sift run_dtype *.ldst *.png bench_human.txt
