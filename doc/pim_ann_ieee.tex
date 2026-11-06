@@ -48,8 +48,9 @@ contrast, \emph{data layout} --- physically co-locating vectors that are visited
 together --- recovers the locality \emph{completely}: with clusters of only
 $\geq\!16$ vectors the random workload reaches 93.6\% row-hit, identical to a
 sequential scan. Pushing further, we show that this threshold is really a
-\emph{byte} budget --- co-locating $\approx\!1$\,KB of contiguous data (one DRAM
-row) saturates locality at \emph{any} vector dimension, giving a predictive
+\emph{byte} budget --- co-locating $\approx\!1$\,KB of contiguous data (the
+measured effective row granularity) saturates locality at \emph{any} vector
+dimension, giving a predictive
 design rule $C^\star\!\approx\!1024/(\mathrm{dim}\times\mathrm{dtype})$ --- that
 the benefit degrades gracefully but requires $\sim\!90\%$ placement accuracy to
 be worthwhile, and that the entire effect is contingent on an open-page policy.
@@ -291,11 +292,16 @@ three vector dimensions. The row-hit rate always saturates at the same 93.6\%
 ceiling, but the \emph{knee} moves: a $64$-byte vector needs $C\!=\!16$, a
 $128$-byte vector needs $C\!=\!8$, and a $256$-byte vector needs only $C\!=\!4$.
 In every case the product $\mathrm{dim}\times C$ at saturation is
-$\approx\!1024$ bytes --- exactly one DRAM row's worth of contiguous data. The
-``magic number 16'' was therefore an artifact of our $128$-byte vectors; the
-real invariant is a \emph{byte budget}. This yields a predictive design rule:
+$\approx\!1024$ bytes. This $\approx\!1$\,KB is the \emph{measured} effective
+contiguous-run granularity $S_\text{eff}$ of our HBM2 configuration --- the span
+of contiguous addresses that stay in one open row before \texttt{RoBaRaCoCh}
+mapping and cache-line channel interleaving divert the next access, not the raw
+row size (nominally $1$--$2$\,KB; the teaching model's illustrative $8$\,KB is
+unrelated). The ``magic number 16'' was therefore an artifact of our $128$-byte
+vectors; the real invariant is a \emph{byte budget}. This yields a predictive
+design rule:
 \begin{equation}
-C^\star \;\approx\; \frac{S_\text{row}}{\mathrm{dim}\times\mathrm{dtype}}
+C^\star \;\approx\; \frac{S_\text{eff}}{\mathrm{dim}\times\mathrm{dtype}}
 \;\approx\; \frac{1024\,\text{B}}{\mathrm{dim}\times\mathrm{dtype}},
 \label{eq:cstar}
 \end{equation}
@@ -330,7 +336,7 @@ $\mathrm{dim}\times C\!\approx\!1$\,KB in every row.}
 \includegraphics[width=0.92\columnwidth]{fig_bytelaw.pdf}
 \caption{Row-hit vs.\ cluster size for three dimensions. The saturation knee
 (dotted) shifts left as vectors grow, always landing where
-$\mathrm{dim}\times C\!\approx\!1$\,KB (one DRAM row).}
+$\mathrm{dim}\times C\!\approx\!1$\,KB (the measured $S_\text{eff}$).}
 \label{fig:bytelaw}
 \end{figure}
 

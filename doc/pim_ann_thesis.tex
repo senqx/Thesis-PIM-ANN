@@ -665,14 +665,28 @@ always climbs to the same 93.6\% ceiling, but the point where it \emph{reaches}
 that ceiling moves: a 64-byte vector needs $C{=}16$, a 128-byte vector needs
 $C{=}8$, and a 256-byte vector needs only $C{=}4$. Multiply it out and the same
 number falls out every time: at saturation, $\mathrm{dim}\times C \approx 1024$
-bytes --- exactly the amount of contiguous data that fills one DRAM row.
+bytes.
+
+\paragraph{A note on DRAM row sizes (to avoid confusion).} Three byte figures
+appear in this work and they are \emph{not} the same quantity. (i) The teaching
+model of Sec.~\ref{sec:sim} uses an illustrative $8$\,KB row; its absolute
+numbers are disclaimed and it is not the source of any reported result.
+(ii) Our cycle-accurate HBM2 configuration exposes an \emph{effective}
+contiguous-run granularity, $S_\text{eff}$, of $\approx\!1$\,KB --- the span of
+contiguous addresses that stay in one open row before the address mapping
+(\texttt{RoBaRaCoCh}) and cache-line channel interleaving route the next access
+to a different row/channel. This is the \emph{measured} quantity behind the
+saturation above, and the one the design rule uses. (iii) The real-HNSW study of
+Sec.~\ref{sec:realhnsw} models a nominal $2$\,KB row for its row-hit accounting;
+this only rescales the vectors-per-row constant (e.g.\ $4$ at float32, $16$ at
+int8) and does not change any ordering between layouts.
 
 So ``sixteen'' was never fundamental; it was an artifact of our particular
-128-byte vectors. The real invariant is a \emph{byte budget}: co-locate about one
-DRAM row's worth of data that is visited together, and locality is fully
-recovered. This gives a predictive design rule,
+128-byte vectors. The real invariant is a \emph{byte budget}: co-locate about
+$S_\text{eff}\approx1$\,KB of data that is visited together, and locality is
+fully recovered. This gives a predictive design rule,
 \begin{equation}
-C^\star \;\approx\; \frac{S_\text{row}}{\mathrm{dim}\times\mathrm{dtype}}
+C^\star \;\approx\; \frac{S_\text{eff}}{\mathrm{dim}\times\mathrm{dtype}}
 \;\approx\; \frac{1024\ \text{bytes}}{\mathrm{dim}\times\mathrm{dtype}},
 \label{eq:cstar}
 \end{equation}

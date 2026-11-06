@@ -75,7 +75,10 @@ proposed method - and it is exactly the kind of artefact my thesis warns about.
 
 **Layout barely moves the needle at all on real SIFT.** Even BFS versus random is
 under half a percent of cycles. This follows directly from my earlier byte-budget
-result: at dim 128 in float32, a single 2 KB DRAM row holds only about four
+result: at dim 128 in float32, a single 2 KB DRAM row (the nominal row size
+this sprint-1 row-hit model assumes; the core study separately *measures* an
+effective ~1 KB contiguous-run granularity on HBM2 — the two differ only by a
+constant factor and do not change any layout ordering) holds only about four
 vectors, so the co-location budget is tiny and intra-vector bursts dominate the
 trace. There is simply little inter-vector locality available to recover.
 

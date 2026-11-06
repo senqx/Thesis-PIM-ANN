@@ -29,7 +29,10 @@
 struct Config {
     uint64_t t_rowhit  = 4;      // cycles: data return when row already open
     uint64_t t_rowmiss = 24;     // cycles: close+open+return on a row conflict
-    uint64_t row_bytes = 8192;   // DRAM row size (8 KB typical)
+    uint64_t row_bytes = 8192;   // ILLUSTRATIVE teaching value only -- NOT a
+                                 // measurement. The cycle-accurate HBM2 result
+                                 // (and the ~1KB byte-budget rule) comes from
+                                 // Ramulator, not from this number; see README.
     uint64_t burst     = 64;     // bytes per access
     double   bw_host   = 8.0;    // bytes/cycle across the off-chip bus (host)
     double   bw_pim    = 64.0;   // bytes/cycle on the near-bank internal path (PIM)
