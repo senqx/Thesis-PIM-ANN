@@ -3,7 +3,9 @@
 
 CXX      ?= g++
 CXXFLAGS ?= -std=c++20 -O2 -Wall -Wextra
-INCLUDES := -I src -I third_party
+# -isystem (not -I) for third_party: silences warnings from vendored hnswlib
+# while keeping full -Wall -Wextra on our own code. Our code builds warning-free.
+INCLUDES := -I src -isystem third_party
 
 CORE := \
   src/ann/hnsw_adapter.cpp \
