@@ -92,7 +92,7 @@ std::vector<uint32_t> exactTopK(
 
 uint64_t emitTrace(
     const pimann::AccessTrace& trace, pimann::MemoryLayout& r_layout,
-    const pimann::GraphView& graph, const std::string& path) {
+    const pimann::GraphView& /*graph*/, const std::string& path) {
   pimann::AddressPlan plan;
   pimann::AddressEmitter emitter(r_layout, plan);
   std::ofstream out(path);
