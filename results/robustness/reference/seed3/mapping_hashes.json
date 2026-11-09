@@ -1,0 +1,13 @@
+{
+  "work/robustness/reference/seed3/bfs_128.mapping.csv": "2d294138c0f691006e046a09f9e0530f4925f9223c2a2d9c9991c0d4580a9779",
+  "work/robustness/reference/seed3/bfs_512.mapping.csv": "2d294138c0f691006e046a09f9e0530f4925f9223c2a2d9c9991c0d4580a9779",
+  "work/robustness/reference/seed3/community_128.mapping.csv": "80cc7f8638c3a073c2fbfdc137527cd7311fdc1b6c849fb8e4621ff96f38b628",
+  "work/robustness/reference/seed3/community_512.mapping.csv": "80cc7f8638c3a073c2fbfdc137527cd7311fdc1b6c849fb8e4621ff96f38b628",
+  "work/robustness/reference/seed3/identity_128.mapping.csv": "abdcd29b585d32215d623a48631fef4193558b882e55df37b97f783ea5ef3998",
+  "work/robustness/reference/seed3/identity_512.mapping.csv": "abdcd29b585d32215d623a48631fef4193558b882e55df37b97f783ea5ef3998",
+  "work/robustness/reference/seed3/logical.csv": "5e434998d067047e9f1956f1c6ae5dc4580fb7b76409fef5630e538b3f14612f",
+  "work/robustness/reference/seed3/query_aware_128.mapping.csv": "9333da69ab674292ab35c768b7ab04c780c75b323f673eb4ecd659e9b920d8d4",
+  "work/robustness/reference/seed3/query_aware_512.mapping.csv": "8d3e51e1ec39e3be5346b4fd39f59c544b50e4cc298fecc3ff44477a2774d60a",
+  "work/robustness/reference/seed3/random_128.mapping.csv": "ceeb970fc329d2dc2c9f6003ea15dcd3c8faa321660c101fb0a64933ab4a3775",
+  "work/robustness/reference/seed3/random_512.mapping.csv": "ceeb970fc329d2dc2c9f6003ea15dcd3c8faa321660c101fb0a64933ab4a3775"
+}

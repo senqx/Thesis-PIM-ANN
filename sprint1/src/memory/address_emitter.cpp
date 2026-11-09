@@ -1,55 +1,73 @@
 #include "memory/address_emitter.h"
-
-#include <cstdio>
-
 #include "layout/memory_layout.h"
-
+#include <limits>
+#include <stdexcept>
 namespace pimann {
-
-uint64_t AddressEmitter::addressOf(const AccessRecord& record) const {
-  switch (record.kind) {
-    case AccessKind::Vector: {
-      // Vectors are the region the layout permutes: a node's physical slot
-      // decides which DRAM row its payload lands in. vectorStride equals the
-      // record span (one full vector).
-      const uint64_t slot = m_layout.slotOf(record.nodeId);
-      return m_plan.vectorBase + slot * record.byteSpan;
-    }
-    case AccessKind::Adjacency:
-      // Adjacency / metadata keep their own regions and are not yet permuted;
-      // a dedicated layout for them is future work (the emitter would take a
-      // second mapping). Addressed by node id for now.
-      return m_plan.adjacencyBase + record.nodeId * m_plan.adjacencyStride;
-    case AccessKind::Metadata:
-      return m_plan.metadataBase + record.nodeId * m_plan.metadataStride;
-    case AccessKind::Candidate:
-      // Search scratch structures live off the modelled data regions; skipped
-      // by emit(), handled here only for switch exhaustiveness.
-      return 0;
-  }
-  return 0;
+namespace {
+uint64_t add(uint64_t a, uint64_t b) {
+  if (a > UINT64_MAX - b)
+    throw std::overflow_error("address overflow");
+  return a + b;
 }
-
-uint64_t AddressEmitter::emit(
-    const AccessTrace& trace, std::ostream& r_out) const {
-  uint64_t records = 0;
-  char line[32];
-  for (const AccessRecord& record : trace) {
-    if (record.kind == AccessKind::Candidate) {
-      continue;  // not a modelled DRAM region
-    }
-    const uint64_t base = addressOf(record);
-    // Expand the payload into burst-sized cache-line requests, matching how the
-    // controller issues DRAM reads.
-    for (uint32_t off = 0; off < record.byteSpan; off += m_plan.burst) {
-      const int len = std::snprintf(
-          line, sizeof(line), "LD 0x%llx\n",
-          static_cast<unsigned long long>(base + off));
-      r_out.write(line, len);
-      records++;
+uint64_t align(uint64_t a, uint32_t b) { return add(a, (b - a % b) % b); }
+} // namespace
+AddressPlan AddressPlan::forGraph(const GraphView &graph, uint32_t bytes, uint32_t burst) {
+  if (!bytes || !burst || (burst & (burst - 1)))
+    throw std::invalid_argument("invalid payload/burst");
+  AddressPlan p;
+  p.vectorBytes = bytes;
+  p.burst = burst;
+  const uint64_t n = graph.nodeCount();
+  if (!n || n > (UINT64_MAX - p.vectorBase) / bytes)
+    throw std::overflow_error("vector address space");
+  p.vectorEnd = p.vectorBase + n * bytes;
+  p.adjacencyBase = align(add(p.vectorEnd, 1024 * 1024), burst);
+  uint64_t cursor = p.adjacencyBase;
+  p.adjacencyOffsets.resize(n);
+  p.adjacencySpans.resize(n);
+  for (uint64_t node = 0; node < n; ++node) {
+    for (uint32_t level = 0; level < graph.levelCount(node); ++level) {
+      const uint64_t bytes = 4 + 4 * graph.neighborsAt(node, level).size();
+      if (bytes > UINT32_MAX)
+        throw std::overflow_error("adjacency size");
+      p.adjacencyOffsets[node].push_back(cursor);
+      p.adjacencySpans[node].push_back(bytes);
+      cursor = align(add(cursor, bytes), burst);
     }
   }
-  return records;
+  p.adjacencyEnd = cursor;
+  return p;
 }
-
-}  // namespace pimann
+uint64_t AddressEmitter::addressOf(const AccessRecord &r) const {
+  if (r.nodeId >= m_plan.adjacencyOffsets.size())
+    throw std::out_of_range("trace node");
+  if (r.kind == AccessKind::Vector) {
+    const auto slot = m_layout.slotOf(r.nodeId);
+    if (slot >= m_plan.adjacencyOffsets.size())
+      throw std::out_of_range("layout slot");
+    return m_plan.vectorBase + slot * m_plan.vectorBytes;
+  }
+  if (r.kind == AccessKind::Adjacency) {
+    if (r.byteSpan != m_plan.adjacencySpans.at(r.nodeId).at(r.level))
+      throw std::invalid_argument("adjacency payload differs from allocation");
+    return m_plan.adjacencyOffsets.at(r.nodeId).at(r.level);
+  }
+  throw std::invalid_argument("unmodelled access kind");
+}
+uint64_t AddressEmitter::emit(const AccessTrace &trace, std::ostream &out) const {
+  uint64_t count = 0;
+  for (const auto &r : trace) {
+    const uint64_t addr = addressOf(r);
+    const auto bytes = r.kind == AccessKind::Vector ? m_plan.vectorBytes : r.byteSpan;
+    const uint64_t end = add(addr, bytes);
+    for (uint64_t a = addr - addr % m_plan.burst; a < end; a = add(a, m_plan.burst)) {
+      out << "LD 0x" << std::hex << a << std::dec << ' ' << r.queryId << ' '
+          << (r.kind == AccessKind::Vector ? 'V' : 'A') << '\n';
+      ++count;
+    }
+  }
+  if (!out)
+    throw std::runtime_error("trace output failed");
+  return count;
+}
+} // namespace pimann

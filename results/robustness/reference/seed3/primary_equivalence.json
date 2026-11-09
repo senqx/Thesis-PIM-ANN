@@ -1,0 +1,16 @@
+{
+  "binary_sha256": "9fb7af820d1153e190b6c395db7b456e955923a8386a342a5d0fcde719463940",
+  "split_recall_logical_mappings_identical": true,
+  "trace_hashes": {
+    "identity_128.trace": "cacf4e54e1da703e1a9d58dfcc1d1f35f35f9677a417622143273a7749a57f6b",
+    "random_128.trace": "295f88274ffb172fce7917e1ab78f874f75fbfec5779a449231b97cabb2efae6",
+    "bfs_128.trace": "0cc7fcdcb0003af401b5f8f5dae21c5d3da9794696e3f4c7f684ef9bde5016d6",
+    "community_128.trace": "74a684c7b74418ffbabaf739e9be7360b3bf0668ba2a5666476f6c23c8bd3a5f",
+    "query_aware_128.trace": "3c23b9aa022d2b708c1725922184346649d0e99199df58010f0e9c777356b4c3",
+    "identity_512.trace": "616a3b6851ed7a05d5caa11f57709093d17835aa78d1e7a09bf74617b312b032",
+    "random_512.trace": "eee22eca418e8fffe4f5539a6031f3584f6dfcda50bece55469f2b67a202fc72",
+    "bfs_512.trace": "df23c952d96b40c0fddfe7be90c030079343d9ad4e46fa940e09a133bcd5e0e9",
+    "community_512.trace": "6ecedb9fcb8e80c5ae36b656ba0ce919a4a930a8e1a8aa5011a95b7fb5867d89",
+    "query_aware_512.trace": "1080c7520e6ea0cfd68dc533433fee87129c5c5ad48f4a23a6d133ada2b1a118"
+  }
+}

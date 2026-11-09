@@ -1,27 +1,35 @@
-# build artifacts
+# Build, downloads and large reproducible intermediates
 bin/
+work/
+data/
+ramulator2/
+.downloads/
+.toolchain/
+sprint1/build/
+sprint1/run_study
 *.o
-*.out
-
-# generated experiment outputs
-traces/
-results/
-*.trace
-*.csv
-
-# editor / OS
+*.d
+__pycache__/
+.pytest_cache/
+core
+core.*
+# Simulator cache stamps are regenerable; raw JSON and CSV results are tracked.
+results/**/*.cache.json
+# Editors
 .vscode/
 .idea/
 *.swp
 .DS_Store
-
-# LaTeX
+# TeX intermediates
 *.aux
 *.log
-*.out
 *.toc
+*.out
+*.bbl
+*.blg
+*.xdv
+*.synctex.gz
 
-# heavy local artifacts (never commit)
-data/
-ramulator2/
-.toolchain/
+.venv/
+
+traces/

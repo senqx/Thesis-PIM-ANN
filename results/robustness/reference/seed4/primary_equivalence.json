@@ -1,0 +1,16 @@
+{
+  "binary_sha256": "9fb7af820d1153e190b6c395db7b456e955923a8386a342a5d0fcde719463940",
+  "split_recall_logical_mappings_identical": true,
+  "trace_hashes": {
+    "identity_128.trace": "ff3bac5490ebe7d34622fb8c51efbc0e3f22cc415b6b671f2ecb8d8862fb49f4",
+    "random_128.trace": "25fe2a6723dde57fc21c6de37b5c4804f1d432bd7b0fde035b0cdd54c4372311",
+    "bfs_128.trace": "e245c6ce7b41b44dfa305d5413dcae92d43eac2594cb14a9761a6d8f21e706ed",
+    "community_128.trace": "9becd4b7efd241fa5873607a577aa4689544a035dfe895beedfc5f57b43bc98b",
+    "query_aware_128.trace": "f6a52dcde99a18ac7799d4dfd658cf1249266c8c7b1f6f68b738e0431f955c4d",
+    "identity_512.trace": "a006052b637da1a37d88104efb364a02402d3b8b987b8d3b49bbcb8905109dbe",
+    "random_512.trace": "f27b41e8947aeab60105feb2ad49ecbb3b0f2886ad5b1e6e277296d5060d7e5b",
+    "bfs_512.trace": "fac7573e67186a8d36cbf0730c9a8ee97ae8191c9c198cde7b6b1057a3d54877",
+    "community_512.trace": "c05150de841a7e3843b4f324ce9cd4f88ac0f8be8de8f4ff2837d623f498c424",
+    "query_aware_512.trace": "0ed7119c246adffc18ada4bfac9e85f2153bad13fcc9b714e404e2d349b8ea9c"
+  }
+}

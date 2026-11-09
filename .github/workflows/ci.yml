@@ -1,0 +1,17 @@
+name: artifact-checks
+on: [push, pull_request]
+jobs:
+  correctness:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install PyYAML==6.0.2 numpy==2.2.3 scipy==1.15.1 matplotlib==3.10.5 h5py==3.15.1
+      - run: make -j2 test
+      - run: bash scripts/setup_ramulator.sh --jobs 2
+      - run: make test-simulator
+      - run: python scripts/check_results.py
+      - run: python scripts/analyze.py
+      - run: git diff --exit-code -- results/real_summary.csv results/paired_summary.csv doc/generated/values.tex doc/generated/*_table.tex

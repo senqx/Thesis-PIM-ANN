@@ -1,0 +1,16 @@
+{
+  "binary_sha256": "9fb7af820d1153e190b6c395db7b456e955923a8386a342a5d0fcde719463940",
+  "split_recall_logical_mappings_identical": true,
+  "trace_hashes": {
+    "identity_128.trace": "f44b910c3c9fb475a84077d97585e7e085b41a6cd608979e2b39f659f7839bde",
+    "random_128.trace": "08a45018e632f857744a0f4a07e0e79b776e21cec762b9b267ad07ca95ea678b",
+    "bfs_128.trace": "5ffa8d98d697667caf49a16f3c4ea3807102cb0a7357ef66b9b7017054302753",
+    "community_128.trace": "074023b5dc84e4c7a1c6721e60c3428bcb77f67847452fa2cd2aa64b1d816642",
+    "query_aware_128.trace": "3ceab3597c5f14dd7b3327663aebabb0023989e02520c394bde8fb39bc4c3412",
+    "identity_512.trace": "98119267bb6f83c3edb4e5116efb42be50df873a76ad2201db0a2b40e1943494",
+    "random_512.trace": "5a92afee463f9c3fafc73fbfb43da91045fa4a1375ec8663d012f5af489fdc3c",
+    "bfs_512.trace": "0b1f1eb354c6c876e1cfcff78c2dc96c13573ed88c063f598b566d3021f546a9",
+    "community_512.trace": "e4628abf3260cb4f59dd89e9bba380de0efeee4dc57e80d2770392527e3fc906",
+    "query_aware_512.trace": "91c68151e0d1b2d85e77f14a71478a79cd587ae3bfe97e34e4a0c5a2fd282f88"
+  }
+}

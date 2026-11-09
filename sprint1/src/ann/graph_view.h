@@ -2,6 +2,7 @@
 #define PIMANN_ANN_GRAPH_VIEW_H
 
 #include <cstdint>
+#include <stdexcept>
 #include <vector>
 
 namespace pimann {
@@ -10,9 +11,9 @@ namespace pimann {
 ///
 /// Layout strategies (BFS, METIS, community, ...) need to walk the graph but
 /// must not depend on hnswlib's internals. The HnswAdapter builds one of these
-/// once; every MemoryLayout consumes it. Only base-layer (level 0) connectivity
-/// is exposed here, because that layer holds every node and dominates both the
-/// memory footprint and the search traffic.
+/// once; every MemoryLayout consumes it. Layout heuristics use the base-layer
+/// (level 0) neighbours, which include every node. The address allocator can
+/// inspect every graph level through levelCount() and neighborsAt().
 class GraphView {
 public:
   virtual ~GraphView() = default;
@@ -22,8 +23,14 @@ public:
 
   /// Base-layer neighbours of @p nodeId. Returned by const reference to avoid
   /// copying adjacency lists during a full-graph traversal.
-  virtual const std::vector<uint32_t>& neighbors(
-      uint64_t nodeId) const = 0;
+  virtual const std::vector<uint32_t> &neighbors(uint64_t nodeId) const = 0;
+
+  virtual uint32_t levelCount(uint64_t) const { return 1; }
+  virtual const std::vector<uint32_t> &neighborsAt(uint64_t node, uint32_t level) const {
+    if (level != 0)
+      throw std::out_of_range("graph level");
+    return neighbors(node);
+  }
 
   /// Dimensionality of the stored vectors (needed to size byte spans).
   virtual uint32_t dimension() const = 0;
@@ -32,6 +39,6 @@ public:
   virtual uint32_t dtypeBytes() const = 0;
 };
 
-}  // namespace pimann
+} // namespace pimann
 
-#endif  // PIMANN_ANN_GRAPH_VIEW_H
+#endif // PIMANN_ANN_GRAPH_VIEW_H

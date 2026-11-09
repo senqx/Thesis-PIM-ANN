@@ -1,1129 +1,560 @@
-\documentclass[11pt,a4paper]{article}
-
-% ---------- packages ----------
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{lmodern}
-\usepackage[margin=2.4cm]{geometry}
-\usepackage{amsmath,amssymb}
-\usepackage{booktabs}
-\usepackage{graphicx}
+\documentclass[11pt,a4paper]{report}
+\usepackage[margin=27mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,longtable,graphicx,array}
 \usepackage{xcolor}
-\usepackage{microtype}
-\usepackage{listings}
-\usepackage{fancyhdr}
-\usepackage{tikz}
-\usetikzlibrary{positioning,arrows.meta,shapes.geometric,calc,backgrounds}
 \usepackage[hidelinks]{hyperref}
-\hypersetup{colorlinks=true,linkcolor=teal!70!black,urlcolor=teal!70!black,citecolor=teal!70!black}
-
-% ---------- colors ----------
-\definecolor{slate}{HTML}{2B3A55}
-\definecolor{teal}{HTML}{1F6F8B}
-\definecolor{brick}{HTML}{9A3B2E}
-\definecolor{greenc}{HTML}{2E7D46}
-\definecolor{cardbg}{HTML}{EDF1F3}
-\definecolor{codebg}{HTML}{F4F5F7}
-\definecolor{gray}{HTML}{5A606A}
-
-% ---------- section styling ----------
-\usepackage{titlesec}
-\titleformat{\section}{\Large\bfseries\color{slate}}{\thesection}{0.6em}{}
-\titleformat{\subsection}{\large\bfseries\color{teal}}{\thesubsection}{0.6em}{}
-\titleformat{\subsubsection}{\bfseries\color{slate}}{\thesubsubsection}{0.6em}{}
-
-% ---------- header/footer ----------
-\pagestyle{fancy}\fancyhf{}
-\lhead{\small\color{gray}Processing-in-Memory for Approximate Nearest Neighbour Search}
-\rhead{\small\color{gray}\thepage}
-\renewcommand{\headrulewidth}{0.3pt}
-
-% ---------- listings ----------
-\lstset{
-  basicstyle=\ttfamily\small,
-  backgroundcolor=\color{codebg},
-  frame=single, rulecolor=\color{gray!40},
-  breaklines=true, columns=fullflexible,
-  keywordstyle=\color{teal}\bfseries,
-  commentstyle=\color{greenc},
-  stringstyle=\color{brick},
-  showstringspaces=false,
-  xleftmargin=1em, xrightmargin=1em,
-  aboveskip=1em, belowskip=1em,
-}
-
-% ---------- helper boxes ----------
-\usepackage[most]{tcolorbox}
-\newtcolorbox{keybox}[1][]{colback=cardbg,colframe=teal,boxrule=0.5pt,
-  left=8pt,right=8pt,top=6pt,bottom=6pt,arc=2pt,#1}
-\newtcolorbox{defbox}[1]{colback=teal!5,colframe=teal!60,boxrule=0.6pt,
-  left=8pt,right=8pt,top=5pt,bottom=5pt,arc=2pt,title={\bfseries #1},
-  fonttitle=\color{white},coltitle=white}
-
-\newcommand{\term}[1]{\textbf{\color{slate}#1}}
-
-% ============================================================
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{listings}
+% Compact captions with a bold label, using the report class's own layout.
+\makeatletter
+\long\def\@makecaption#1#2{%
+  \vskip\abovecaptionskip
+  \sbox\@tempboxa{\small\textbf{#1:} #2}%
+  \ifdim\wd\@tempboxa>\hsize
+    {\small\textbf{#1:} #2\par}%
+  \else
+    \global\@minipagefalse
+    \hb@xt@\hsize{\hfil\box\@tempboxa\hfil}%
+  \fi
+  \vskip\belowcaptionskip}
+\makeatother
+\definecolor{accent}{HTML}{006C80}
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+\brokenpenalty=10000
+\widowpenalty=10000
+\clubpenalty=10000
+\setlist{itemsep=0.3em,topsep=0.3em}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,columns=fullflexible,frame=single}
+\newcommand{\QA}{query-aware}
+\input{generated/values.tex}
+\input{generated/strengthening_values.tex}
 \begin{document}
-
-% ---------- title page ----------
+\hypersetup{pageanchor=false}
 \begin{titlepage}
 \centering
-\vspace*{2.5cm}
-{\color{gray}\large Master's Thesis --- Preparatory Technical Report\par}
+\vspace*{2cm}
+{\large Master's Thesis\par}
 \vspace{1.2cm}
-{\color{slate}\Huge\bfseries Processing-in-Memory for\\[0.3cm] Approximate Nearest Neighbour Search\par}
-\vspace{0.8cm}
-{\color{teal}\Large A simulator-based study of why graph-based vector search resists near-memory acceleration\par}
-\vspace{2.0cm}
-\begin{minipage}{0.8\textwidth}\centering\color{gray}\normalsize
-This document explains, from first principles, every concept behind the thesis: the memory-wall
-problem, Processing-in-Memory, vector search and its index structures, how DRAM timing works, how
-architecture simulators are used, and the experiment we ran on the Ramulator cycle-accurate
-simulator. It is written so that a technically literate reader with no prior exposure to any of
-these specific topics can follow the whole argument.
-\end{minipage}
+{\Huge\bfseries DRAM Locality in\\Graph-Based Approximate\\Nearest Neighbour Search\par}
+\vspace{1cm}
+{\Large\color{accent} A trace-based study motivated by\\processing-in-memory\par}
+\vspace{2cm}
+{\large Artashes\par}
+{Computer Science / Computer Architecture (HPC)\par}
 \vfill
-{\color{gray} Artashes \quad\textbullet\quad Computer Science / Computer Architecture (HPC)\par}
-\vspace{0.4cm}
-{\color{gray}\today\par}
+{9 November 2026\par}
+\vspace{0.6cm}
+\begin{minipage}{0.88\textwidth}\small
+This thesis characterises a specified DRAM service model. Its measurements are simulations, and its layout experiments preserve float32 HNSW traversal. The accompanying repository contains source, correctness checks, raw results, query splits, and scripts that generate the tables and figures.
+\end{minipage}
 \end{titlepage}
+\pagenumbering{roman}
+\hypersetup{pageanchor=true}
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+Graph-based approximate nearest neighbour search combines irregular vector reads with adjacency-list traversal. Processing-in-memory motivates reducing data movement, but locality alone does not determine application speed. This thesis asks how request order and reusable vector placement affect DRAM service under an explicit model, and whether a particular workload-trained placement heuristic improves on simple graph layouts.
 
+The artifact instruments stock hnswlib search, assigns non-overlapping storage to every adjacency list at every graph level, and replays the same logical query accesses under identity, random, breadth-first, community, and workload-trained vector layouts. Ramulator is pinned to a source revision. A project frontend uses its native 32-byte HBM2 transactions, bounds outstanding reads, drains at query boundaries, and waits for every completion. The evaluation separates address-colocation diagnostics from simulator row classifications and cycles. A 128-byte footprint is a hypothetical repacking of float32 traversal, not a quantised search implementation.
+
+Experiments include controlled request-order and contiguous-run microbenchmarks, valid placement permutations, and a 100,000-vector SIFT subset with ten paired train/test splits. Three controller settings are repeated across those splits; three additional graph constructions and command-level diagnostics test robustness and interpretation. Mean Recall@10 against exact neighbours in that subset is \SiftRecall\%, with a split-level 95\% interval of [\SiftRecallLow, \SiftRecallHigh]\%. The workload-trained layout's cycle difference relative to BFS is \QADeltaFloat\% [\QALowFloat, \QAHighFloat] for 512-byte vectors and \QADeltaCompact\% [\QALowCompact, \QAHighCompact] for the hypothetical 128-byte footprint. Negative differences indicate fewer service cycles.
+
+The controlled baseline gives sequential access more row hits but more cycles than a permutation at the default concurrency. Serialising requests changes that comparison. Additional graph constructions also reverse the 128-byte layout ranking under the same controller. This demonstrates why row-hit fraction must be interpreted together with concurrency, mapping, and timing. The results support a bounded comparison of the tested layouts and controller settings; they do not establish an optimal layout, a universal contiguous-byte threshold, or a host-versus-PIM speedup.
 \tableofcontents
-\newpage
+\listoffigures
+\listoftables
+\clearpage\pagenumbering{arabic}
 
-% ============================================================
-\section{Executive summary}
+\chapter{Problem and research questions}
+\label{ch:intro}
+\section{Motivation}
+A vector-search system represents items as points in a metric space and retrieves points close to a query. Recommendation, image retrieval, and retrieval-augmented generation are examples of applications that use this operation. The cost of obtaining each candidate vector can matter as much as evaluating its distance. That balance depends on dimension, representation, cache behaviour, batch size, and the processor executing the search; it cannot be inferred from irregular access alone.
 
-Modern computers spend a large and growing share of their time and energy \emph{moving data}
-between memory and the processor rather than computing on it. For a whole class of important
-workloads --- databases, machine learning, and \emph{vector search} --- this data movement, not the
-arithmetic, is the true bottleneck. \term{Processing-in-Memory (PIM)} is an architectural response:
-place computation \emph{inside or beside} the memory, so the data barely has to move.
+Graph indexes such as HNSW discover useful candidates by following links between vectors \cite{hnsw}. The next candidate depends on earlier distance results. This makes the algorithm different from a complete sequential scan, but does not imply that its memory traffic is uniformly random. Graph neighbours, insertion order, the query distribution, and implementation choices can all create locality.
 
-This thesis focuses on one high-demand, under-explored corner of that landscape:
-\term{Approximate Nearest Neighbour (ANN) search} --- the engine behind recommendation systems,
-semantic search, and the retrieval step of modern AI (Retrieval-Augmented Generation). ANN is
-strongly memory-bound, which makes it a natural PIM target. However, the field has quickly
-converged on one \emph{style} of ANN (cluster-based, called IVF/PQ), while a second, more powerful
-style (graph-based, called HNSW) remains almost untouched on PIM.
+Processing-in-memory (PIM) places computation in or near the memory system to reduce movement across some hardware boundaries \cite{primer}. It can also introduce limited local storage, weak arithmetic units, and communication overhead between processing units. Improving DRAM locality is therefore one possible ingredient of a PIM implementation. It is neither a sufficient condition for speedup nor a complete performance model.
 
-We argue, and then \emph{measure}, \emph{why}: graph-based search accesses memory in a random,
-pointer-chasing pattern that destroys the locality PIM depends on. Using a memory trace of a real
-ANN kernel, replayed through the peer-reviewed \term{Ramulator} cycle-accurate DRAM simulator with
-an HBM2 memory model, we show that merely changing the access pattern from sequential to random ---
-with the algorithm and data held fixed --- raises the cycle count by 41\%, drops the DRAM
-row-buffer hit rate from 93.6\% to 55.1\%, and increases memory latency by 40\%. This is the
-quantitative heart of the thesis direction, and it is fully reproducible from the accompanying
-software repository.
+This thesis investigates that ingredient through controlled address traces and actual HNSW access sequences. The purpose is to compare placement strategies under known assumptions, while exposing the checks needed for those comparisons to be meaningful.
 
-\begin{keybox}
-\textbf{What this report claims, and what it does not.} Every timing number here is a
-\emph{DRAM-locality} measurement --- row-hit rate, memory-access cycles, latency --- produced by a
-cycle-accurate memory simulator. It is \emph{not} an end-to-end Processing-in-Memory speedup: we
-model the memory path, not a near-memory compute datapath, so we deliberately make no claim about
-host-versus-PIM acceleration (Section~\ref{sec:limits} states this as a scope boundary). The
-contribution is an explanation of \emph{why} graph-based ANN is hard to accelerate near memory, and
-of exactly which lever --- and how much of one --- can recover the lost locality.
-\end{keybox}
-
-\paragraph{The central thesis.} Taken together, the experiments support a single, defensible claim:
-\emph{the effectiveness of graph-based ANN on Processing-in-Memory is fundamentally constrained by
-the interaction between graph traversal, physical data layout, and DRAM access granularity.}
-Locality lost to random traversal can be fully recovered in controlled synthetic workloads by
-co-locating co-visited vectors --- but on a \emph{real} HNSW index the graph structure already
-exposes substantial locality on its own, so a simple traversal-order (breadth-first) placement
-captures essentially all of the available benefit, and a learned, workload-aware layout adds little.
-The negative result is therefore not a failed optimisation but the finding itself: it maps the
-ceiling on how much physical placement can help graph-ANN on PIM, and explains where that ceiling
-comes from.
-
-% ============================================================
-\section{The problem: the memory wall}
-
-\subsection{How a conventional computer is organised}
-
-A conventional computer separates \term{storage} from \term{computation}. The processor (CPU)
-contains the arithmetic units and a small amount of very fast memory (registers and caches). The
-bulk of the working data lives in \term{main memory}, built from \term{DRAM} (Dynamic Random-Access
-Memory) chips, which is much larger but much slower and physically separated from the CPU by a bus
-(a set of wires called the \term{memory channel}).
-
-To perform any operation on a piece of data, the processor must first fetch it across that channel,
-place it in a register, compute, and often write the result back. This organisation --- data is
-brought \emph{to} the computation --- is called \term{processor-centric} design, and it has been the
-dominant paradigm since the 1940s (it is sometimes called the \emph{von Neumann} model).
-
-\subsection{Why moving data is the expensive part}
-
-The uncomfortable fact of modern hardware is that \emph{moving} a byte costs far more than
-\emph{computing} on it --- in time, and especially in energy. A floating-point multiply might take a
-fraction of a nanosecond and a few picojoules; fetching the operands from off-chip DRAM can take
-tens of nanoseconds and hundreds of picojoules. As Mutlu et al.\ summarise in their widely cited
-survey \emph{A Modern Primer on Processing in Memory}, measurements on real systems show that
-\emph{62.7\% of total system energy}, on average, is spent on data movement across the memory
-hierarchy; on mobile devices the figure is around 62\%, and for large neural networks on edge
-accelerators more than 90\% of energy goes to memory.
-
-\begin{keybox}
-\term{The memory wall.} Processor speed has historically improved much faster than memory
-latency and bandwidth. The result is that, for data-intensive workloads, the processor spends most
-of its time \emph{waiting} for data. Adding more cores or raising the clock frequency does not help
-if the bottleneck is feeding those cores. This growing gap is called the \emph{memory wall}.
-\end{keybox}
-
-\subsection{Which workloads hit the wall}
-
-A workload is \term{memory-bound} when its performance is limited by memory bandwidth or latency,
-and \term{compute-bound} when it is limited by arithmetic throughput. A useful shorthand is
-\term{arithmetic intensity} --- the number of arithmetic operations performed per byte of data moved.
-Low arithmetic intensity means memory-bound.
-
-The workloads that hit the wall hardest --- graph analytics, databases, genome analysis, and much of
-machine learning --- share this low arithmetic intensity: they stream through enormous amounts of
-data while doing very little computation per byte. Vector search, the subject of this thesis, is a
-textbook example.
-
-% ============================================================
-\section{Processing-in-Memory (PIM)}
-
-\subsection{The core idea}
-
-If the problem is that data must travel to the computation, the obvious inversion is to move the
-computation to the data. \term{Processing-in-Memory} (PIM) places compute units \emph{in or near}
-the memory --- inside the DRAM chip, next to the memory banks, in the logic layer of 3D-stacked
-memory, or in the memory controller --- so that computation happens where the data already lives and
-data movement is reduced or eliminated.
-
-\begin{keybox}
-\textbf{Analogy.} In the processor-centric model you drive to the library, check out every book
-you might need, drive home, read, and drive back. PIM puts a small desk \emph{inside} the library,
-so you read where the books already are. Less driving means less time and energy wasted.
-\end{keybox}
-
-\subsection{Two families: PUM and PNM}
-
-The literature classifies PIM designs by \emph{how} and \emph{where} they compute.
-
-\begin{description}
-\item[\color{teal}Processing-Using-Memory (PUM).] Computation is performed using the memory array's
-own analog behaviour --- the cells and sense amplifiers do the work. This is extremely area-efficient
-and keeps data perfectly in place, but it supports only a narrow set of specialised operations
-(e.g.\ bulk copy, bulk bitwise logic, bit-serial arithmetic). Representative mechanisms include
-RowClone, Ambit, and SIMDRAM.
-\item[\color{teal}Processing-Near-Memory (PNM).] Conventional logic --- even full small processors ---
-is placed physically close to the memory. This is flexible (it can run general code) but data still
-moves from the array to that logic over internal buses. Representative real systems include UPMEM's
-general-purpose in-DRAM cores and Samsung's HBM-PIM SIMD units.
-\end{description}
-
-\subsection{Real PIM hardware exists today}
-
-PIM is no longer only a research idea. \term{UPMEM} ships DRAM modules containing thousands of small
-general-purpose cores (DPUs, DRAM Processing Units). \term{Samsung} has demonstrated HBM-PIM
-(``Aquabolt-XL''), which embeds wide SIMD units inside a High-Bandwidth-Memory stack and reports,
-for example, an 8.9$\times$ speedup on matrix-vector multiplication. SK~Hynix, Alibaba, and others
-have comparable efforts. These are PNM designs, and they are the concrete context for this thesis.
-
-\begin{keybox}
-\textbf{Our constraint.} We do \emph{not} have access to PIM hardware. This is normal in academic
-work and is exactly what simulators are for (Section~\ref{sec:sim}). It also shapes our choice of
-contribution: a \emph{simulator-based} study that needs no special silicon.
-\end{keybox}
-
-% ============================================================
-\section{Vector search and Approximate Nearest Neighbours}
-
-\subsection{What a vector is, and why we search over vectors}
-
-In modern machine learning, a piece of content --- a document, an image, a product, a user --- is
-represented as an \term{embedding}: a list of numbers (a \term{vector}) of fixed length (the
-\term{dimension}, often 128 to 1536). The key property is that \emph{semantic similarity becomes
-geometric closeness}: two documents about the same topic have vectors that are near each other in
-this high-dimensional space; unrelated documents are far apart.
-
-\term{Nearest Neighbour search} is then the operation: given a query vector, find the stored vectors
-closest to it (by Euclidean or cosine distance). This is the retrieval engine behind recommendation
-(``items similar to this one''), semantic search, and \term{Retrieval-Augmented Generation (RAG)},
-where a language model first retrieves relevant documents by vector similarity and then conditions
-its answer on them.
-
-\subsection{Why ``approximate''}
-
-Computing the \emph{exact} nearest neighbours means comparing the query against every stored vector.
-At the scale of modern systems --- millions to billions of vectors --- that is far too slow. So in
-practice we accept \term{Approximate Nearest Neighbour (ANN)} search: return vectors that are almost
-always the true nearest neighbours, in exchange for being orders of magnitude faster. The quality of
-an ANN method is measured by \term{recall} (what fraction of the true neighbours it returns) traded
-against \term{throughput} (queries per second).
-
-\begin{defbox}{A note on the acronym ``ANN''}
-In this thesis, \textbf{ANN} always means \emph{Approximate Nearest Neighbour} (search). The same
-three letters are sometimes used for \emph{Artificial Neural Network}; that is a different concept
-and is never meant here.
-\end{defbox}
-
-\subsection{The three index structures: IVF, HNSW, PQ}
-
-To avoid comparing against every vector, ANN systems build an \term{index} --- a data structure that
-narrows the search. Three building blocks dominate, and the difference between them is central to
-this thesis.
-
-\begin{description}
-\item[\color{teal}IVF (Inverted File index).] Cluster all vectors into, say, ten thousand groups
-using $k$-means. At query time, compute the distance to each cluster \emph{centroid}, pick the few
-nearest clusters, and only scan the vectors inside those. This replaces a scan of everything with a
-scan of a few clusters. Its memory access is \emph{sequential}: once a cluster is chosen, its
-vectors are read in order from a contiguous block.
-
-\item[\color{teal}PQ (Product Quantization).] A \emph{compression} technique usually combined with
-IVF. Each vector is split into sub-vectors, and each sub-vector is replaced by a one-byte code from
-a small learned codebook. A 512-dimension float vector (2\,KB) shrinks to roughly 32--64 bytes, and
-distance computation becomes fast table lookups. The access pattern remains sequential.
-
-\item[\color{teal}HNSW (Hierarchical Navigable Small World).] A \emph{graph}-based index. Each vector
-is a node connected to its near neighbours, arranged in multiple layers. A query ``walks'' the graph,
-hopping greedily from node to node toward the query, coarse layer to fine. HNSW gives excellent
-recall and speed on a CPU --- but its memory access is \emph{random}: which node you visit next
-depends on distances you just computed, so you jump unpredictably around memory
-(\emph{pointer-chasing}).
-\end{description}
-
-\begin{keybox}
-\textbf{The crucial contrast.} IVF/PQ reads memory \emph{sequentially}; HNSW reads it
-\emph{randomly}. Section~\ref{sec:dram} explains why this single difference decides whether PIM
-helps --- and Section~\ref{sec:results} measures it.
-\end{keybox}
-
-% ============================================================
-\section{How DRAM timing really works}
-\label{sec:dram}
-
-To understand the result, we need one piece of DRAM internals: the \term{row buffer}. This is the
-mechanism that turns ``sequential vs.\ random access'' into ``fast vs.\ slow''.
-
-\subsection{Rows, columns, and the row buffer}
-
-A DRAM chip stores bits in a two-dimensional grid of \term{rows} and \term{columns}, organised into
-independent \term{banks}. Crucially, you cannot read a single bit directly. To access any address,
-the memory controller must first \term{activate} its entire row, which copies that row into a fast
-holding area called the \term{row buffer}. Only then can columns be read from the buffer.
-
-\begin{itemize}
-\item If the \emph{next} access is to the \emph{same row} that is already in the buffer, it is a
-\term{row hit}: the data is read immediately. This is fast.
-\item If the next access is to a \emph{different row}, it is a \term{row miss} (or \emph{row
-conflict}): the controller must \term{precharge} (close) the current row and \term{activate} the new
-one before reading. This costs many extra cycles.
-\end{itemize}
-
-\begin{center}
-\begin{tikzpicture}[font=\small,node distance=4mm]
-  % bank grid
-  \node[draw,fill=cardbg,minimum width=2.6cm,minimum height=1.9cm,align=center] (bank) {};
-  \foreach \y in {0.2,0.6,1.0,1.4} \draw[gray!50] ([yshift=\y cm]bank.south west) -- ([yshift=\y cm]bank.south east);
-  \node at (bank.north) [above=1mm] {DRAM bank (rows)};
-  \draw[brick,very thick] ([yshift=1.0cm]bank.south west) rectangle ([yshift=1.4cm]bank.south east);
-  % row buffer
-  \node[draw,fill=teal!15,minimum width=2.6cm,minimum height=0.5cm,below=8mm of bank] (rb) {row buffer};
-  \draw[-{Latex[length=2mm]},brick,thick] ([yshift=1.2cm]bank.south east) to[out=-20,in=20] (rb.east);
-  \node[right=2mm of rb,text width=5.3cm,align=left] {
-    \textbf{\color{greenc}Row hit:} next access in the open (red) row $\Rightarrow$ read now (fast).\\[2pt]
-    \textbf{\color{brick}Row miss:} next access in a different row $\Rightarrow$ close + open a new row (slow).
-  };
-\end{tikzpicture}
-\end{center}
-
-\subsection{Why access pattern decides everything}
-
-Now the connection becomes mechanical:
-
-\begin{itemize}
-\item A \term{sequential scan} walks through addresses in order. Consecutive addresses almost always
-fall in the same DRAM row, so after the first activation you get a long run of \emph{row hits}. The
-scan streams out of the open row at high speed.
-\item A \term{random traversal} jumps to unpredictable addresses. Each jump is likely to land in a
-different row, forcing a \emph{row miss} --- close, activate, read --- again and again. Throughput
-collapses and latency rises.
-\end{itemize}
-
-\begin{keybox}
-This is why IVF/PQ (sequential) is friendly to high-bandwidth memory and PIM, while HNSW (random)
-is not. The \emph{computation} is identical in both --- the same distances over the same vectors ---
-but the \emph{order} of memory access determines the row-hit rate, and the row-hit rate determines
-performance. The thesis makes this precise and measures it.
-\end{keybox}
-
-% ============================================================
-\section{Simulators: how we study hardware we don't have}
-\label{sec:sim}
-
-\subsection{Why simulate}
-
-Real PIM hardware is scarce, expensive, and --- most importantly for research --- \emph{fixed}. We
-cannot ask physical silicon ``what if the memory had twice the banks?'' or ``what if the access
-pattern changed?''. A \term{computer-architecture simulator} is a software program that imitates
-hardware: you feed it a workload, and it reports how the hardware \emph{would} behave --- cycle
-counts, bandwidth, energy --- on an ordinary computer. This lets us explore designs cheaply, and it
-is the standard methodology of the field.
-
-Simulators differ in \term{fidelity}. A \term{functional} simulator computes the right \emph{answer}
-but not realistic timing. A \term{cycle-accurate} (or cycle-level) simulator models behaviour
-clock-tick by clock-tick, including the DRAM timing constraints described above; it is detailed and
-trustworthy but slower to run. For a timing claim to be credible, a cycle-accurate model is
-required.
-
-\subsection{Ramulator}
-
-We use \term{Ramulator} (version 2.1), an open-source, cycle-accurate DRAM simulator written in
-C++20 and developed by the SAFARI research group at ETH Z\"urich (Onur Mutlu's group --- the same
-authors as the PIM primer cited earlier). Ramulator models the memory controller and DRAM device
-for all current standards, including HBM1/2/3/4, the stacked memory where commercial PIM lives. It
-is \term{trace-driven}: you supply a list of memory accesses, and it replays them against its timing
-model, reporting cycles, row hits and misses, latency, and bandwidth. Because it is peer-reviewed
-and widely used, results obtained with it are credible to a committee or reviewer.
-
-\subsection{What the model captures, and what it abstracts away}
-\label{sec:modelscope}
-
-Being explicit about the boundary of the model is essential to reading the results correctly.
-Ramulator, in our configuration, \emph{does} model the parts that decide locality: the row buffer
-and its activate/precharge timing, \term{bank-level parallelism} (multiple banks open at once), the
-\term{FR-FCFS} request scheduler that reorders the controller's queue to favour row hits, the
-address-mapping scheme that assigns physical addresses to rows/banks/columns, and the full DDR
-timing constraints of the HBM2 device. These are exactly the mechanisms that turn ``sequential
-vs.\ random'' into ``fast vs.\ slow,'' so for a \emph{DRAM-locality} question the model is faithful.
-
-It \emph{does not} model three things, and we claim nothing about them. First, there is \emph{no
-near-memory compute datapath}: Ramulator times the memory, not an in- or near-bank ALU, so our
-numbers are locality metrics, never an end-to-end PIM speedup. Second, there is \emph{no
-host$\leftrightarrow$PIM transfer or synchronisation cost}: a real PIM system pays to ship queries in
-and results out, which our single-channel memory trace does not capture. Third, we replay a
-\emph{single channel/one DPU's worth} of accesses, so inter-DPU concurrency and cross-DPU merge
-traffic are out of scope (we discuss their likely effect only analytically). The honest reading is
-therefore narrow and defensible: we measure how access pattern and layout move DRAM row-buffer
-locality, and we leave the translation of that into a full PIM speedup --- which requires all three
-abstracted pieces --- as future work.
-
-\subsection{The trace-driven workflow}
-
-The methodology has three steps, and it cleanly separates the \emph{workload} from the
-\emph{hardware model}:
-
-\begin{enumerate}
-\item \textbf{Kernel.} Take (or write) the real computation --- here, the inner loop of ANN distance
-search.
-\item \textbf{Trace.} Record the sequence of memory addresses the kernel touches, as a list of
-\texttt{LD}/\texttt{ST} (load/store) records. This is the \term{memory trace}.
-\item \textbf{Replay.} Feed the trace to Ramulator's cycle-accurate model and read out the timing
-statistics.
+\section{Questions and contribution}
+The study addresses three questions.
+\begin{enumerate}[label=RQ\arabic*.]
+\item How do access order, contiguous runs, and finite request presorting affect service in the specified HBM2 model, and how does request concurrency change that interpretation?
+\item On held-out SIFT queries, how do identity, random, BFS, community, and a specified workload-trained vector layout compare when logical traversal is fixed?
+\item How sensitive are those comparisons to storage footprint, controller policy, address mapping, issue rate, queue capacity, graph construction, and the heuristic's training parameters?
 \end{enumerate}
 
-The advantage is modularity: we can swap the timing model (for example, from a simple teaching model
-to full Ramulator) \emph{without touching the kernel or the trace}.
+The row-reuse/parallelism trade-off is an established property of DRAM. The scientific contribution here is a controlled characterisation of the relationship between graph-vector placement and DRAM service. It has three parts: a measured example in which row-hit and timing rankings disagree; paired estimates of the size of placement effects on held-out searches; and interventions showing how concurrency, mapping, footprint and graph construction affect those comparisons. Command-level observations help explain the disagreement. A reproducible implementation makes the evidence auditable. The workload-trained algorithm supplies one concrete placement heuristic; the research does not depend on that heuristic winning every comparison.
 
-% ============================================================
-\section{Methodology: the experiment we ran}
+There are two distinct experimental interventions. In the HNSW experiment, one logical access sequence is mapped to different vector locations. In the contiguous-run microbenchmark, the generator constructs a sequence with specified run length. Only the former evaluates a reusable placement learned from or derived from a graph. The latter characterises how a memory model responds when locality is available.
 
-\subsection{The workload and the two access patterns}
+\section{Scope}
+The primary workload is the first 100,000 vectors of the public SIFT benchmark mirror, with 128-dimensional float32 distance computation. The primary memory system is one simulated HBM2 channel using a pinned Ramulator revision. We vary selected settings within that model, not the entire architecture. A synthetic clustered workload provides a separate consistency check.
 
-Our kernel is the inner loop of IVF/PQ-style ANN: for a batch of candidate vectors stored
-contiguously, compute the (squared Euclidean) distance from a query to each, and keep the
-$k$ smallest. Concretely we use 4{,}096 candidate vectors of dimension 128, quantised to 8-bit
-integers (PQ style), which produces 8{,}192 memory reads in 64-byte bursts (one cache line each).
+The model does not execute a PIM kernel, CPU caches, distance arithmetic, candidate queues, address-translation tables, host transfers, or graph-discovery timing dependencies. It therefore reports \emph{DRAM stream service}, not complete query latency, throughput of a deployed search service, energy efficiency, or PIM acceleration. The distinction is maintained in all result labels.
 
-We generate \emph{two} traces of this workload that differ only in the \emph{order} of access:
-\begin{description}
-\item[Sequential] --- candidates read in storage order. This models an \textbf{IVF/PQ cluster scan}.
-\item[Random] --- candidates visited in a shuffled order. This models \textbf{graph/HNSW traversal}'s
-pointer-chasing.
-\end{description}
-Everything else --- the vectors, their count, the bytes moved, the distance arithmetic --- is held
-identical. Only the memory access order changes. This is a controlled experiment: it isolates
-\emph{access pattern} as the single independent variable.
+\section{Reading the thesis}
+The intended reader understands arrays, pointers and basic performance measurement, but need not know ANN or DRAM scheduling. Chapter~\ref{ch:background} introduces the search and memory concepts. Chapter~\ref{ch:model} connects them through a worked address example. The results distinguish three questions throughout: what changed, what was measured, and what that measurement permits us to conclude. The terminology appendix provides a reference for acronyms and units.
 
-\subsection{A teaching-size model first, then the real simulator}
+\chapter{Background and related work}
+\label{ch:background}
+\section{Nearest neighbours and approximate search}
+A vector is an array of numbers representing an item. For example, an image descriptor can contain 128 values describing local image features. A query is another vector in the same space, and the corpus is the collection we search. ``Nearest'' refers to a chosen distance function between those arrays. In a two-dimensional illustration, $(2,3)$ is closer to query $(2,4)$ than $(9,9)$ under Euclidean distance. The actual experiment uses 128 dimensions, but the operation is the same.
 
-Before building a large simulator, we wrote a roughly 90-line C++ program --- the \term{toy model}
---- that models only the one DRAM effect that dominates a scan: the row buffer. It reads a trace and
-charges a few cycles for a row hit and many more for a row miss, counting each. Its purpose is
-pedagogical and methodological: it lets us see the whole trace-driven flow in minutes and build
-intuition. Its absolute numbers are \emph{illustrative ratios, not real nanoseconds}, because it
-ignores banks, refresh, and the scheduler. Once the method was clear, we handed the identical traces
-to real Ramulator for trustworthy numbers.
-
-\subsection{The Ramulator configuration}
-
-We configured Ramulator with its \texttt{LoadStoreTrace} front-end (which reads exactly our
-\texttt{LD}/\texttt{ST} trace format), an HBM2 device (8\,Gb per channel, 2.0\,Gbps), an
-\texttt{Open} row policy (which keeps a row open after access, rewarding sequential reuse and
-penalising random access --- precisely the mechanism under study), and a first-ready,
-first-come-first-served (\texttt{FR-FCFS}) memory scheduler. The run is shown abbreviated below.
-
-\begin{lstlisting}[language=Python]
-frontend = ramulator.frontend.LoadStoreTrace(clock_ratio=8, path=trace)
-hbm2 = ramulator.dram.HBM2(org_preset="HBM2_8Gb",
-                           timing_preset="HBM2_2000Mbps")
-ctrl = ramulator.controller.GenericDDR(
-    dram=hbm2, scheduler=ramulator.scheduler.FRFCFS(),
-    row_policy=ramulator.row_policy.Open(),           # the row-buffer effect
-    addr_mapper=ramulator.addr_mapper.RoBaRaCoCh())
-sim = ramulator.Simulation(frontend, mem); sim.run()
-\end{lstlisting}
-
-% ============================================================
-\section{Results}
-\label{sec:results}
-
-\subsection{The numbers}
-
-Table~\ref{tab:results} reports the cycle-accurate HBM2 results for the two traces.
-
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.25}
-\begin{tabular}{lrrr}
-\toprule
-\textbf{Metric} & \textbf{\color{greenc}Sequential (IVF/PQ)} & \textbf{\color{brick}Random (graph/HNSW)} & \textbf{Change} \\
-\midrule
-Cycles                 & 12{,}829      & 18{,}134      & $+41\%$ \\
-Row-hit rate           & 93.6\%        & 55.1\%        & $-38$ pts \\
-Avg.\ read latency     & 67.1 cyc      & 93.8 cyc      & $+40\%$ \\
-Read throughput        & 20{,}354 MB/s & 14{,}394 MB/s & $-29\%$ \\
-Row hit / miss / confl.& 7639/225/296  & 4502/300/3365 & --- \\
-\bottomrule
-\end{tabular}
-\caption{Cycle-accurate HBM2 results (Ramulator 2.1). Workload: 4{,}096 vectors, dimension 128,
-int8, 8{,}192 reads; HBM2\_8Gb at 2.0\,Gbps, Open row policy, FR-FCFS scheduler.}
-\label{tab:results}
-\end{table}
-
-\subsection{Reading the result}
-
-The computation was identical in both runs --- the same vectors, the same number of reads, the same
-arithmetic. The \emph{only} change was the order of memory access. Yet switching from sequential to
-random:
-
-\begin{itemize}
-\item dropped the DRAM row-hit rate from \textbf{93.6\%} to \textbf{55.1\%} (a 38-point fall);
-\item raised the cycle count by \textbf{41\%};
-\item raised average read latency by \textbf{40\%} and cut sustained throughput by \textbf{29\%}.
-\end{itemize}
-
-The row-miss-plus-conflict count tells the mechanical story directly: the sequential run suffered
-only $225+296$ row conflicts out of 8{,}192 reads, while the random run suffered
-$300+3365 \approx 3665$ --- more than a tenfold increase in the expensive case. This is exactly the
-row-buffer behaviour predicted in Section~\ref{sec:dram}, now confirmed on a peer-reviewed,
-cycle-accurate simulator.
-
-\subsection{Toy model versus real Ramulator}
-
-The teaching model and the real simulator agree on the \emph{shape} of the result (sequential far
-more row-hit-friendly than random) but differ in the exact numbers, as expected
-(Table~\ref{tab:toy}). Real HBM2 has many banks and an intelligent FR-FCFS scheduler, which recover
-some row hits that the toy's single-row model misses. This is precisely why one reports the
-simulator numbers, not the toy's: the toy builds intuition; Ramulator provides evidence.
-
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.25}
-\begin{tabular}{lrr}
-\toprule
- & \textbf{Toy model} & \textbf{Real Ramulator (HBM2)} \\
-\midrule
-Sequential row-hit & 99.2\% & 93.6\% \\
-Random row-hit     & 50.7\% & 55.1\% \\
-Fidelity           & illustrative ratios & cycle-accurate, validated \\
-\bottomrule
-\end{tabular}
-\caption{The toy model agrees with Ramulator on the qualitative shape; Ramulator provides the
-trustworthy quantitative numbers.}
-\label{tab:toy}
-\end{table}
-
-% ============================================================
-\section{Why this matters, and the research gap}
-
-\subsection{The literature splits exactly along this line}
-
-A survey of recent work (2024--2025) shows the field has produced several ANN-on-PIM systems ---
-DRIM-ANN, UpANNS, and PIMANN among them --- all of which accelerate the \emph{cluster-based} IVF/PQ
-style on real UPMEM hardware, reporting speedups in the range of roughly 2.5--4.3$\times$ over a CPU.
-Every one of them keeps memory access sequential, which (as we have just measured) is what makes PIM
-effective. By contrast, \emph{graph-based} ANN (HNSW, DiskANN) on PIM is almost absent from the
-literature --- precisely because its random, data-dependent traversal is hostile to the row-buffer
-locality that PIM relies on.
-
-There is a second, subtler gap. All three existing systems are \emph{hand-tuned point designs on a
-single fixed commercial chip} (UPMEM). Because the hardware is fixed, none of them can vary the DRAM
-geometry --- burst size, address mapping, page policy, row granularity --- and therefore none can ask
-the \emph{general} question of \emph{when} and \emph{why} a given access pattern wins or loses on
-near-memory DRAM. A simulator can. This points to a contribution of a different kind from ``another
-faster system'': a portable, simulator-based \emph{characterisation} of the interaction between graph
-traversal, physical layout, and row-buffer granularity, with the existing hardware systems serving as
-validation points rather than competitors.
-
-\begin{keybox}
-\textbf{The gap, stated precisely.} Cluster-based ANN on PIM is becoming crowded and works because
-it is sequential; graph-based ANN on PIM is open because it is random. But the deeper opening is one
-of \emph{generality and methodology}: the existing works are fixed-silicon point designs, so the
-reusable question --- \emph{under what memory geometry does layout matter, and by how much} --- is
-unanswered. This thesis answers that question on a cycle-accurate model and validates it on a real
-HNSW index, turning an assertion into a measured, portable characterisation.
-\end{keybox}
-
-\subsection{What the result de-risks}
-
-Beyond the scientific point, the experiment establishes that the entire toolchain works end to end:
-a real cycle-accurate simulator builds from source, our ANN traces run through it, and sensible
-numbers come out. The research method is proven \emph{before} the hard, open research begins. For a
-thesis, that is a significant de-risking.
-
-% ============================================================
-\section{Which lever recovers the random case? Reordering vs.\ layout}
-\label{sec:opt}
-
-Characterising the problem is only half the work; the thesis contribution is to \emph{recover} the
-lost performance. The obvious idea is to \emph{reorder} accesses so that same-row requests are
-serviced together. We tested it on the real simulator --- and found that it does \emph{not} work. The
-intervention that does work is changing the data \emph{layout}. This section reports both, because
-the negative result is as instructive as the positive one.
-
-\subsection{How we approached the problem: expectation vs.\ reality}
-
-It is worth recording the actual path of this investigation, because the route to the answer is
-itself part of the contribution --- and because it is a small case study in letting measurement
-overrule intuition.
-
-\paragraph{Our initial hypothesis.} Having established that the random access pattern destroys
-row-buffer locality (Chapter~\ref{sec:results}), the natural first instinct was: \emph{if the problem
-is that accesses arrive in a locality-hostile order, then re-ordering them should fix it}. Every
-textbook lever for improving DRAM locality --- query batching, a deeper memory-controller reorder
-window, software access scheduling --- is ultimately a way of reordering pending requests so that
-same-row accesses are serviced together. We expected that sorting the random access stream within a
-window would recover a large fraction of the lost locality, smoothly approaching the sequential
-ideal as the window grew.
-
-\paragraph{What the teaching model predicted.} Our first, teaching-size timing model (which tracks
-only a single open DRAM row) agreed enthusiastically. It predicted that windowed reordering would
-lift the row-hit rate from $50.7\%$ toward $78.0\%$ as the window reached a few hundred accesses --- a
-clean, monotone recovery curve. On the strength of that, we tentatively wrote up ``access reordering
-partly recovers the gap'' as the proposed contribution.
-
-\paragraph{What actually happened.} When we replayed the \emph{same} reordered traces through the
-cycle-accurate Ramulator simulator with a real HBM2 model, the recovery \emph{vanished}. The row-hit
-rate barely moved --- from $55.1\%$ to $56.2\%$ across the entire window sweep. The teaching model had
-been wrong, and the real simulator corrected us. This was initially surprising; on reflection it is
-obvious. A real memory controller already uses a first-ready (FR-FCFS) scheduler that reorders its
-own request queue to prioritise row hits. Our software pre-sorting was simply \emph{doing again,
-less well, what the hardware already does}. Reordering is redundant, and therefore useless, against a
-modern controller.
-
-\paragraph{The pivot that followed.} The failure was informative: it told us the lever we needed must
-be something the controller \emph{cannot} do for us. A controller can reorder \emph{when} it reads
-addresses, but it cannot change \emph{where} the data physically lives. That reframing pointed
-directly at \emph{data layout} --- placing co-visited vectors in the same DRAM rows --- which we then
-tested and found to recover the locality completely. The remainder of this chapter reports both
-results in order: first the reordering null result, then the layout result that it led us to.
-
-\subsection{Negative result: access reordering does not help}
-
-We took the random (graph/HNSW) trace and sorted its accesses within sliding windows of size $W$
-before replaying them through cycle-accurate HBM2 ($W{=}1$ is untouched random; larger $W$ approaches
-a sorted, sequential order). The row-hit rate barely moves: from 55.1\% at $W{=}1$ to only 56.2\% at
-$W{=}256$ (Table~\ref{tab:opt}). The reason is architectural. The HBM2 memory controller already uses
-a \emph{first-ready, first-come-first-served} (FR-FCFS) scheduler, which reorders its own request
-queue to prioritise row hits. Our software pre-sorting is therefore \emph{redundant with work the
-controller already performs}, and cannot beat it. \textbf{Access reordering is the wrong lever.}
-
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{rr}
-\toprule
-\textbf{Reorder window $W$} & \textbf{Row-hit rate (real HBM2)} \\
-\midrule
-1 \; (pure random)      & 55.1\% \\
-32                      & 55.1\% \\
-64                      & 55.1\% \\
-128                     & 55.3\% \\
-256                     & 56.2\% \\
-\bottomrule
-\end{tabular}
-\caption{Reordering the random trace within a window $W$ recovers almost nothing on real Ramulator
-HBM2 --- the FR-FCFS controller already reorders for row hits, so software pre-sorting is redundant.}
-\label{tab:opt}
-\end{table}
-
-\subsection{Positive result: data layout recovers locality completely}
-
-The one thing the controller \emph{cannot} do is change \emph{where} data lives. We store the
-candidate vectors so that those visited together (members of the same coarse cluster, or graph
-neighbours) occupy contiguous addresses --- hence the same DRAM rows --- while still visiting clusters
-in random order, exactly as graph traversal does. This \emph{cluster-ordered layout} recovers the
-locality in full: on real HBM2 it reaches \textbf{93.6\% row-hit and 13{,}097 cycles, statistically
-identical to the sequential baseline} (93.6\%, 12{,}829 cycles). The access pattern is still random at
-the graph level; only the placement changed.
-
-\subsection{How much layout is enough?}
-
-Sweeping the cluster size $C$ (Table~\ref{tab:layout}) shows the recovery is steep and saturates
-early. Clusters of just $C{=}4$ vectors already reach 87.6\% row-hit; by $C{=}16$ the rate hits the
-sequential ceiling of 93.6\% and stays there. The practical message is strong and cheap:
-\textbf{co-locating only about sixteen co-visited vectors is enough to make graph-ANN read memory
-exactly as well as a sequential scan} --- a one-time, offline index-build transformation.
-
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{rr}
-\toprule
-\textbf{Cluster size $C$} & \textbf{Row-hit rate (real HBM2)} \\
-\midrule
-1 \; (pure random)         & 55.4\% \\
-4                          & 87.6\% \\
-16                         & 93.6\% \\
-32                         & 93.6\% \\
-64                         & 93.6\% \\
-\midrule
-\emph{sequential ceiling}  & \emph{93.6\%} \\
-\bottomrule
-\end{tabular}
-\caption{Cluster-ordered layout recovers locality on real HBM2, saturating at the sequential ceiling
-by a cluster size of only $C\!\approx\!16$ vectors.}
-\label{tab:layout}
-\end{table}
-
-\begin{keybox}
-This is the heart of the contribution. The naive fix (reordering) fails because the memory controller
-already does it; the real fix is \emph{data layout}, which gives the controller row-hits it could not
-otherwise obtain. The thesis proper would implement cluster-ordered placement inside a real graph
-index (e.g.\ HNSW over SIFT1M) and measure end-to-end recall and throughput.
-\end{keybox}
-
-% ============================================================
-\section{Sharpening the layout result: a design rule and its limits}
-\label{sec:deep}
-
-The layout finding above is the key positive result, but on its own it only says
-``clusters of about sixteen vectors work.'' We ran three further sweeps on the
-same cycle-accurate HBM2 model to turn that observation into something a future
-index-builder can actually use --- and to find out where it stops working. All
-numbers in this section come from \texttt{scripts/deep\_experiments.sh} in the
-artifact.
-
-\subsection{The threshold is a byte budget, not a vector count}
-
-Why sixteen? To find out we swept the cluster size $C$ at three different vector
-dimensions (Table~\ref{tab:bytelaw}, Fig.~\ref{fig:bytelaw}). The row-hit rate
-always climbs to the same 93.6\% ceiling, but the point where it \emph{reaches}
-that ceiling moves: a 64-byte vector needs $C{=}16$, a 128-byte vector needs
-$C{=}8$, and a 256-byte vector needs only $C{=}4$. Multiply it out and the same
-number falls out every time: at saturation, $\mathrm{dim}\times C \approx 1024$
-bytes.
-
-\paragraph{A note on DRAM row sizes (to avoid confusion).} Three byte figures
-appear in this work and they are \emph{not} the same quantity. (i) The teaching
-model of Sec.~\ref{sec:sim} uses an illustrative $8$\,KB row; its absolute
-numbers are disclaimed and it is not the source of any reported result.
-(ii) Our cycle-accurate HBM2 configuration exposes an \emph{effective}
-contiguous-run granularity, $S_\text{eff}$, of $\approx\!1$\,KB --- the span of
-contiguous addresses that stay in one open row before the address mapping
-(\texttt{RoBaRaCoCh}) and cache-line channel interleaving route the next access
-to a different row/channel. This is the \emph{measured} quantity behind the
-saturation above, and the one the design rule uses. (iii) The real-HNSW study of
-Sec.~\ref{sec:realhnsw} models a nominal $2$\,KB row for its row-hit accounting;
-this only rescales the vectors-per-row constant (e.g.\ $4$ at float32, $16$ at
-int8) and does not change any ordering between layouts.
-
-So ``sixteen'' was never fundamental; it was an artifact of our particular
-128-byte vectors. The real invariant is a \emph{byte budget}: co-locate about
-$S_\text{eff}\approx1$\,KB of data that is visited together, and locality is
-fully recovered. This gives a predictive design rule,
+Given a query $q\in\mathbb{R}^{d}$ and a finite corpus $X$, squared Euclidean distance is
 \begin{equation}
-C^\star \;\approx\; \frac{S_\text{eff}}{\mathrm{dim}\times\mathrm{dtype}}
-\;\approx\; \frac{1024\ \text{bytes}}{\mathrm{dim}\times\mathrm{dtype}},
-\label{eq:cstar}
+ D(q,x)=\sum_{j=1}^{d}(q_j-x_j)^2.
 \end{equation}
-which tells an index designer, for any vector width, how many co-visited vectors
-to place contiguously. As a sanity check that this is really the row buffer at
-work, notice the leftmost column of Table~\ref{tab:bytelaw}: even with
-\emph{no} co-location ($C{=}1$) the row-hit rate rises with dimension
-($29.9\%, 55.1\%, 75.6\%$), because a bigger vector already occupies several
-contiguous 64-byte bursts and so collects some row-hits ``for free.''
+An exact top-$k$ answer selects the $k$ closest corpus items under a stated tie convention. A brute-force scan evaluates every vector. Other exact methods can prune work under appropriate conditions; a complete scan is not a mathematical requirement of exact search.
 
-\paragraph{Scope of the rule: what is general and what is not.} The \emph{form}
-of Eq.~\ref{eq:cstar} --- that the recovery threshold is a fixed byte budget
-divided by the per-vector byte span --- is a row-buffer argument and should hold
-on any open-page DRAM. The \emph{constant}, $S_\text{eff}\approx1$\,KB, is
-\emph{not} universal: it is a property of \emph{this} HBM2 configuration and
-would change with the DRAM standard (DDR5, HBM3, LPDDR), the burst length, the
-address-mapping scheme (we use \texttt{RoBaRaCoCh}), the number of interleaved
-channels, and the page policy. In other words, a reader should take ``co-locate
-about one effective row's worth of co-visited data'' as the portable principle,
-and re-measure $S_\text{eff}$ for any target memory system rather than assuming
-$1$\,KB. Establishing how $S_\text{eff}$ moves across these knobs is a concrete
-item of future work; it does not affect any \emph{ordering} between layouts
-reported here, only the absolute knee position.
+An approximate index examines a promising subset of items to reduce search work, accepting that it may miss some exact neighbours. It trades construction cost, memory, and search effort for a speed--accuracy operating point. If nine of the exact ten neighbours are returned, Recall@10 is 90\%. Recall measures answer quality; it does not measure elapsed time. Recall@10 here is the fraction of the exact subset top ten that appear in the approximate top ten. Equal-distance ties are resolved by corpus ID for exact ground truth. HNSW may choose another equally distant item, so ID-based recall can penalise a tied alternative. The result files retain both ID lists to make this convention inspectable.
 
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{rrrrrrr}
+\section{HNSW and its memory accesses}
+Hierarchical Navigable Small World (HNSW) search represents each corpus vector as a graph node. An edge stores the ID of a nearby node, and an adjacency list is the array of those IDs. HNSW builds a hierarchy of proximity graphs \cite{hnsw}. Upper layers guide a greedy descent to a promising region. The base layer maintains a candidate queue and a set of promising results. Expanding a node reads its neighbour list; evaluating a newly encountered candidate reads its vector. The visited structure suppresses repeated base-layer candidate evaluations, while the result bound supplies a stopping condition.
+
+Consider expanding node 17 whose neighbour list contains nodes 4 and 29. Search first reads that list, then reads candidate vectors 4 and 29 to compute their distances to the query. The distances help determine which node to expand next. This is a data dependency: later addresses become known through earlier reads and computations. The trace model used here records the resulting sequence, then replays its reads without executing those computations.
+
+The parameter $M$ controls graph connectivity during construction. In this artifact $M=16$, and base-layer lists can contain up to $2M=32$ neighbours. Construction search effort is set to 200 using \texttt{efConstruction}. The experiment uses \texttt{efSearch}=64. Search width is not the number of visited nodes: traversal may evaluate many more distances before selecting its final result set. Stock search uses a bound at least as large as $k$, including when a caller sets $\texttt{efSearch}<k$.
+
+The \texttt{efSearch} parameter controls the size of the maintained candidate/result search set. Increasing it generally allows a more thorough search, at a potential cost in work. It is distinct from $k$, the number of answers requested. Holding both fixed lets the layout experiment compare storage choices at the same search operating point.
+
+The study records all vector distance reads and expanded adjacency lists in both upper and base layers. It does not record speculative CPU prefetches or scratch structures. These omissions define the modelled stream rather than demonstrating that those accesses are negligible.
+
+\section{Encoding terminology}
+A 128-dimensional float32 vector occupies 512 payload bytes. A hypothetical one-byte-per-component representation occupies 128 bytes. Signed int8, unsigned byte-valued SIFT descriptors, scalar quantisation, and product quantisation are different representations.
+
+Product quantisation partitions a vector into subspaces, encodes subspace choices with codebook indices, and commonly evaluates approximate distances with lookup tables \cite{pq}. An int8 squared-distance loop is not PQ. This thesis does not build either a scalar-quantised or a PQ HNSW index. Its smaller-footprint experiment retains the original float32 results and traversal and changes only the modelled stored payload and placement capacity. Consequently, its measured recall applies to the float32 search that produced the trace.
+
+\section{DRAM service and PIM}
+Dynamic random-access memory (DRAM) is divided into banks, each of which can keep a row open in a small row buffer. An \emph{activate} command (ACT) opens a row; a read command (RD) transfers data from that open row; a \emph{precharge} command (PRE) closes it before another row can be opened. Refresh periodically restores stored charge. These commands have timing constraints: issuing one may require waiting before another is legal.
+
+A row hit means the required row is already open when the controller classifies the request. A conflict means another row is open in the same bank and must be replaced. A row miss here means the bank has no open row. The simulator's precise classification point is specified in the methods. A row hit can still wait for command spacing, a busy data path, or earlier work.
+
+High-bandwidth memory (HBM) uses stacked DRAM and multiple channels to provide substantial aggregate bandwidth. The experiment models one HBM2 channel. Within its hierarchy, different bank instances have separate row state, while some timing and transfer resources are shared. The small architectural fields in the methods identify those bank instances; readers do not need to memorise the bit positions to follow the results.
+
+Two useful effects can compete. Keeping related requests in one open row avoids opening more rows. Distributing ready work across banks can let one bank make progress while another waits. With one outstanding request, much of that overlap is unavailable. With many outstanding requests, the controller has more choices. The question is therefore how much waiting is avoided by each arrangement, not just how often a row is reused.
+
+The memory controller accepts requests, queues them, and selects commands from its buffers. \emph{Outstanding reads} are requests accepted but not yet completed; the read queue is only one part of that in-flight state. A \emph{page policy} decides when to close rows. An open-page policy leaves them open for possible reuse, while the tested capped policy limits accesses before closing. An \emph{address mapper} translates an address into channel, bank, row and column fields. Together these choices determine which opportunities the scheduler sees. First-ready, first-come-first-served (FRFCFS) is a family of scheduling policies. In the pinned source, \texttt{FRFCFS} prioritises timing-ready commands and breaks ties by arrival time. A separate \texttt{FRFCFS-RowHit} implementation explicitly prioritises row hits among eligible requests \cite{ramsource}. Treating these implementations as interchangeable would obscure the scheduling experiment.
+
+A CPU cache is different from a DRAM row buffer: a cache can satisfy a load without sending it to DRAM at all. A row hit is still a DRAM request. This study omits caches to isolate the service of a specified request stream.
+
+PIM spans several architectures, from near-memory processors to operations performed within memory arrays \cite{primer}. A bank-local processing unit and a CPU accessing one HBM channel do not have the same data path. The present model uses neither as a complete application platform. HBM2 supplies a specific DRAM timing and mapping substrate for the locality study.
+
+\section{Position relative to prior work}
+The literature was checked on 9 November 2026 using the publications and source links in the bibliography. This is a targeted comparison, not an exhaustive systematic survey. Table~\ref{tab:related} distinguishes the relevant research questions and evaluation levels.
+
+
+
+DRIM-ANN's abstract reports 2.46$\times$ CPU and up to 2.67$\times$ GPU speedup on \emph{computationally enhanced} PIM platforms \cite{drim}. That condition matters when comparing it with work measured entirely on existing hardware. PIMANN identifies underutilisation caused by batch scheduling and uses a control interface for finer CPU--PIM arbitration \cite{pimann}. Neither result is evidence that a row-hit improvement by itself predicts system speedup.
+
+The closest placement-related comparison is Coleman et al.~\cite{coleman}. They apply graph reordering to HNSW, measure cache behaviour and query time, and report improvements up to 40\% in their evaluation. That establishes that graph layout is already a useful systems technique. This thesis examines a different layer: it fixes the logical search, emits every selected demand to a DRAM model without caches, and varies the controller conditions. A small DRAM-stream improvement here does not contradict a larger cache-mediated query improvement there. The measurements answer different questions. This study does not reproduce their algorithms or claim superiority over their best result.
+
+PIMCQG is particularly relevant because it directly studies graph ANN on PIM \cite{pimcqg}. This thesis therefore claims a narrower contribution: a transparent comparison of specific vector layouts under a controlled DRAM stream model. It does not claim to be the first graph-ANN-on-PIM system or to supersede the cited systems' full evaluations.
+
+\begin{table}[htbp]\centering\small
+\caption[Position relative to prior work]{Relevant prior work and the narrower question retained here. Performance statements belong to the cited authors' evaluation; they are not reproduced by this thesis.}\label{tab:related}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.34\textwidth}>{\raggedright\arraybackslash}p{0.38\textwidth}}
 \toprule
- & \multicolumn{6}{c}{\textbf{cluster size $C$}} \\
-\cmidrule(l){2-7}
-\textbf{dim (bytes)} & 1 & 4 & 8 & 16 & 32 & 64 \\
-\midrule
-64  & 29.9 & 78.8 & 88.3 & \textbf{93.6} & 93.6 & 93.6 \\
-128 & 55.1 & 87.8 & \textbf{93.5} & 93.6 & 93.6 & 93.6 \\
-256 & 75.6 & \textbf{93.5} & 93.6 & 93.6 & 93.6 & 93.6 \\
-\bottomrule
+Work & Method and platform & Evidence and relation to this study\\\midrule
+HNSW \cite{hnsw} & Hierarchical proximity graph; software ANN index & Search accuracy/efficiency trade-offs. Supplies the search algorithm; does not specify this trace frontend or HBM mapping.\\
+Coleman et al.\ \cite{coleman} & Graph reordering for cache-efficient near-neighbour search & Memory layout is an established optimisation. The present work's request sorting is a separate operation from relabelling/reordering graph storage.\\
+DiskANN \cite{diskann} & Graph ANN spanning memory and SSD storage & Billion-point search on a single node; shows that system-level storage design matters beyond DRAM row statistics.\\
+DRIM-ANN \cite{drim} & UPMEM-oriented ANN, arithmetic lookup tables, load balancing and I/O optimisation & Reports CPU/GPU comparisons and analyses computationally enhanced PIM. Its conclusions include compute limitations; they cannot be reduced to sequential reads.\\
+UpANNS \cite{upanns} & Billion-scale ANN on commercial UPMEM; placement, resource management, co-occurrence encoding and pruning & Reports QPS and energy comparisons. Co-design and data movement exceed the vector-layout-only intervention used here.\\
+PIMANN \cite{pimann} & Persistent kernels and fine-grained per-PIM-core scheduling on commercial PIM & Reports throughput comparisons with CPU/GPU systems. Its scheduling includes CPU--PIM bus arbitration and load distribution, not simply sorting DRAM requests.\\
+PIMCQG \cite{pimcqg} & Graph ANN/PIM co-design; compact index, asynchronous pipeline, multiplication-free distance kernel & 2026 preprint, three billion-scale datasets. Directly addresses graph ANN on PIM, including communication and computation.\\
+This thesis & Fixed-traversal vector placement and bounded DRAM request streams & SIFT100k plus controlled traces; cycles, traffic, row classifications, recall, and paired differences under explicit assumptions.\\\bottomrule
 \end{tabular}
-\caption{Row-hit rate (\%) versus cluster size and vector dimension on real HBM2.
-Saturation (\textbf{bold}) always occurs where $\mathrm{dim}\times C\approx1$\,KB
---- one DRAM row.}
-\label{tab:bytelaw}
 \end{table}
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.72\textwidth]{fig_bytelaw.pdf}
-\caption{The saturation knee shifts left as vectors grow larger, always landing
-at $\approx\!1$\,KB of contiguous data. The ``magic number 16'' is really a
-fixed \emph{byte} budget.}
-\label{fig:bytelaw}
-\end{figure}
-
-\subsection{How good does the layout have to be?}
-
-A real index will never place every co-visited vector perfectly. To see how much
-that matters we modelled an \emph{imperfect} layout with a quality knob $Q$: the
-percentage of vectors actually co-located with their cluster, the rest left
-scattered at random. Fig.~\ref{fig:quality} shows the outcome. The good news is
-there is no cliff --- quality degrades gracefully. The sobering news is that the
-curve is \emph{back-loaded}: the row-hit rate only climbs from 56\% to 93.6\% as
-$Q$ goes from 0 to 100\%, and you have to reach roughly $Q{=}90\%$ before you
-land within five points of the ceiling. The lesson for a practical graph-layout
-heuristic is concrete: partial co-location helps a little, but most of the payoff
-only arrives when placement is nearly perfect.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.72\textwidth]{fig_quality.pdf}
-\caption{Imperfect layout (dimension 128, $C{=}16$): row-hit rate versus the
-fraction $Q$ of vectors correctly co-located. Graceful, but about 90\% accuracy
-is needed to approach the sequential ceiling.}
-\label{fig:quality}
-\end{figure}
-
-\subsection{A boundary condition: the gain needs an open-page policy}
-
-Finally, an honest result should say where it stops holding. The memory
-controller can be run in two modes. An \emph{open-page} policy leaves a row
-active after an access, betting the next access hits the same row --- which is
-what makes sequential scans fast. A \emph{closed-page} policy immediately
-precharges the row after each access, giving up that bet. When we switch to
-closed-page (Fig.~\ref{fig:policy}), the whole picture changes: sequential access
-collapses from 93.6\% to 75.0\% row-hit and actually becomes \emph{slower} than
-random (20{,}076 versus 18{,}227 cycles), because every would-be row-hit now pays
-a fresh activation; random access, which was missing anyway, barely moves
-(55.1\% to 54.7\%).
-
-In other words, the entire row-buffer advantage --- and therefore the entire
-value of our layout optimisation --- depends on the controller using an open-page
-policy. This is worth stating plainly as a scope condition rather than hiding it.
-Fortunately it points the same way as the application: bandwidth-bound,
-streaming-friendly workloads like PIM-based vector search are exactly the setting
-where an open-page controller is the natural choice, so the assumption is
-realistic for the target domain.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.62\textwidth]{fig_policy.pdf}
-\caption{Open versus closed page policy. Closed-page auto-precharge erases the
-sequential row-hit advantage entirely, so the layout fix only pays off under an
-open-page controller.}
-\label{fig:policy}
-\end{figure}
-
-\begin{keybox}
-Three sharpenings of the layout result: (1) the real threshold is a
-\emph{$\sim$1\,KB byte budget}, captured by the design rule
-$C^\star\approx1024/(\mathrm{dim}\times\mathrm{dtype})$, not a fixed count of
-sixteen; (2) imperfect layouts degrade gracefully but need $\sim$90\% placement
-accuracy to be worthwhile; (3) the whole effect is \emph{contingent on an
-open-page policy} --- a realistic assumption for bandwidth-bound PIM workloads.
-\end{keybox}
-
-% ============================================================
-\section{Validating the layout idea on a real HNSW index}
-\label{sec:realhnsw}
-
-Every result so far used a \emph{synthetic} memory trace: a random permutation
-standing in for graph traversal, and hand-built clusters standing in for a
-layout. That was deliberate and disclosed --- but it leaves the central question
-open. Does a layout informed by the \emph{real} behaviour of a graph index
-actually improve locality on \emph{real} data, without hurting search quality? We
-built a faithful pipeline to find out, and the honest answer sharpened the thesis
-rather than confirming the easy version of it.
-
-\subsection{What we built}
-
-We instrumented a real HNSW index (the \texttt{hnswlib} library) to record the
-exact base-layer memory accesses of real queries, keeping \emph{vector} reads
-separate from \emph{adjacency} (neighbour-list) reads. We then replayed those
-traces through the same cycle-accurate Ramulator HBM2 model, comparing four ways
-of placing vectors in memory: \textbf{Random} (a control), \textbf{Community}
-(structural graph partitioning), \textbf{BFS} (store nodes in breadth-first
-traversal order), and a proposed \textbf{query-aware} layout that \emph{learns},
-from a training set of queries, which vectors are read together and co-locates
-them. Crucially the layout never changes the search result, so \textbf{Recall@10
-is identical across all four layouts} --- locality is bought at zero accuracy cost
---- and the query-aware method is trained on one query set and scored on a
-disjoint held-out set, so any gain reflects generalisation.
-
-\subsection{The result: a simple baseline wins}
-
-On real SIFT1M (100\,000 base vectors, dimension 128), measured with an honest
-inter-vector row-hit metric, the proposed query-aware layout \textbf{does not
-beat a simple BFS traversal-order layout}. BFS gives the fewest cycles, the
-lowest latency, and the highest inter-vector row-hit rate; query-aware only ties
-on aggregate row-hit, within noise. The learned workload signal, in other words,
-does not generalise better than plain graph adjacency.
-
-The reason is instructive. On a real HNSW graph, the neighbours a query walks to
-\emph{are} the vectors it reads together --- the graph structure already encodes
-the access pattern. So BFS, by co-locating graph neighbours, already co-locates
-the co-visited vectors, for free, with no training and no query log. A learned
-model has almost nothing extra to exploit. On the synthetic data the artificial
-clusters diverged from the graph, which had flattered the learned method; real
-data exposed that.
-
-\subsection{Testing the one place layout should matter most: int8}
-
-The byte-budget rule of Section~\ref{sec:deep} predicts that layout matters more
-when vectors are \emph{smaller}, because more then fit in a DRAM row. At
-dimension 128 a float32 vector is 512 bytes (about four per 2\,KB row); an int8 /
-product-quantised vector is 128 bytes (about sixteen per row). This is the single
-setting where the learned layout had the best chance, so we re-ran all four
-layouts at both encodings (Table~\ref{tab:dtype}, Fig.~\ref{fig:dtype}).
-
-\begin{table}[h]
-\centering
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{lrr}
-\toprule
-\textbf{Layout} & \textbf{float32 (4/row)} & \textbf{int8 (16/row)} \\
-\midrule
-Random                 & 0.004 & 0.020 \\
-Community              & 0.129 & 0.609 \\
-Query-aware (proposed) & 1.005 & 1.151 \\
-\textbf{BFS}           & \textbf{1.365} & \textbf{2.103} \\
-\bottomrule
-\end{tabular}
-\caption{Inter-vector row-hit (\%) on real SIFT1M at two vector encodings. The
-larger int8 budget lifts every layout (the byte-budget law holds on real data),
-but it \emph{widens} BFS's lead over the proposed method rather than closing it.}
-\label{tab:dtype}
-\end{table}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.66\textwidth]{fig_dtype_byte_budget.pdf}
-\caption{Real SIFT1M, four layouts, float32 versus int8. Every layout improves
-with the bigger int8 co-location budget, but BFS benefits most and its margin
-over the learned query-aware layout grows.}
-\label{fig:dtype}
-\end{figure}
-
-Two things happen, and both are informative. The byte-budget law holds on real
-data: every layout improves with the larger budget. But the bigger budget does
-not rescue the proposed method --- it \emph{widens} BFS's lead (from $+0.36$ to
-$+0.95$ points), because BFS soaks up almost all of the extra room while
-query-aware barely moves. We have now tested the proposed layout on real data at
-the encoding where it had the best chance, and it still does not beat the
-simplest baseline.
-
-\begin{keybox}
-\textbf{The honest contribution of this validation.} It is \emph{not} ``the
-learned layout wins'' --- on real data that is false. It is (1) a faithful,
-reproducible methodology for studying real graph-ANN memory behaviour; (2) a
-\emph{negative result with a mechanism} --- learned, workload-aware placement does
-not beat free traversal-order (BFS) placement, because graph adjacency already
-captures co-visitation; and (3) confirmation, now on real data and across vector
-encodings, that layout gains on real graph-ANN are marginal, exactly as the
-byte-budget law of Section~\ref{sec:deep} predicts for large vectors. This also
-vindicates the method of the whole thesis: three times a convenient result from a
-simplified setting --- the teaching model on reordering, an aggregate metric, and
-a synthetic corpus --- was overturned by checking it against reality.
-\end{keybox}
-
-% ============================================================
-\section{Limitations and threats to validity}
-\label{sec:limits}
-
-A result is only as useful as its caveats are clear. We group them by the kind of validity each one
-threatens, in the usual empirical-methods sense, so a reader can see precisely how far each claim
-reaches.
-
-\subsection{Construct validity --- are we measuring the right thing?}
-
-\begin{description}
-\item[DRAM locality is not PIM speedup.] This is the most important boundary. Ramulator models the
-memory path, not a near-memory compute unit, so every number we report is a \emph{locality} metric
-(row-hit rate, memory cycles, latency), never an end-to-end host-versus-PIM speedup
-(Section~\ref{sec:modelscope}). A better row-hit rate is necessary but not sufficient for a PIM win:
-the full picture additionally needs compute time, host$\leftrightarrow$PIM transfer, and
-synchronisation, none of which we model. Any speed-up figure printed by the teaching model
-(e.g.\ $2.36\times$) is an analytical estimate under assumed bandwidths, not a measurement, and we
-treat it as illustrative only.
-\item[Synthetic trace vs.\ real traversal.] Real graph traversal is \emph{data-dependent} --- the next
-node depends on distances computed at run time --- whereas the core sweeps use a random permutation as
-a stand-in. We treat the synthetic results as the controlled \emph{mechanism} study and give the
-\emph{real} HNSW/SIFT1M validation (Section~\ref{sec:realhnsw}) the final word; where the two
-disagree, the real-data result governs the conclusion. The random trace should be read as an upper
-bound on irregularity, not as equivalent to HNSW.
-\end{description}
-
-\subsection{Statistical-conclusion validity --- is the effect real?}
-
-\begin{description}
-\item[Large synthetic effects, small real-data margins.] The sequential-vs-random and
-layout-recovery effects are very large (tens of points of row-hit), so single-seed runs are adequate
-to establish \emph{them}. The real-SIFT1M layout comparison is different: the aggregate-cycle spread
-between layouts is small (under $0.5\%$), and a single seed cannot by itself carry a claim at that
-scale. We therefore (i) lead the real-data conclusion with the \emph{inter-vector} row-hit metric,
-where the separation is far larger and more stable, and (ii) flag multi-seed confidence intervals on
-the real-data runs as required confirmatory work; the harness for this already exists in the artifact
-(\texttt{run\_multiseed}). We do not overstate the practical magnitude of the real-data difference.
-\end{description}
-
-\subsection{External validity --- how far does it generalise?}
-
-\begin{description}
-\item[One DRAM configuration.] We report one HBM2 preset. As Section~\ref{sec:deep} states, the byte
-budget's \emph{constant} $S_\text{eff}$ is configuration-specific (standard, burst, mapping, channels,
-page policy); only the \emph{form} of the rule is expected to generalise. Confirming the rule on a
-second DRAM standard is future work.
-\item[One dataset and scale.] We validate on SIFT1M at $100$k base vectors, dimension $128$. Larger
-scale (full $1$M, GIST's dimension $960$) and other datasets would strengthen external validity; the
-pipeline is built to accept them.
-\item[Not yet hardware-validated.] Ramulator is validated against real DRAM, but our specific
-ANN-to-memory mapping should, where possible, be cross-checked against a measurement on a real UPMEM
-or HBM-PIM system.
-\end{description}
-
-\subsection{Internal validity --- could something else explain it?}
-
-\begin{description}
-\item[Controlled single variable.] In each core experiment only one factor changes (access order, or
-placement, or page policy) with everything else fixed, and the mechanism (row misses/conflicts) is
-reported directly, so the causal link from access pattern to timing is tightly controlled. The main
-residual risk is that the address-mapping scheme interacts with our contiguous placement in a way
-specific to \texttt{RoBaRaCoCh}; we note this and leave a mapping sweep to future work.
-\end{description}
-
-% ============================================================
-\section{Conclusions and future work}
-
-\subsection{Conclusions}
-
-The work supports one overarching conclusion: \emph{the effectiveness of graph-based ANN on
-Processing-in-Memory is fundamentally constrained by the interaction between graph traversal,
-physical data layout, and DRAM access granularity.} The specific findings below make that claim
-precise and bound it. Note throughout that these are \emph{DRAM-locality} results from a
-cycle-accurate memory model, not end-to-end PIM speedups (Section~\ref{sec:limits}).
-
+\chapter{Experimental model and implementation}
+\label{ch:model}
+Search determines which data are needed; placement determines where they live; the memory system determines how the resulting requests are served. This chapter separates those decisions so that a timing difference has an identifiable experimental cause.
+\section{Separation of logical search and placement}
+The pipeline has five stages:
 \begin{enumerate}
-\item ANN distance search is memory-bound: the arithmetic is trivial, so performance is governed by
-how data moves. This makes it a natural PIM target.
-\item The DRAM \emph{row buffer} is the deciding mechanism. A high row-hit rate (sequential access)
-yields fast memory; a low row-hit rate (random access) yields slow memory.
-\item \emph{Access pattern}, not the computation and not the dataset size, determines whether PIM
-helps. We demonstrated this with a controlled experiment in which only the access order changed, and
-performance degraded by 41\% in cycles and 38 points in row-hit rate.
-\item The penalty is recoverable --- but by \emph{layout}, not reordering. Software access reordering
-barely helps (55.1\%$\to$56.2\%) because the FR-FCFS controller already reorders; cluster-ordered
-\emph{data layout} fully recovers locality (to 93.6\%, the sequential ceiling) with clusters of only
-$\sim$16 vectors (Section~\ref{sec:opt}).
-\item The layout lever obeys a simple \emph{design rule}. Co-locating about one DRAM row's worth of
-co-visited data ($\sim$1\,KB, i.e.\ $C^\star\approx1024/(\mathrm{dim}\times\mathrm{dtype})$) fully
-recovers locality at any vector dimension; partial layouts degrade gracefully but need $\sim$90\%
-placement accuracy; and the whole effect holds only under an open-page controller policy
-(Section~\ref{sec:deep}).
-\item This explains the shape of the literature: cluster-based (sequential) ANN on PIM succeeds and
-is crowding; graph-based (random) ANN on PIM is the genuinely open problem.
-\item Validated on a \emph{real} HNSW index over SIFT1M (Section~\ref{sec:realhnsw}), a learned,
-workload-aware layout does \emph{not} beat a simple breadth-first traversal-order layout --- because on
-a real graph the neighbours one traverses already are the co-visited vectors, so BFS co-locates them
-for free. This holds at both float32 and int8 encodings. It is an honest negative result with a clear
-mechanism, and it sharpens rather than contradicts the design rule: layout gains on real graph-ANN are
-marginal exactly where the byte budget is small.
+\item Build a stock hnswlib index over the fixed corpus, with explicit graph-construction and insertion-order seeds. The primary experiment uses corpus order; a separate robustness study varies construction.
+\item Record logical accesses from disjoint training and evaluation queries.
+\item Construct a bijection $\pi$ from logical node IDs to dense vector slots using each layout algorithm.
+\item Translate the fixed evaluation sequence through $\pi$, allocate graph storage separately, and emit native memory transactions.
+\item Replay the transactions under one specified controller configuration, preserving query boundaries and waiting for completions.
 \end{enumerate}
 
-\subsection{Future work}
+A logical record is $(q,v,t,\ell,s)$: query position, node ID, structure kind, graph level, and payload size. The kind is vector or adjacency. All layouts consume the same ordered records for a given split. Layout construction does not rerun search or alter returned IDs. Each mapping is checked for range, uniqueness, and inverse consistency.
 
-The natural research programme follows directly:
-\begin{itemize}
-\item \textbf{Sweep on Ramulator.} Reproduce the size- and dimension-independence of the effect with
-cycle-accurate numbers (the first quantitative figure of the thesis proper).
-\item \textbf{Model near-memory compute.} Add a near-bank datapath to obtain a true host-vs-PIM
-speedup, not just a locality metric.
-\item \textbf{Faithful graph traces.} Instrument a real HNSW search to emit per-query memory traces,
-replacing the random approximation.
-\item \textbf{Attack the gap.} Design and evaluate locality-improving techniques for graph-based ANN
---- data layout, node clustering, traversal scheduling --- and measure whether they recover the
-row-hit rate (and hence the PIM benefit). Section~\ref{sec:opt} already identifies the correct lever --- cluster-ordered data layout, which
-fully recovers locality on real HBM2 --- and rules out access reordering; the thesis proper would
-implement that layout inside a real graph index (HNSW over SIFT1M) and measure end-to-end recall and
-throughput. This is the core contribution the thesis would
-make.
-\end{itemize}
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{generated/study_pipeline.pdf}
+\caption[The experiment pipeline]{From a graph search to a timing result. Node 17 and slot 2 are an illustrative example, not another measured experiment. Changing the layout changes the second stage while preserving the first.}\label{fig:pipeline}
+\end{figure}
 
-% ============================================================
-\section{Reproducibility}
+For example, suppose the logical search needs vectors 17 and 29 consecutively. One layout might place them in slots 2 and 3, and another in slots 2 and 4. At 512 bytes per vector and a 1-KiB aligned block, slots 2 and 3 share a block; slots 2 and 4 do not. Both searches still evaluate the same vectors and return the same answers. Their memory addresses differ, so the controller may require different commands or expose different bank overlap. This is the intervention the experiment isolates.
 
-Every number in this document regenerates from the accompanying software repository
-(\texttt{Thesis-PIM-ANN}). The repository contains the ANN kernel, the trace generator (which emits
-Ramulator's \texttt{LD}/\texttt{ST} format), the teaching toy model, the reordering tool, and a
-verified build-and-run script. On a Linux machine with a C++20 compiler and Python 3.10:
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{generated/layout_example.pdf}
+\caption[Example of vector placement]{An illustrative excerpt of two vector layouts. Each vector occupies 512 bytes, so two fit in a 1-KiB block. Layout B puts the highlighted pair in one block while retaining every shown vector exactly once. That creates an opportunity for row reuse, but also concentrates the pair's requests in one bank.}\label{fig:layout-example}
+\end{figure}
 
-\begin{lstlisting}[language=bash]
-git clone Thesis-PIM-ANN.bundle Thesis-PIM-ANN
-cd Thesis-PIM-ANN
-make demo          # Experiments 1-2 (sequential vs random)
-make optsweep      # Section 11 (windowed-reorder recovery)
-./scripts/setup_ramulator.sh    # builds Ramulator 2.1 and runs on real HBM2
-./scripts/deep_experiments.sh   # byte-law, layout-quality, and policy sweeps
+\section{Stock-search instrumentation}
+The vendored search implementation contains observer calls immediately before vector distance reads and after determining an expanded list's length. Heap operations, candidate bounds, stopping conditions, and tie handling remain in stock search. The adapter snapshots adjacency for every graph level after construction and forwards observer records to a collector. The observer is cleared after successful and exceptional searches.
+
+The maintained build disables optional CPU prefetching while retaining SIMD distance arithmetic and stock search decisions. Prefetches are speculative early memory requests, outside this demand-stream model. The remediation record documents the vendor safety issue that motivated disabling that implementation path.
+
+Internal HNSW node numbers follow insertion order, while external corpus IDs must remain stable. The adapter translates internal IDs in observed accesses and adjacency lists back to corpus IDs. Tests check that translation against an independently built index after shuffled insertion. Thus changing construction does not silently change the meaning of identity placement or exact-neighbour IDs.
+
+The adapter is single-threaded; the mutable observer is not a general concurrent-search interface. Tests compare results against a separately built stock index on continuous and tie-heavy inputs, with $\texttt{efSearch}=4$ and 64 and $k=10$. They also check entry-vector presence and list sizes. In every real evaluation query, instrumented and unobserved stock result lists must match exactly before the run continues.
+
+Direct instrumentation is stronger than maintaining a second approximate implementation of the search algorithm, but still requires auditing the selected hooks. The instrumentation covers demand vector/list accesses. It does not turn hnswlib into a full CPU memory tracer.
+
+\section{Address representation}
+Let $b$ be the vector payload in bytes, $N$ the corpus size, and $B=32$ the native transaction size. Vectors occupy a dense separate array starting at $A_V=\mathtt{0x10000000}$:
+\begin{equation}
+ a_V(v)=A_V+\pi(v)b,\qquad A_V\leq a_V(v)<A_V+Nb.
+\end{equation}
+The adjacency region begins at the next transaction boundary after the vector end plus a 1-MiB separating gap. Every $(v,\ell)$ list receives its own aligned allocation in node/level order. Its payload is
+\begin{equation}
+ s_A(v,\ell)=4+4\,\deg(v,\ell),
+\end{equation}
+representing a four-byte header and four-byte neighbour IDs. The next list begins after rounding the current allocation end up to $B$. A 32-neighbour base list therefore occupies 132 payload bytes and reserves 160 bytes at 32-byte alignment. Distinct list allocations cannot overlap. The allocation is independent of vector layout for a given footprint.
+
+For any payload beginning at $a$ with size $s$, the emitted transactions cover
+\begin{equation}
+ B\left\lfloor\frac{a}{B}\right\rfloor,\;B\left\lfloor\frac{a}{B}\right\rfloor+B,\ldots < a+s.
+\end{equation}
+This handles partial and unaligned payloads. It can read padding or the containing line of a neighbouring dense vector, but does not reuse a fetched line across logical records. There is no cache or duplicate-read coalescing. The two primary vector widths are multiples of 32, so their per-vector request count is layout-independent.
+
+This separate-array representation is not hnswlib's native physical allocation. It isolates vector placement while holding adjacency placement fixed. An integrated reordered index would also need a mapping mechanism; mapping lookup traffic and storage overhead are outside the simulated stream. For non-identity layouts, the artifact stores both mapping directions as 64-bit entries, or $16N$ bytes, excluding container overhead. A deployed implementation could choose another representation, but cannot assume translation is free without justification.
+
+\section{Verified HBM2 geometry}
+\label{sec:geometry}
+The simulator revision is \texttt{7bead6cb7c4b03e095c6d4769ae3181a8e0bf6da}. The primary preset is \texttt{HBM2\_8Gb} with \texttt{HBM2\_2000Mbps}. The actual hierarchy is one configured channel, two pseudochannels, two SIDs, four bank groups, four banks, 32,768 rows, and 128 column units. The preset exposes a 128-bit channel interface, but explicitly sets the data payload to 32 bytes for one pseudochannel. The mapper reduces the column count by the prefetch factor of four, giving 32 native transactions per bank-row address span.
+
+The resulting contiguous same-bank, same-row span is $32\times32=1024$ bytes for the default mapper. Its bit decomposition is shown in Table~\ref{tab:bits}. Integration tests send sample addresses through the actual simulator and compare callback addresses with this decomposition, including a high address within the configured capacity. This avoids inferring geometry from a performance curve.
+
+\begin{table}[htbp]\centering
+\caption[Default address mapping]{Default \texttt{RoBaRaCoCh} mapping for one channel. Bit 0 is the least significant address bit.}\label{tab:bits}
+\begin{tabular}{lrl}\toprule
+Field & Address bits & Values\\\midrule
+Byte within transaction & 0--4 & 32 bytes\\
+Transaction column & 5--9 & 32 columns\\
+Pseudochannel & 10 & 2\\
+SID & 11 & 2\\
+Bank group & 12--13 & 4\\
+Bank & 14--15 & 4\\
+Row & 16--30 & 32,768\\\bottomrule
+\end{tabular}
+\end{table}
+
+The alternate \texttt{ChRaBaRoCo} mapper keeps column bits 5--9, places row in bits 10--24, then bank, bank group, SID, and pseudochannel in bits 25--30. It therefore presents very different bank parallelism for a small contiguous range despite retaining a 1-KiB row span. There is no interleaving across multiple configured channels in either experiment.
+
+The preset's DRAM period is 1 ns at its stated 2,000-Mbps transfer rate. Several timing choices in upstream source are annotated as estimates. This work verifies trace interpretation, mapping, and accounting; it does not independently validate the preset against a physical HBM2 device.
+
+\section{Frontend, concurrency, and completion}
+\label{sec:frontend}
+Each line has the form \texttt{LD address query kind}. The frontend accepts read-only, native-aligned addresses, requires monotonic query positions, and supports untagged microbenchmark lines as one query. It submits at most one transaction per configured issue interval and limits submitted-but-uncompleted requests. A rejected controller submission is retried without advancing the trace.
+
+The controller implementation is \texttt{GenericDDR}, which selects at most one command per controller cycle. The HBM2 timing specification still constrains those commands, but this is not the specialised dual-command-issue HBM controller. This explicit choice limits claims about peak HBM utilisation.
+
+The primary configuration permits 64 outstanding reads, a 32-entry read buffer, and one submission opportunity per memory cycle. These are separate constraints: active and pending controller state can make total in-flight traffic differ from the waiting read-buffer occupancy. The frontend uses completion callbacks to enforce the outstanding limit. The limit counts 32-byte transactions, not vectors: 64 transactions represent 2 KiB of payload, equivalent to four complete 512-byte vectors or sixteen 128-byte vectors before accounting for adjacency traffic. Changing footprint therefore changes both grouping capacity and how much logical vector work fits within this request bound.
+
+At a query boundary, all earlier reads must complete before the next query can issue. Bank-row state remains warm, refresh continues during service, and there is no cache state to reset. The simulation starts with the default initial DRAM state. It terminates only when callbacks have arrived for every trace read. A watchdog rejects a nonterminating run.
+
+The frontend's clock configuration is derived from the pinned simulation loop rather than assumed from parameter names. Its \texttt{clock\_ratio}=1 and the memory system's ratio equal to the issue interval produce one frontend opportunity every specified number of memory cycles. A four-cycle issue interval is tested as a sensitivity.
+
+For each query, the frontend records the minimum accepted-request arrival and maximum read departure in controller cycles. Their difference is the query's stream service interval. Total controller cycles include the complete stream and refresh effects. Neither measure includes graph computations or the time to discover future addresses. An in-flight limit of one serialises memory requests but still does not add distance computation; it is a concurrency sensitivity, not a complete dependency-aware HNSW model.
+
+\section{Page policy and scheduler settings}
+The default policy is \texttt{Open}. Sensitivities use \texttt{ClosedCAP} with cap explicitly equal to one and four. A cap is the policy's column-access count within an activation; it is not a guarantee that every pending request is classified as a row miss. The controller can have multiple requests and commands in progress, and upstream row classification occurs when a request is first scheduled. All page-policy findings refer to these implementations.
+
+The study also tests \texttt{FRFCFS-RowHit}, read-buffer capacity eight, outstanding limits one and 16, issue interval four, and the alternate mapper. Every setting first replays all five layouts at both footprints on the first held-out split. Three informative settings---one outstanding read, cap four, and the alternate mapper---are then repeated across all ten splits. The remaining settings retain their exploratory single-split status.
+
+\chapter{Layouts, metrics, and correctness}
+With the address representation fixed, the next choice is how to assign nodes to slots. The five layouts use progressively different information: corpus order, randomness, graph structure, and observed training searches. This chapter explains those choices and the measurements used to compare them.
+\section{Baseline layouts}
+\textbf{Identity} assigns slot $v$ to node $v$, preserving corpus order, including when graph insertion is shuffled. It is the practical reference for this separate-array representation, not a claim about the original allocator's addresses.
+
+\textbf{Random} uses a seeded permutation of all nodes. It is a control for locality available from the other mappings, not an upper bound on irregularity. Its RNG varies with the evaluation split seed.
+
+\textbf{BFS} (breadth-first search) visits a node's immediate neighbours before moving to the next graph frontier. It assigns slots in breadth-first order over the base graph, restarting from the lowest unplaced ID for disconnected regions. It may bring some graph neighbours close together, but cannot guarantee that all nodes expanded together share a row.
+
+\textbf{Community} groups nodes by graph connectivity. Each node starts with a label; repeated updates favour labels common among its neighbours. This asynchronous label propagation runs for at most 20 iterations, then places communities contiguously. Community-size ties and within-community choices are deterministic under the configured seed. It is a lightweight structural heuristic rather than an exact graph-partitioning solver.
+
+\section{Workload-trained greedy layout}
+The \QA{} method asks which vectors tend to be read near one another during training searches. If nodes 17 and 29 often occur close together in those searches, it gives their pair a larger weight and tries to store them together. This can capture a relationship between two neighbours expanded from the same parent even when the two nodes do not have a direct graph edge. The held-out queries then test whether that training signal is useful beyond the searches used to build it.
+
+Formally, the method learns a symmetric weighted co-visitation graph from training vector accesses. Within a query, each vector access contributes a weight increment with the different nodes in a bounded recent list. The default list capacity is 16 distinct nodes. A node already in that list contributes pairs but is not reinserted or refreshed in recency; the list is therefore a bounded distinct-history heuristic rather than a fixed number of access occurrences. Query boundaries reset the list.
+
+After accumulation, each node's partners are sorted by descending weight, breaking ties by node ID. Seeds are sorted by total incident weight with the same deterministic ID tie-break. The layout places the first unplaced seed and then its heaviest unplaced partners that fit before the current physical block boundary. A short group may leave room for the next seed, but that next seed's partners may not spill into a subsequent block. Unplaced nodes are appended using BFS restarts.
+
+The primary block size is the verified 1,024-byte contiguous row span. A footprint of 512 bytes gives capacity for two complete vectors in an aligned block; 128 bytes gives eight. For example, if a 512-byte block group starts at slot 2, only one partner fits beside the seed before slot 4 begins the next block. At 128 bytes, a fresh aligned block can hold the seed and seven partners. The mapping is rebuilt separately for each footprint. A 2,048-byte grouping is tested as a heuristic sensitivity, without calling it the physical HBM2 row span.
+
+The method optimises a proxy: temporal co-visitation in a finite training sample. It does not know controller command timing or adjacency interference, and does not minimise simulated cycles directly. Low coverage, the weighting rule, greedy ordering, and the grouping objective can each limit its performance. A loss by this method would not prove that the workload has no useful placement information.
+
+\section{Metrics and their meanings}
+\subsection{Search accuracy and traffic}
+For each test query, exact squared distances are evaluated over exactly the indexed base subset, using double accumulation and distance/ID sorting. Recall is computed against those IDs. Full-million-vector ground truth is not used for the 100k index. The SIFT components have integral values in the mirrored float representation, which also makes the recorded tie convention interpretable.
+
+Vector and adjacency logical records, their graph levels, emitted read count, allocated address bounds, construction times, split membership, returned IDs, and truth IDs are retained. Upper-layer records constitute \UpperFraction\% of logical evaluation records on average. They are included in timing rather than discarded on the assumption that they are negligible.
+
+\subsection{Address-colocation diagnostics}
+Let $v_1,\ldots,v_m$ denote one query's vector records in order, after skipping consecutive repeated node IDs for the transition count. For block size $R$, define
+\begin{equation}
+ g(v)=\left\lfloor\frac{\pi(v)b}{R}\right\rfloor.
+\end{equation}
+The \emph{consecutive-vector same-block fraction} counts transitions for which $g(v_i)=g(v_{i+1})$, divided by all eligible within-query transitions, then aggregates counts across queries. It compares vector starts, not all bytes of a potentially crossing vector. It resets between queries and ignores adjacency records by definition.
+
+A second diagnostic takes each query's unique visited-node set and counts pairs sharing a start-address block. This co-visit same-block fraction is computed using per-block counts, avoiding explicit quadratic enumeration. Both diagnostics are address statistics. They do not include bank state, intervening adjacency requests, controller reordering, or command timing. They must not be labelled measured DRAM row-hit rates.
+
+\subsection{Simulator outputs}
+The primary performance quantity is completed-stream controller cycles. The simulator's read row-hit fraction is
+\begin{equation}
+ H=\frac{n_{\mathrm{hit}}}{n_{\mathrm{hit}}+n_{\mathrm{miss}}+n_{\mathrm{conflict}}}.
+\end{equation}
+The three counters classify requests in the pinned controller. They are not an application speedup and need not track cycles monotonically. Raw controller statistics include latency and throughput values, but the thesis's headline comparison uses cycles and conserved traffic, avoiding an inference from a more visually separated proxy.
+
+\section{Maintained checks}
+Table~\ref{tab:checks} describes invariants checked by the artifact. Tests target failure modes that can change the scientific comparison; the numerical direction of a layout result is not made a test requirement.
+\begin{table}[htbp]\centering\small
+\caption[Correctness checks]{Correctness checks required before analysing results.}\label{tab:checks}
+\begin{tabular}{p{0.29\textwidth}p{0.62\textwidth}}\toprule
+Area & Check\\\midrule
+Search & 800 independent-index result comparisons across corpus/shuffled insertion, including ties and $\mathrm{ef}<k$; per-query instrumented/unobserved equality in every real run.\\
+Address space & All adjacency levels have separate aligned ranges; known 132-byte lists cannot alias; partial payloads emit every touched transaction.\\
+Placement & Every mapping is a bijection with a valid inverse; footprint-specific constructions and partial-group boundaries have regression cases.\\
+Metrics & A vector in each of two separate queries cannot create a within-query transition; known same-block examples produce the expected count.\\
+Input & Empty, short, ragged, nonfinite and truncated records fail; numeric overflow and negative parameters fail in maintained trace tools.\\
+Frontend & Native transaction size and mapper samples match the actual configuration; outstanding limits and query drain are checked; a one-read trace completes.\\
+Accounting & Trace lines, submitted reads, completed callbacks, served reads, and classified reads must agree for every analysed run.\\
+Quality sweep & Slots remain unique and the address multiset is identical at every quality setting; observed fixed slots match the requested integer count.\\\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Experimental protocol}
+A fair comparison needs more than several layout implementations. It needs the same search work, a clear accuracy check, disjoint training and evaluation, and repetitions that vary the intended source of uncertainty. The protocol first tests controlled streams, then actual HNSW demands, and finally the assumptions on which the comparison depends.
+\section{Data, construction, and held-out queries}
+The SIFT source is the ANN-Benchmarks HDF5 mirror \cite{annbench,pq}. The artifact records its SHA-256 digest, converts the first 100,000 training vectors to fvecs, and converts all 10,000 query vectors. Corpus IDs are the zero-based prefix positions. The mirror calls corpus data ``train and query data ``test; those names are separate from this thesis's training/test partition of the query pool. Query IDs are retained after shuffling; vector dimensions and finite components are checked.
+
+For each of ten split seeds, a permutation of the fixed 10,000-query pool determines the split. The first 500 queries train the co-visitation model; the last 200 evaluate every layout. This convention keeps the same test queries when training size changes and leaves training and testing disjoint. Repetitions hold the corpus, insertion order, HNSW parameters, and index seed 100 fixed. They vary training/test selection and the random/community layout seeds. They do not quantify index-construction variation or alternative corpus subsets.
+
+Index reconstruction uses the same deterministic insertion protocol in each process. Corpus and trace hashes, parameters, query IDs, and mappings identify the experiment. Results describe this fixed graph and query pool. New datasets or index seeds would be required for broader ANN conclusions.
+
+\section{Two different kinds of repetition}
+A random seed makes a pseudo-random procedure reproducible. It does not specify what source of variation is being tested. The primary ten seeds change which queries train and evaluate a layout, while keeping the graph fixed. The added construction study changes graph seeds to 101 and 102 while retaining corpus order, and separately uses graph seed 100 with shuffled insertion order seeded by 17. Each of these three additional graphs uses query splits one through three. The original graph on those same three splits supplies the reference.
+
+Corpus IDs and the exact-neighbour search universe remain fixed. Layouts are compared within a graph and split; raw times across different graphs also reflect different search work. Graph and insertion-order hashes verify that the intended graph is reused across its splits and that the selected constructions differ. With only three deliberately selected alternatives, their results are reported as observed means and ranges, not as a confidence interval over all possible graphs.
+
+\section{Paired uncertainty}
+For split $s$ and layout $L$, let $T_{s,L}$ be completed-stream cycles at one fixed footprint. The paired relative difference against BFS is
+\begin{equation}
+ d_{s,L}=100\left(\frac{T_{s,L}}{T_{s,\mathrm{BFS}}}-1\right).
+\end{equation}
+For example, 99,700 cycles against a 100,000-cycle BFS run gives $d=-0.3\%$: fewer cycles is a negative difference. Each comparison uses the same queries and graph, so a difficult query set cannot make one layout look worse simply because it was tested on more work. The estimate is the mean of these ten differences. The reported interval is
+\begin{equation}
+ \bar d_L\;\pm\;t_{0.975,9}\frac{s_d}{\sqrt{10}},\qquad t_{0.975,9}\approx2.262,
+\end{equation}
+using the conventional Student interval \cite{student}. The sampling unit is an independently selected split/layout RNG condition within the fixed pool. The interval expresses uncertainty in the mean effect under this protocol; it is not a range that should contain 95\% of individual query latencies. Query sets may overlap between repetitions; there is no leakage between training and testing within one split. The interval describes variability induced by that random protocol, conditional on the corpus, graph and simulator.
+
+The simulator is deterministic for a fixed trace and configuration; rerunning identical inputs would not measure workload uncertainty. Individual queries are not treated as independent hardware replications, and overlap of marginal layout intervals is not used as a test of a paired difference. These are exploratory 95\% intervals for individual comparisons, without a family-wise multiplicity correction. An interval containing zero is inconclusive about the sign at this precision; it is not evidence of equivalence. No equivalence margin is specified, and the study makes no statistical-equivalence claim.
+
+\section{Controlled microbenchmarks}
+The ordering experiment reads 4,096 vectors with 128-byte payloads, producing 16,384 native transactions. Sequential and permuted variants have identical address multisets. Request presorting stably sorts disjoint batches of 1, 16, 64, 256, 1,024, 4,096, or 16,384 \emph{transaction records}. These are not sliding windows or numbers of vectors. The full-size sort is checked to reproduce the sequential trace byte for byte.
+
+The run-length generator visits contiguous groups in shuffled group order. Run lengths are 1, 2, 4, 8, 16, 32, and 64 vectors. Payload widths are 96, 128, 192, 256, 384, and 512 bytes; base offsets relative to the aligned base are 0, 32, and 480 bytes. A smaller run/mapping matrix also tests the alternate mapper. The generator evaluates available locality, not attainable HNSW placement.
+
+The placement-quality intervention holds the logical contiguous-group visits fixed at 16 vectors per group. For requested quality $q$, exactly $N-\lfloor Nq/100\rfloor$ IDs are selected and their slots cyclically permuted. All other IDs keep their original slot. The special impossible case of exactly one displaced slot is rejected. Thus ``quality'' means fixed \emph{slot} fraction, not fixed row or cluster fraction. The tested percentages are 0, 25, 50, 75, 90, and 100.
+
+\section{Sensitivity and preprocessing cost}
+The real-data sensitivity matrix changes one controller setting at a time on split one. Training-size ablations use 100 and 1,000 queries; window ablations use four and 64 distinct-history entries; block-size sensitivity uses 2 KiB. Their test IDs remain the same, and BFS and \QA{} are both replayed at both footprints.
+
+The driver times index construction, training-query collection, co-visitation construction, and each layout build using a steady clock. These are wall-clock observations on a shared execution environment, with other experiment processes potentially active. They establish that preprocessing is nonzero and expose order-of-magnitude costs. They are not controlled hardware throughput benchmarks or a measured amortisation break-even point.
+
+\chapter{Results}
+\label{ch:results}
+The results follow the argument from a simple case to a realistic access pattern. Controlled streams first reveal why locality and timing can disagree. The SIFT experiment then measures how much the tested layouts change service at fixed search work. Repeated controller settings, graph variations and command diagnostics examine how stable those differences are and why they arise.
+\section{Ordering: row hits and cycles can disagree}
+Figure~\ref{fig:order} begins with the simplest controlled comparison: two orders of the same reads. Sequential service takes \SequentialCycles{} cycles at \SequentialHit\% classified row hits. The permuted stream takes \RandomCycles{} cycles at \RandomHit\% hits. Every stream read completes and is represented in the classification counters.
+
+The sequential sequence has a higher hit fraction but takes more cycles at the default concurrency. This result is compatible with the different banks exposed by the request order: with the default mapping, 32 adjacent transactions fill one row span, so a 64-request contiguous prefix exposes only two bank instances, whereas scattered vectors can expose more. The exact performance follows from scheduling, buffers, and timing together. Row-hit fraction alone does not isolate the cause or establish a necessary condition for good service.
+
+At outstanding limit one, full sorting changes the permuted stream's 398,592 cycles to 325,786 cycles. This comparison is retained in the raw sensitivity results and demonstrates that available concurrency materially changes the ordering result. It does not add HNSW's compute dependencies.
+
+\begin{figure}[htbp]\centering\includegraphics[width=\textwidth]{generated/micro_order.pdf}
+\caption[Row hits and service cycles]{Default native-transaction microbenchmark. Higher row-hit fraction does not imply fewer completed-stream cycles.}\label{fig:order}\end{figure}
+
+\input{mechanism_explanation.tex}
+
+\section{Finite request presorting}
+\begin{table}[htbp]\centering\caption[Request-presorting windows]{Disjoint presorting windows on the permuted 16,384-request trace. The full window exactly reproduces the sequential trace.}\label{tab:reorder}
+\input{generated/reorder_table.tex}\end{table}
+Table~\ref{tab:reorder} reports the tested windows. Sorting can expose a different issue order than the original permutation, and can also reduce bank diversity. Sorting the whole known stream places its addresses in exactly the sequential order; the byte-for-byte trace check verifies this endpoint. Its feasibility during an actual dependent graph search is a separate question: the required future addresses may not yet be known.
+
+The artifact also repeats selected windows with explicit row-hit-prioritising scheduling and with one outstanding request. Those experiments test the controller explanation rather than presuming that all software sorting duplicates FRFCFS. They do not justify a general claim that software reordering is useless or that the largest sorting window is useful in a deployed ANN implementation.
+
+\section{Contiguous runs, alignment, and placement quality}
+Figure~\ref{fig:runs} separates hit-fraction behaviour from cycle behaviour. To summarise hit saturation on the finite grid, the threshold is the smallest tested run length for which that point and every larger tested point are within one percentage point of the best hit fraction in the same width/offset sweep. Table~\ref{tab:threshold} reports the resulting run \emph{bytes}. This is an empirical finite-grid summary, not a physical-law fit or a guarantee about untested run lengths.
+
+\begin{figure}[htbp]\centering\includegraphics[width=\textwidth]{generated/run_sensitivity.pdf}
+\caption[Contiguous runs and alignment]{Contiguous-run sensitivity to payload width and alignment. The left panel measures classified hits; the right panel shows that cycle behaviour requires separate examination.}\label{fig:runs}\end{figure}
+\begin{table}[htbp]\centering\caption[Empirical run-byte thresholds]{Run-byte threshold for sustained hit fraction within one percentage point of the best tested point, by base offset. The threshold is conditional on this grid and configuration.}\label{tab:threshold}
+\input{generated/threshold_table.tex}\end{table}
+
+The 1-KiB contiguous row span is independently established by address decoding. A saturation threshold can be larger, smaller in a particular grid, or affected by alignment and the controller's request mix. It should not be used to infer the row size after the fact. The alternate mapping experiments additionally change the bank opportunities associated with a contiguous address range. A predictive universal byte-budget rule is not established.
+
+Figure~\ref{fig:quality} and Table~\ref{tab:quality} use only bijective layouts with identical address multisets. Reducing the fixed-slot fraction can move a vector within or across its original bank-row group, so the percentage is not a direct measurement of retained row locality. The curve describes this chosen corruption process. The experiment measures robustness to this specific perturbation. Translating a fixed-slot percentage into an acceptable engineering threshold would require a target cycle benefit and a preprocessing-cost model.
+\begin{figure}[htbp]\centering\includegraphics[width=\textwidth]{generated/quality.pdf}
+\caption[Placement perturbation]{Valid fixed-slot-quality experiment. Each condition retains all 4,096 storage slots exactly once.}\label{fig:quality}\end{figure}
+\begin{table}[htbp]\centering\caption[Placement-quality measurements]{Placement-quality results under the specified cyclic displacement process.}\label{tab:quality}
+\input{generated/quality_table.tex}\end{table}
+
+\section{Held-out SIFT comparison}
+Table~\ref{tab:real} contains the real timing comparison and both locality measures. Mean Recall@10 is \SiftRecall\%, with the split-level interval [\SiftRecallLow, \SiftRecallHigh]\%. Within a split all five layouts have exactly the same logical query result and the same emitted read count at a given footprint. The table's differences therefore reflect the modelled placement and controller interactions rather than a changed number of HNSW distance evaluations.
+
+\begin{table}[htbp]\centering\small
+\caption[Paired SIFT layout comparison]{Ten paired SIFT100k splits. Cycles are mean totals for 200 held-out queries. Hit is the simulator classification fraction; block is the consecutive-vector same-block diagnostic. The final column is mean relative cycle difference and its paired 95\% interval; negative is faster than BFS.}\label{tab:real}
+\resizebox{\textwidth}{!}{\input{generated/real_table.tex}}
+\end{table}
+\begin{figure}[htbp]\centering\includegraphics[width=\textwidth]{generated/real_paired.pdf}
+\caption[Paired layout differences and uncertainty]{Paired cycle differences relative to BFS. Intervals describe query-split and random-layout variability on a fixed corpus/index/model.}\label{fig:paired}\end{figure}
+
+For 512-byte vectors the \QA{} difference is \QADeltaFloat\% [\QALowFloat, \QAHighFloat]; for the hypothetical 128-byte footprint it is \QADeltaCompact\% [\QALowCompact, \QAHighCompact]. The footprint-specific mapping is rebuilt to match the number of vectors that fit in each grouping block. However, the 128-byte case still retains float32 traversal and recall. Its result cannot be promoted to evidence about PQ accuracy, quantised traversal, or distance-kernel speed.
+
+The pairing matters because query difficulty changes the total traffic and cycles across splits. Comparing layout totals from unrelated query sets would confound the intervention. The original layout is included because a gain over a random permutation alone does not establish a benefit relative to the storage order available to a user.
+
+\section{Controller and heuristic sensitivity}
+Figure~\ref{fig:sensitivity} compares layouts under the one-setting-at-a-time controller matrix. Each cell is a relative cycle difference against BFS in the \emph{same} condition and split. The heat map should not be read as independent evidence from ten repetitions for each cell. It shows how a finding can change when the issue model or bank mapping changes.
+
+\begin{figure}[p]\centering\includegraphics[width=\textwidth]{generated/sensitivity.pdf}
+\caption[Exploratory controller sensitivity]{Split-one controller sensitivity. Values are cycle differences in percent against BFS; negative is fewer cycles. The two footprints use separately rebuilt layouts.}\label{fig:sensitivity}\end{figure}
+
+The sensitivity matrix reverses some layout comparisons. For example, the workload-trained layout is faster than BFS with one outstanding request at both footprints, but slower under both capped policies. The alternate mapper favours it relative to BFS at both footprints in this split, although random placement is faster still for 512-byte vectors. These observations show dependence on the memory model; they are not additional ten-split estimates.
+
+The cap-one policy and cap-four policy are explicitly different. In the controlled ordering traces, cap one gives sequential 146,441 cycles and random 33,798 cycles, while their classified hit fractions remain close to 50\%; cap four gives 63,333 and 29,708 cycles. These counters follow the simulator's scheduling-time classification and must not be interpreted as a guarantee that cap one produces zero classified hits. The much larger cycle separation demonstrates why a page-policy label or hit fraction is insufficient to predict service. The real-layout matrix supplies the relevant direct comparison; no claim that all placement benefit requires an open-page controller follows from the synthetic pair alone.
+
+The ablations also change the sign of the comparison: the four-entry history loses to BFS at both widths, while 1,000 training queries give the workload-trained layout fewer cycles at both widths in this split. More training is not uniformly better for every footprint. These tests support examining the heuristic's objective and capacity rather than attributing all performance to static graph locality.
+
+Table~\ref{tab:ablations} changes the heuristic's training and grouping parameters while retaining the test queries. Mean test vector-access coverage by the default training set is \MeanCoverage\%. Coverage here counts accesses whose node appeared in training, not the fraction of all corpus nodes or the fraction of learned edges shared with the graph. The ablations can reveal a limitation of this heuristic, but do not establish why every possible workload-trained placement would succeed or fail.
+
+\begin{table}[htbp]\centering\small\caption[Training and grouping ablations]{Split-one heuristic ablations. Coverage is the fraction of test vector accesses to a node seen in training; model time excludes search collection and layout construction.}\label{tab:ablations}
+\input{generated/ablation_table.tex}\end{table}
+
+\input{robustness_explanation.tex}
+
+\section{Construction cost and synthetic cross-check}
+Across primary runs, mean index construction takes \MeanIndexSeconds{} s, collecting training traces takes \MeanTrainingSeconds{} s, and building the co-visitation model takes \MeanModelSeconds{} s on the execution host. Table~\ref{tab:cost} reports per-layout construction. The \QA{} layout time alone does not include its training and model stages. BFS requires graph traversal and memory for the mapping; it is not free. These shared-host observations are useful accounting, not hardware-independent performance predictions.
+\begin{table}[htbp]\centering\caption[Layout construction cost]{Observed layout construction times for the primary float32 footprint. Shared-host wall-clock measurements; no performance-isolation claim.}\label{tab:cost}
+\input{generated/cost_table.tex}\end{table}
+
+The separate synthetic check uses 8,000 corpus vectors and a 2,000-query pool around the same 64 centroids, with 300 training and 150 test queries. Corpus and query generation share the centroids and are independent of the split seed. Its raw recall, layouts and timing results are retained under \texttt{results/synthetic}. This workload is useful for checking the pipeline, but a difference from SIFT cannot by itself identify whether graph structure, query distribution, training coverage or layout objectives caused it. Synthetic centroid proximity is not evidence that a particular real workload is uniformly clustered.
+
+\chapter{Interpretation and threats to validity}
+\section{Answers supported by the evidence}
+\textbf{RQ1.} Access order changes both row classifications and service time in the controlled model. The direction of cycle improvement depends on concurrency: the default sequential stream has more hits and more cycles, whereas full sorting reduces cycles with one outstanding read. Presorting results are limited to the tested disjoint windows. Contiguous runs and valid placement perturbations characterise available locality; they do not demonstrate a reusable HNSW layout that creates the same runs.
+
+\textbf{RQ2.} The paired table measures the tested layouts on held-out queries of a fixed SIFT100k graph. The \QA{} differences are \QADeltaFloat\% and \QADeltaCompact\% at the two footprints, with the reported intervals. This is a comparison of implementations and protocol, not an upper bound on placement or a proof that BFS contains all temporal information. Co-visited nodes can be siblings in an expansion rather than adjacent graph vertices.
+
+\textbf{RQ3.} Storage width, page policy, concurrency, and address mapping alter the opportunities presented to the controller. The exploratory matrix identifies relevant interventions; three controller settings are repeated across ten splits, and three additional graph constructions are tested separately. The unreplicated settings and training ablations remain exploratory. The evidence supports conditional comparisons of the tested cases.
+
+\section{Practical significance and an overhead budget}
+A detectable difference is not necessarily a useful optimisation. The default 512-byte query-aware advantage over BFS is approximately \SavedCyclesPerQuery{} controller cycles per query, averaged across the primary splits. That absolute scale is easier to reason about than a percentage alone.
+
+Consider an explicitly simplified additive model. Let $C$ be all shared non-memory work, $M_B$ and $M_Q$ the memory-service costs for BFS and query-aware layouts in the same units, and $H$ any extra per-query cost of the latter implementation:
+\begin{align}
+ T_B &= C+M_B, & T_Q &= C+M_Q+H.\\
+ T_Q<T_B &\quad\Longleftrightarrow\quad H<M_B-M_Q.
+\end{align}
+Substituting the observed stream means gives an illustrative overhead allowance of about \SavedCyclesPerQuery{} controller cycles per query. It is not a measured CPU or PIM budget: real computation and memory may overlap, and graph dependencies change the memory schedule. The calculation makes the practical question explicit rather than assuming translation and integration are free.
+
+The artifact stores both mapping directions as 64-bit entries, requiring $16N$ bytes, or \MappingMiB{} MiB at $N=100{,}000$, before container overhead. An implementation might encode the mapping differently or rewrite neighbour IDs, but then must account for that representation, conversion and update work. Offline preprocessing also requires amortisation over a useful workload lifetime. Shared-host CPU seconds and simulated controller cycles cannot be mixed to produce a valid deployment break-even query count.
+
+\section{A decision path for a system designer}
+The measurements suggest a concrete evaluation sequence.
+\begin{enumerate}
+\item \textbf{Establish comparable search work.} Fix the corpus, accuracy target and search settings. Check that a placement experiment preserves logical accesses and answers. If an encoding changes traversal or recall, evaluate it as a different search configuration.
+\item \textbf{Measure the service objective.} Use completed cycles or actual application latency as appropriate, alongside traffic and locality. A proxy helps diagnose behaviour; it cannot select a winner by itself.
+\item \textbf{Check the execution assumptions.} Decode the address map, identify the concurrency the application can really expose, and evaluate the relevant row policy. The same contiguous addresses can create different opportunities under another mapper.
+\item \textbf{Compare benefit with implementation cost.} Include mapping accesses, storage movement, preprocessing, updates and workload drift on the target platform. The small default advantage here is a reason to measure these costs carefully.
+\end{enumerate}
+This is the useful engineering outcome of the study: a way to decide what evidence is needed before investing in a more complex layout. It does not prescribe one layout for every architecture.
+
+\section{Internal validity}
+The main threats addressed by the implementation are aliased storage, collision-producing placement, an independently rewritten search loop, layout construction inconsistent with footprint, cross-query metric transitions, and premature simulator termination. Input and mapping checks reject these failures before analysis. Raw data and generated tables make numerical accounting inspectable.
+
+Remaining internal limits include the selected demand-access hooks and the modelling choice of a separate vector array with adjacency in another region. Keeping logical reads fixed isolates placement, but assumes that a physical integration would preserve the same algorithmic traversal. Mapping lookup traffic, cache effects and duplicate-read reuse could change the balance. The address-colocation metric intentionally omits adjacency and scheduling and must remain a diagnostic.
+
+\section{Model and external validity}
+A bounded flat stream still exposes future requests before a dependent HNSW execution might discover them. Outstanding-limit and issue-rate sensitivities vary this assumption but do not recover missing computation. Scratch memory, query-vector accesses, host/PIM transfers, index replication, processing-unit local memory, and energy are absent. Multiplying the observed cycle ratio by an assumed PIM bandwidth is not a measured PIM speedup.
+
+The simulator models DRAM commands and timing rules, but the chosen preset contains estimates and is not validated here against a device trace. One configured HBM2 channel is not an entire HBM stack or a commercial PIM module. The alternate mapper and policies expand the conditional evidence without making it representative of all memory systems.
+
+Only one real corpus prefix is evaluated. The four graph constructions test limited seed/order variation on that prefix; they do not test new datasets or eliminate source-order structure in the corpus. The query pool may not represent future deployment traffic. Ten-split intervals remain conditional on the primary graph, while the construction study reports its own finite observed variation. Other datasets, distances, dimensions, corpus sizes and graph-search operating points remain unevaluated. The 128-byte payload experiment is especially limited because genuine quantisation can change search, accuracy and compute costs.
+
+\section{Statistical and practical validity}
+Ten paired repetitions provide uncertainty for the selected random protocol, with the usual small-sample assumptions of a Student interval. Heavy-tailed split effects would call for more independent repetitions and an alternative interval check. Multiple exploratory comparisons are shown without claiming a family-wise hypothesis test. Small nonzero timing differences may be detectable under this protocol while remaining unimportant in a full system with additional costs.
+
+The measured preprocessing times do not establish a break-even query count. Such a calculation would require a physical mapping implementation, query service costs on the target platform, update frequency, and the cost of moving or rebuilding storage. A static graph layout may be less useful if workload drift or frequent insertions invalidate its signal. These questions remain outside the evaluated model, and no deployment recommendation is based solely on the best cycle point estimate.
+
+\chapter{Conclusion}
+The thesis began with a natural engineering intuition: storing data used together close together should reduce the cost of graph search. The experiments show why that intuition needs a memory-service model. Row reuse avoids operations, while distributing work across banks can overlap waiting. A layout changes both opportunities.
+
+The controlled experiment demonstrates a ranking reversal when concurrency changes. The held-out HNSW comparison then quantifies the placement effect on SIFT100k: the query-aware heuristic is slightly faster than BFS at 512 bytes and slightly slower at the hypothetical 128-byte footprint under the default model. Command records show how fewer row operations can coexist with more no-command cycles; component-stream experiments and bank-diversity diagnostics make that observation interpretable. The repeated controller comparisons retain their conditional signs across query splits. Additional graph constructions reverse the 128-byte ranking even under the same controller, while the 512-byte query-aware advantage persists in the selected cases. The evidence therefore supports evaluating both the memory assumptions and the constructed graph.
+
+The contribution is a reproducible characterisation of these interactions and a clear evaluation method. Preserve search work and answer quality, distinguish address diagnostics from completed service, test the relevant controller assumptions, and put small gains beside their integration costs. A checked artifact, exact subset recall and retained raw evidence make those steps inspectable.
+
+For PIM, this work supplies one part of the larger system question. A subsequent implementation should add graph-discovery dependencies, distance computation, caches or local storage, mapping overhead and host/PIM communication before measuring application speedup. Other real datasets and search operating points would test broader generality. Within its stated DRAM-stream scope, the study answers a useful question: locality can change memory time, but its value depends on how the memory system can exploit it.
+
+\appendix
+\chapter{Artifact and reproduction}
+\section{Authoritative files}
+The long thesis is \texttt{doc/pim\_ann\_thesis.tex}; the short paper uses the same generated evidence. Current raw results are in \texttt{results/}. Large regenerable mappings, logical traces and transaction traces are in \texttt{work/}. Original files from commit \texttt{40d0edd} are preserved under \texttt{archive/pre-review} and are explicitly superseded. Their old timing and placement numbers are not used as evidence in this document.
+
+\section{Reproduction sequence}
+The root README gives environment and data instructions. The maintained sequence is:
+\begin{lstlisting}
+make test
+bash scripts/setup_ramulator.sh
+python3 scripts/prepare_sift.py
+make test-simulator
+python3 scripts/experiments.py all --seeds 10 --jobs 2
+python3 scripts/strengthen.py all --jobs 2
+python3 scripts/check_results.py
+make docs
 \end{lstlisting}
+The dataset HDF5 file must first be downloaded to the path documented in the README. Setup verifies pinned simulator/dependency archives and applies the project frontend. The experiment runner checks subprocess status, records data and trace hashes, and reuses cached results only after checking the input fingerprint, result accounting, companion files, and output hashes. Missing prerequisite traces cause a clear error before sensitivity work begins. Analysis refuses to generate the primary tables if the required ten-split or sensitivity inputs are absent.
 
-The script downloads a prebuilt CMake if needed, clones and builds Ramulator (pre-fetching its
-dependencies for a robust offline build), generates the ANN traces, and replays them through the
-cycle-accurate HBM2 model --- reproducing Table~\ref{tab:results}.
+Each timing JSON contains the complete configuration, raw statistics, read-accounting checks and source/library/trace hashes. Each query CSV records callback-based service bounds. Study directories contain split IDs, returned/exact IDs, metadata and layout metrics. Figure provenance lists hashes of the data used by the analysis script. Normal build cleanup does not delete the committed evidence.
 
-% ============================================================
-\section*{Glossary}
-\addcontentsline{toc}{section}{Glossary}
-\small
-\begin{description}
-\item[ANN] Approximate Nearest Neighbour search --- find vectors close to a query, approximately.
-\item[Arithmetic intensity] Operations performed per byte of data moved; low $\Rightarrow$ memory-bound.
-\item[Bank] An independently accessible sub-array within a DRAM chip.
-\item[Cycle-accurate] A simulator that models behaviour clock-tick by clock-tick, including real timing.
-\item[DPU] DRAM Processing Unit --- UPMEM's small general-purpose in-memory core.
-\item[DRAM] Dynamic Random-Access Memory --- the technology of main memory.
-\item[Embedding] A fixed-length vector representing content, where closeness means similarity.
-\item[HBM] High-Bandwidth Memory --- fast 3D-stacked DRAM used in GPUs/AI accelerators and PIM.
-\item[HNSW] Hierarchical Navigable Small World --- a graph-based ANN index (random access).
-\item[IVF] Inverted File index --- a cluster-based ANN index (sequential access).
-\item[Memory-bound] Limited by memory bandwidth/latency rather than by arithmetic.
-\item[PIM] Processing-in-Memory --- computing in or near memory to cut data movement.
-\item[PNM / PUM] Processing-Near-Memory (logic beside memory) / Processing-Using-Memory (compute in the array).
-\item[PQ] Product Quantization --- compresses vectors into small codes for fast ANN.
-\item[RAG] Retrieval-Augmented Generation --- an LLM that retrieves documents (via ANN) before answering.
-\item[Row buffer] The fast holding area for an activated DRAM row; hits are fast, misses slow.
-\item[Row hit / miss] Next access in the open row (fast) / a different row (slow).
-\item[Trace-driven] A simulation method that replays a recorded list of memory accesses.
-\end{description}
-
+\chapter{Terminology}
+\label{ch:terms}
+\begin{longtable}{p{0.27\textwidth}p{0.64\textwidth}}\toprule
+Term & Meaning in this thesis\\\midrule\endhead
+ANN / ANNS & Approximate nearest neighbour search: retrieve close items while allowing some exact neighbours to be missed.\\
+HNSW & Hierarchical Navigable Small World: a graph index whose upper layers guide a search toward promising regions.\\
+Corpus / query & The stored vectors / the vector used to search for close stored items.\\
+Recall@$k$ & The fraction of exact top-$k$ IDs recovered by an approximate search.\\
+BFS & Breadth-first search; here, a graph traversal used to choose storage order.\\
+Adjacency list & The stored neighbour IDs of a graph node.\\
+DRAM / HBM & Dynamic random-access memory / high-bandwidth memory, a stacked DRAM technology.\\
+Bank / row buffer & A DRAM subdivision with separate row state / its currently open row.\\
+ACT / PRE / RD & Commands to activate (open), precharge (close), and read a row.\\
+Address mapper & The rule assigning an address to channel, bank, row and column fields.\\
+Outstanding read & A submitted request whose completion has not yet arrived.\\
+FRFCFS & First-ready, first-come-first-served scheduling; the exact implementation determines priorities.\\
+KiB / MiB & $2^{10}$ / $2^{20}$ bytes; different from decimal kB / MB.\\
+Seed & An input that makes a pseudo-random procedure reproducible; its meaning depends on which procedure is varied.\\
+Logical trace & Ordered vector/list demands identified by node and query, before assigning physical addresses.\\
+Vector layout & A bijection from logical nodes to dense storage slots.\\
+Graph reordering & A memory-layout/graph relabelling optimisation in the cited literature; distinct from sorting pending request records.\\
+Request presorting & Stable address sorting within disjoint batches of an already known read stream.\\
+Transaction & One native 32-byte read in the evaluated HBM2 configuration.\\
+Row hit & A request classification made by the pinned simulator/controller; distinct from the flat same-block proxy.\\
+Same-block fraction & A specified within-query vector-start colocation statistic, without a bank/scheduler model.\\
+Stream cycles & Controller cycles through the final read completion under the frontend assumptions.\\
+Footprint sensitivity & Repacking the same float32 traversal with a different modelled vector payload.\\
+Paired interval & An interval calculated from layout differences on matching split conditions.\\
+PIM speedup & End-to-end comparison involving a specified PIM system and baseline; not measured here.\\\bottomrule
+\end{longtable}
+\clearpage\addcontentsline{toc}{chapter}{Bibliography}
+\begingroup\raggedright
+\input{references.tex}
+\endgroup
 \end{document}

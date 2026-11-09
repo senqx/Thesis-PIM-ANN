@@ -1,309 +1,159 @@
-<div align="center">
+# DRAM locality in graph-based ANN
 
-# Thesis‑PIM‑ANN
+This repository contains Artashes's thesis and a reproducible experiment artifact.
+It studies **DRAM stream service under explicit assumptions**, motivated by processing-in-memory.
+It does not measure end-to-end PIM acceleration.
 
-### Memory‑Locality Limits of Graph‑Based Approximate Nearest Neighbour Search on Processing‑in‑Memory
+Start with [the thesis PDF](doc/pim_ann_thesis.pdf), [the short paper](doc/pim_ann_ieee.pdf),
+or [the reading guide](doc/READING_GUIDE.md), which gives a path through the argument.
+The [project overview](PROJECT_OVERVIEW.md) and [remediation record](doc/REVIEW_FIXES.md)
+describe the project and link the review findings to repairs and validation.
 
-*A small, fully reproducible research artifact — builds with just a C++ compiler, scales up to the real Ramulator cycle‑accurate DRAM simulator.*
+The experiment uses stock float32 HNSW, all graph levels, non-overlapping
+adjacency allocations, five checked vector permutations, exact subset recall, and
+native 32-byte HBM2 requests that all complete before replay terminates.
+The hypothetical 128-byte footprint retains float32 search and is not an int8/PQ index.
 
-![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C?logo=cplusplus&logoColor=white)
-![Build](https://img.shields.io/badge/build-make-427819)
-![Simulator](https://img.shields.io/badge/validated%20on-Ramulator%202.1%20(HBM2)-1F6F8B)
-![License](https://img.shields.io/badge/license-MIT-lightgrey)
+On ten paired SIFT100k splits, the query-aware heuristic uses **0.31% fewer cycles
+than BFS at 512 bytes** (95% interval: 0.26–0.37% fewer), and **0.17% more at
+128 bytes** (0.11–0.24% more). These intervals vary query splits and random/community
+layout seeds on a fixed index and corpus. See [the generated paired results](results/paired_summary.csv)
+for full precision and all baselines. Additional graph constructions reverse the
+128-byte ranking, while the 512-byte query-aware advantage persists in the tested
+cases. The result therefore depends on graph construction as well as the memory
+configuration. These small conditional differences establish neither optimality
+of BFS nor application speedup. The old conclusions and numeric
+results are superseded; [the archive](archive/pre-review/README.md) preserves them explicitly.
 
-</div>
+## Build and correctness checks
 
----
-
-> 🧭 **New here?** Read **[`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md)** first — a
-> plain‑language tour of the whole project (no background needed): what we did,
-> the questions we asked, what worked, and what honestly did **not**.
-
-> 📁 **This repo has two layers — read both before judging the claims.**
-> **(1) Root (`src/`, `doc/`)** — the core study: a *controlled microbenchmark* that
-> isolates access‑pattern effects on DRAM locality, using SIFT‑dimensioned
-> **synthetic** traces, validated cycle‑accurately on Ramulator HBM2.
-> **(2) [`sprint1/`](sprint1/)** — the follow‑up that closes the realism gap:
-> a **real HNSW index** (hnswlib) over the **real SIFT1M** dataset, with
-> graph‑aware layouts, recall held fixed, replayed through the same simulator.
-> The root establishes the *mechanism*; sprint1 tests whether it survives on real
-> graph‑ANN. **Its headline is an honest negative result** (a learned layout does
-> not beat simple BFS on real data) — see [`sprint1/docs/findings.md`](sprint1/docs/findings.md).
-
----
-
-## 📌 The one‑sentence idea
-
-> **Approximate Nearest Neighbour (ANN) search is memory‑bound, so it is a natural Processing‑in‑Memory (PIM) target — but *how* it reads memory decides whether PIM helps.**
-> *Cluster‑based* ANN (IVF/PQ) reads memory **sequentially** and loves PIM. *Graph‑based* ANN (HNSW) reads it **randomly**, destroying DRAM row‑buffer locality — which is exactly why graph‑ANN‑on‑PIM is an open problem.
-
-This repo **measures that gap** on a real cycle‑accurate simulator, shows that software **reordering does *not* fix it** (the memory controller already reorders), and that **data layout fixes it completely** — co‑locating just ~16 vectors per cluster recovers full sequential‑scan locality.
-
----
-
-## 🎯 Headline results
-
-The **DRAM‑locality numbers below are measured on real HBM2 timing (Ramulator 2.1)** — row‑hit rate and cycles. They are the load‑bearing evidence of this project, and they are reproduced by **`make demo-ramulator`** (which replays the traces through the real simulator). The fast **`make demo`** target runs only the *analytical toy model* and prints illustrative ratios — it does **not** reproduce these numbers. See [Reproducing the numbers](#-which-command-produces-which-number) below.
-
-| Access pattern | DRAM row‑hit rate | Cycles (Ramulator HBM2) |
-| :-- | :--: | :--: |
-| **Sequential** (IVF/PQ scan) | **93.6 %** | 12 829 |
-| **Random** (graph/HNSW walk) | **55.1 %** | 18 134 |
-
-> A **trace‑driven memory experiment**: the same *address population* (4 096 vectors) is visited under two different orders — sequential vs. a random permutation. The trace generator emits the memory addresses a read would touch; it does **not** execute the ANN distance arithmetic. Changing **only the visitation order**, cycles rise **+41 %** and the row‑hit rate drops **38 points**, on a cycle‑accurate simulator. (The random permutation is a controlled stand‑in for graph traversal, *not* a real HNSW access sequence — for that, see [`sprint1/`](sprint1/).)
-
-> ⚠️ **On "PIM speed‑up."** Ramulator models the **DRAM path only** — it does *not* simulate a near‑memory compute unit, so this project does **not** measure an end‑to‑end host‑vs‑PIM speed‑up. The figures of **2.36× / 1.47×** that appear in `make demo` come from an *analytical* model (`toy_timing`) under **explicitly assumed** host/PIM bandwidths (8 vs 64 GB/s) and are **illustrative estimates, not measurements**. Treat the row‑hit/cycle numbers as the validated result; treat the speed‑up as a back‑of‑envelope projection pending a real near‑bank compute model.
-
-### What each claim is actually backed by
-
-| Claim | Evidence tier | How to reproduce |
-| :-- | :-- | :-- |
-| Access *ordering* changes DRAM locality | Cycle‑accurate Ramulator HBM2 | `make demo-ramulator` |
-| Physical *layout* changes DRAM locality | Cycle‑accurate Ramulator (synthetic traces) | `make layoutsweep-ramulator` |
-| Layout result holds on a **real HNSW index** over SIFT1M | Cycle‑accurate Ramulator (real‑workload traces) | [`sprint1/`](sprint1/) |
-| A specific **PIM application speed‑up** (2.36×) | **Analytical model only** (assumed bandwidths) | `make demo-toy` — *not a measurement* |
-
-### <a name="-which-command-produces-which-number"></a>🔁 Which command produces which number
-
-| Command | Timing model | Status of its numbers |
-| :-- | :-- | :-- |
-| `make demo-toy` (alias: `make demo`) | `toy_timing` (analytical) | **Illustrative ratios** — not measured hardware |
-| `make demo-ramulator` | Ramulator 2.1 HBM2 | **The headline row‑hit / cycle numbers** |
-| `make layoutsweep-ramulator` | Ramulator 2.1 HBM2 | Cycle‑accurate layout sweep |
-| `sprint1/` drivers | Ramulator 2.1 HBM2 | Real‑HNSW / real‑SIFT1M validation |
-
-The `-ramulator` targets require `./scripts/setup_ramulator.sh` to have built the simulator first.
-
-**Which lever recovers the random case?** (real HBM2)
-
-| Intervention | Row‑hit rate | Verdict |
-| :-- | :--: | :-- |
-| Random baseline | 55.1 % | the problem |
-| Random **+ reordering** (window `W`≤256) | 56.2 % | ❌ no help — controller already reorders |
-| Random **+ cluster layout** | **93.6 %** | ✅ full recovery (= sequential) |
-
-**How much layout is enough?** Row‑hit vs cluster size `C` (real HBM2):
-
-| `C` (vectors co‑located) | 1 | 4 | 16 | 32 | 64 |
-| :-- | :--: | :--: | :--: | :--: | :--: |
-| Row‑hit rate | 55.4 % | 87.6 % | **93.6 %** | 93.6 % | 93.6 % |
-
-> Grouping just **16 co‑visited vectors** makes graph‑ANN read memory exactly as well as a sequential scan — a cheap, one‑time index‑build transformation.
-
----
-
-## 🔎 Deeper results — a design rule and its limits
-
-Three further sweeps on real HBM2 (`scripts/deep_experiments.sh`) sharpen the layout finding into something a real index‑builder can use.
-
-**1. The threshold is a *byte budget*, not a vector count.** Sweeping cluster size `C` across vector dimensions, row‑hit always saturates where `dim × C ≈ 1 KB` — the measured effective row granularity (see the DRAM‑geometry table above):
-
-| dim \ `C` | 1 | 4 | 8 | 16 | 32 | 64 |
-| :-- | :--: | :--: | :--: | :--: | :--: | :--: |
-| **64 B** | 29.9 | 78.8 | 88.3 | **93.6** | 93.6 | 93.6 |
-| **128 B** | 55.1 | 87.8 | **93.5** | 93.6 | 93.6 | 93.6 |
-| **256 B** | 75.6 | **93.5** | 93.6 | 93.6 | 93.6 | 93.6 |
-
-> This gives a predictive design rule: **`C* ≈ 1024 / (dim × dtype_bytes)`** — co‑locate ~1 KB of co‑visited data (the empirical granularity, not a universal constant) and locality is fully recovered at any dimension.
-
-**2. Imperfect layouts degrade gracefully — but need ~90 % accuracy.** Row‑hit vs the fraction `Q` of correctly co‑located vectors (dim 128, `C`=16):
-
-| `Q` | 0 % | 25 % | 50 % | 75 % | 90 % | 100 % |
-| :-- | :--: | :--: | :--: | :--: | :--: | :--: |
-| Row‑hit | 56.2 | 60.8 | 71.4 | 82.5 | 88.9 | 93.6 |
-
-**3. The gain is contingent on an *open‑page* policy.** Under closed‑page auto‑precharge, sequential access collapses (93.6 % → 75.0 %) and even becomes *slower* than random — so the layout fix only pays off on open‑page controllers (the sensible default for bandwidth‑bound PIM):
-
-| Policy | Sequential row‑hit | Random row‑hit |
-| :-- | :--: | :--: |
-| **Open page** | 93.6 % | 55.1 % |
-| **Closed page** | 75.0 % | 54.7 % |
-
----
-
-## 🔬 Follow‑up study: does a smart layout help on *real* data? (`sprint1/`)
-
-The results above use a synthetic memory trace. The companion study in
-[`sprint1/`](sprint1/) tests the layout idea on a **real HNSW index searching
-real SIFT1M data**, comparing four layouts (random, community, BFS, and a
-proposed *query‑aware* method) through the same cycle‑accurate simulator — with
-a proper train/test split, so any gain reflects generalisation.
-
-**Honest headline:** on real data, a **learned query‑aware layout does *not*
-beat a simple BFS traversal‑order layout** — because on a real graph, the
-neighbours you walk to are already the vectors read together, so BFS co‑locates
-them for free. This is a **negative result with a clear mechanism**, and it
-reinforces the byte‑budget finding above (layout gains are marginal at dim‑128
-float32). Full write‑up: [`sprint1/docs/findings.md`](sprint1/docs/findings.md);
-the picture that tells the story: `sprint1/fig_synth_vs_real.png`.
-
----
-
-## 📂 Repository layout
-
-```
-Thesis-PIM-ANN/
-├── PROJECT_OVERVIEW.md       # ← start here: plain-language tour of everything
-├── src/                      # the main experiment (5 small C++ tools)
-│   ├── ann_kernel.cpp        #   real ANN distance + top‑k (seq / rand order)
-│   ├── gen_trace.cpp         #   emit a Ramulator LD/ST memory trace
-│   ├── toy_timing.cpp        #   teaching‑size DRAM row‑buffer model
-│   ├── reorder.cpp           #   access reordering (tested — does NOT help)
-│   └── gen_layout.cpp        #   cluster‑ordered layout (the fix that works)
-├── scripts/
-│   ├── setup_ramulator.sh    #   build Ramulator 2.1 + run on real HBM2
-│   ├── deep_experiments.sh   #   byte‑law + layout‑quality + policy sweeps
-│   └── run_ann_ramulator.py  #   LoadStoreTrace + HBM2 config
-├── doc/                      # the write‑ups
-│   ├── pim_ann_ieee.pdf      #   IEEE conference paper (+ .tex, figures)
-│   └── pim_ann_thesis.pdf    #   detailed from‑first‑principles report (+ .tex)
-├── sprint1/                  # follow‑up: real‑HNSW layout study (negative result)
-├── Makefile                  # build / demo / sweep / optsweep / layoutsweep
-└── README.md
-```
-
----
-
-## ⚙️ Dependencies
-
-**To run the core experiments (Part A)** — nothing but a compiler and Make:
-
-| Tool | Version | Install |
-| :-- | :-- | :-- |
-| C++ compiler | C++20 (`g++ 11+` or `clang++ 15+`) | `sudo apt install g++`  ·  `sudo pacman -S gcc` |
-| GNU Make | any | `sudo apt install make`  ·  `sudo pacman -S make` |
-
-**To validate on real Ramulator (Part B)** — a few more, all standard:
-
-| Tool | Version | Install |
-| :-- | :-- | :-- |
-| git | any | `sudo apt install git`  ·  `sudo pacman -S git` |
-| CMake | ≥ 3.14 *(auto‑downloaded if missing)* | `sudo apt install cmake`  ·  `sudo pacman -S cmake` |
-| Python + dev headers | 3.10+ | `sudo apt install python3-dev`  ·  `sudo pacman -S python` |
-
-> `scripts/setup_ramulator.sh` checks all of these for you, fetches a prebuilt CMake if yours is missing, and pre‑clones Ramulator's dependencies for a robust offline build.
-
----
-
-## 🚀 Part A — The fast analytical tour (just a compiler)
-
-> ⚠️ These `-toy` targets run the **analytical model only**. They build intuition and show the *shape* of every effect in seconds, but their numbers are **illustrative ratios, not measured hardware**. To reproduce the headline numbers you must run the **`-ramulator`** targets in Part B.
+Requirements: Linux, a C++20 compiler, Make, CMake 3.15+, Python 3.12+ with development
+headers, and curl. The recorded environment used GCC 15.1, Python 3.13, and CMake 3.30.
+The analysis/data packages are pinned in `requirements.txt`.
 
 ```bash
-git clone https://github.com/senqx/Thesis-PIM-ANN.git
-cd Thesis-PIM-ANN
-make            # build the tools into ./bin
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -r requirements.txt
+make -j2 test
 ```
 
-Then run any of the toy‑model experiments:
+The tests cover stock-search agreement (including ties and `ef < k`), address spans,
+partial transactions, query boundaries, layout bijections, malformed input and valid
+placement-quality permutations. A small synthetic run needs no dataset or simulator:
 
 ```bash
-make demo-toy        # Experiments 1 & 2: sequential vs random  (the gap, analytically)
-make sweep-toy       # Experiment 3: pattern — not size — governs locality
-make optsweep-toy    # Experiment 4: reordering does NOT recover it
-make layoutsweep-toy # Experiment 5: cluster‑ordered layout recovers it
+sprint1/run_study --max-base 8000 --train 300 --test 150 --output work/synthetic
 ```
 
-(The bare `make demo` etc. are kept as aliases for `*-toy`.)
+The old separate `run_sift`, `run_dtype`, and multi-seed drivers have been replaced
+by `run_study`; their historical sources are in the archive.
 
-**Example output** (`make demo-toy`):
-
-```
-## ANALYTICAL TOY MODEL (illustrative ratios, NOT measured HBM2)
-=== traces/ann_seq.trace ===
-  PIM   cycles=42240   hit-rate=99.2%   PIM speedup: 2.36x   (analytical est.)
-=== traces/ann_rand.trace ===
-  PIM   cycles=121680  hit-rate=50.7%   PIM speedup: 1.47x   (analytical est.)
-```
-
-> **Why these differ from the headline table.** `toy_timing` models only the **row buffer**, with hand‑chosen latencies, an illustrative 8 KB row, and *assumed* host/PIM bandwidths — so its absolute cycles and its `PIM speedup` are **not** measurements. The headline 93.6 %/55.1 % row‑hit and 12 829/18 134 cycles come from **real Ramulator HBM2** (`make demo-ramulator`, Part B), where the toy's *shape* is confirmed but its absolute numbers are replaced by cycle‑accurate ones.
-
----
-
-## 🔬 Part B — Validate on real Ramulator 2.1 (cycle‑accurate HBM2)
-
-First build the simulator from source (once):
+## Build the pinned simulator
 
 ```bash
-./scripts/setup_ramulator.sh    # clone + build Ramulator 2.1 (records the exact
-                                # commit to ramulator2_commit.txt for provenance)
+bash scripts/setup_ramulator.sh --jobs 4
+make test-simulator
+make demo-ramulator
 ```
 
-Then reproduce the **headline numbers** and the cycle‑accurate layout sweep:
+Setup downloads hash-verified Ramulator/dependency archives, builds them, applies
+`simulator/thesis_trace.cpp`, and records `ramulator2/build-manifest.json`. The pin is
+`7bead6cb7c4b03e095c6d4769ae3181a8e0bf6da`. This is a **new corrected baseline**;
+the simulator version behind the old archived results could not be recovered.
+`--offline` uses already downloaded, verified archives. Re-running setup reapplies
+the pin rather than silently keeping an arbitrary existing checkout.
+
+The runner handles the in-tree Python/library paths. One input line denotes one
+native **32-byte transaction**; use `--burst 32` with the root generators. The
+frontend rejects incompatible simulator geometry and unaligned addresses.
+Default settings: one channel, GenericDDR (at most one selected command per cycle),
+Open policy, readiness-first FRFCFS, 64 uncompleted
+reads, 32-entry read buffer, one issue opportunity per controller cycle. Query
+boundaries drain outstanding reads while retaining row state. Graph timing
+dependencies and CPU/PIM compute/transfer costs are not modelled.
+
+## Prepare SIFT100k
+
+The public ANN-Benchmarks mirror is approximately 500 MB. The canonical conversion
+uses the first 100,000 `train` records and all 10,000 `test` records.
 
 ```bash
-make demo-ramulator          # -> the 93.6%/55.1% row‑hit, 12829/18134 cycles
-make layoutsweep-ramulator   # -> row‑hit vs cluster size C, on real HBM2
+mkdir -p .downloads
+curl -L --fail --retry 2 https://ann-benchmarks.com/sift-128-euclidean.hdf5 \
+  -o .downloads/sift-128-euclidean.hdf5
+python3 scripts/prepare_sift.py
 ```
 
-For the deeper design‑rule sweeps (byte budget, layout quality, page policy):
+Expected source SHA-256:
+`dd6f0a6ed6b7ebb8934680f861a33ed01ff33991eaee4fd60914d854a0ca5984`.
+The conversion records source and output hashes in `data/manifest.json`.
+[The committed dataset manifest](results/sift/dataset.json) identifies the evaluated files.
+The driver computes exact neighbours over the indexed subset, rather than reusing
+full-million-vector ground truth. It rejects short, corrupt and nonfinite data.
+
+## Reproduce the evidence
 
 ```bash
-./scripts/deep_experiments.sh   # writes ~/deep_results.txt
+python3 scripts/experiments.py all --seeds 10 --jobs 2
+python3 scripts/strengthen.py all --jobs 2
+python3 scripts/check_results.py
+python3 scripts/analyze.py
 ```
 
-> 💡 On a remote machine, run it inside `tmux` so a dropped connection doesn't kill the build:  `tmux new -s ram` … `./scripts/setup_ramulator.sh` … detach with `Ctrl‑b d`.
+Baseline stages can also run separately: `micro`, `sift`, `sensitivity`, `synthetic`.
+The additional campaign provides `controllers`, `graphs`, and `mechanism` stages.
+Its fixed design is documented in [research closure](doc/RESEARCH_CLOSURE.md).
+Run `sift` before `sensitivity`, which uses its first split. The full suite runs
+hundreds of simulator conditions; allow several GB of working space. Set
+`PIMANN_WORK=/path/to/scratch` to place large intermediates on another filesystem,
+and use the same setting for the `sift` and `sensitivity` stages. Large
+transaction traces from later splits and completed ablations are discarded after
+replay; mapping files, logical traces, trace hashes, query timings and raw statistics
+remain. Missing transaction traces are regenerated when needed.
 
-### DRAM geometry — one authoritative reference
+* `results/`: committed raw JSON statistics, per-query timings, splits, accuracy,
+  metadata and derived CSV summaries. Each timing JSON includes the full config,
+  trace/library/frontend hashes and matching submitted/completed/classified counts.
+* `work/`: regenerable logs, logical traces, mappings and selected transaction traces.
+* `doc/generated/`: tables/plots generated from current results, with input hashes.
+* `archive/pre-review/`: invalidated old evidence and obsolete drivers, excluded
+  from the maintained build and current documents.
 
-Three byte figures appear in this repo; they are **different quantities**, not an inconsistency:
+The analysis uses paired relative cycle differences per split and a Student 95%
+interval with nine degrees of freedom. Three controller settings are repeated
+across all ten splits. The other controller
+settings and heuristic ablations use one fixed split. Three additional graph
+constructions use three matching query splits each, with descriptive ranges
+reported separately from the primary confidence intervals. Construction times are
+shared-host wall-clock observations. The 791 retained replays include command-count
+and component-stream diagnostics.
+The checker enumerates every expected result by name and verifies associated query
+files, graph identities, recall and preserved primary trace hashes. Cache reuse
+requires valid complete contents and matching hashes of outputs and sidecar files.
+Missing prerequisite traces fail before controller sensitivity work starts.
+A run fails on a command error or incomplete read accounting;
+it does not append an apparently valid row after a failed simulation.
 
-| Parameter | Toy model (`toy_timing`) | Ramulator HBM2 (the real result) |
-| :-- | :-- | :-- |
-| Row size | 8 KB (illustrative, hand‑set) | fixed by the `HBM2_8Gb` org preset |
-| Burst size | 64 B | 64 B (cache line) |
-| Page policy | one open row | `Open` |
-| Address mapping | simplified `addr / row_bytes` | `RoBaRaCoCh` + cache‑line channel interleave |
-| Timing | hand‑selected (`t_rowhit=4`, `t_rowmiss=24`) | full HBM2 timing model (`HBM2_2000Mbps`) |
+## Build the documents
 
-The **byte‑budget rule `C* ≈ 1024/(dim×dtype)`** is *not* the raw row size. The ~1 KB constant is the **empirically measured** effective contiguous‑run granularity of the Ramulator config above — the span of addresses that stay in one open row before the mapping/interleave diverts the next access. It is an **empirical result under this configuration**, not a universal law; `sprint1/` models a nominal 2 KB row for its own row‑hit accounting (which only rescales the vectors‑per‑row constant and changes no layout ordering).
-
----
-
-## 🧪 What each experiment shows
-
-| Command | Timing | Research question | Finding |
-| :-- | :-- | :-- | :-- |
-| `make demo-ramulator` | HBM2 | Does access **pattern** govern performance? | Yes — random costs +41 % cycles, −38 pts row‑hit |
-| `make sweep-toy` | toy | Is it **pattern** or **dataset size**? | Pattern: hit‑rate is flat across a 32× size range |
-| `make optsweep-toy` | toy | Does **reordering** recover it? | No — ~55 % → ~56 %, redundant with the controller *(confirmed on HBM2 in the thesis)* |
-| `make layoutsweep-ramulator` | HBM2 | Does **layout** recover it? | Yes — fully, by cluster size `C`≈16 |
-| `deep_experiments.sh` | HBM2 | What's the **design rule** and its limits? | ~1 KB effective byte budget; needs ~90 % layout accuracy; open‑page only |
-| `sprint1/` (real HNSW) | HBM2 | Does a **learned layout** beat BFS on **real** data? | No — BFS is already strong; negative result with a mechanism |
-
----
-
-## ✅ Tests
-
-The root tools have an automated test suite (argument validation, record‑count and
-determinism checks, and the core sequential‑≫‑random row‑hit claim):
+Install Tectonic 0.15.0 (or put its binary at `.toolchain/bin/tectonic`) and Poppler's
+`pdftotext`/`pdfinfo`. The build script pins the Tectonic bundle to
+`https://data1b.fullyjustified.net/tlextras-2022.0r0.tar` and packages are cached under
+`.toolchain/cache`. First compilation needs network access for TeX packages. Subsequent builds can
+use `TECTONIC_OFFLINE=1 make docs` with the populated cache.
 
 ```bash
-make test        # builds the tools and runs tests/run_tests.sh (27 checks)
+make docs
 ```
 
-For the real‑HNSW study, `sprint1/` includes a **multi‑seed harness** that reports
-mean / stddev / 95 % CI per layout, so the BFS‑vs‑query‑aware comparison can be
-read with error bars rather than a single run:
+This regenerates tables/figures, compiles both PDFs, and checks unresolved references
+and horizontal overflow. The long thesis is authoritative; the paper shares its
+result tables, values and bibliography. Both follow the argument from search and
+DRAM fundamentals through controlled results, robustness checks and practical
+interpretation. Vector graphics illustrate the experiment pipeline, placement,
+actual command issues and uncertainty in the measured differences. No old hard-coded figure is used.
 
-```bash
-cd sprint1 && make run_multiseed
-./scripts/multiseed.sh 10          # 10 seeds -> mean +/- CI per layout
-```
-
----
-
-## 📄 Papers
-
-- **`doc/pim_ann_ieee.pdf`** — IEEE conference‑format paper with research questions, the proposed *locality‑aware graph layout*, the design rule, and the multi‑DPU parallelism analysis.
-- **`doc/pim_ann_thesis.pdf`** — a longer, from‑first‑principles report (memory wall → PIM → ANN → DRAM → results), written so any technically literate reader can follow it. Both `.tex` sources are included.
-
----
-
-## ✍️ Author
-
-**senqx** — Master's thesis preparatory work, Computer Science / Computer Architecture (HPC).
-
-## 📜 License
-
-MIT — see `LICENSE`.
+The GitHub Actions workflow builds the pipeline, checks the pinned simulator,
+validates committed results and regenerates numeric tables. The full SIFT campaign
+is retained as research evidence rather than rerun on every push.

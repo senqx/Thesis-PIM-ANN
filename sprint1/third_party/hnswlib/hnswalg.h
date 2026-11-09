@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include <atomic>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <list>
@@ -26,6 +27,9 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
     static const tableint MAX_LABEL_OPERATION_LOCKS = 65536;
     static const unsigned char DELETE_MARK = 0x01;
 
+    // Thesis instrumentation: observational callbacks only. The adapter is single-threaded.
+    // Arguments: internal node id, adjacency (true) / vector (false), level, bytes.
+    mutable std::function<void(tableint, bool, unsigned, size_t)> access_observer;
     size_t max_elements_{0};
     mutable std::atomic<size_t> cur_element_count{0};  // current number of elements
     size_t size_data_per_element_{0};
@@ -350,6 +354,7 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
         dist_t lowerBound;
         if (bare_bone_search ||
             (!isMarkedDeleted(ep_id) && ((!isIdAllowed) || (*isIdAllowed)(getExternalLabel(ep_id))))) {
+            if (access_observer) access_observer(ep_id, false, 0, data_size_);
             char* ep_data = getDataByInternalId(ep_id);
             dist_t dist = fstdistfunc_(data_point, ep_data, dist_func_param_);
             lowerBound = dist;
@@ -387,6 +392,8 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
             tableint current_node_id = current_node_pair.second;
             int *data = (int *) get_linklist0(current_node_id);
             size_t size = getListCount((linklistsizeint*)data);
+            if (access_observer) access_observer(current_node_id, true, 0,
+                                                sizeof(linklistsizeint) + size * sizeof(tableint));
 //                bool cur_node_deleted = isMarkedDeleted(current_node_id);
             if (collect_metrics) {
                 metric_hops++;
@@ -415,6 +422,7 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
                 if (!(visited_array[candidate_id] == visited_array_tag)) {
                     visited_array[candidate_id] = visited_array_tag;
 
+                    if (access_observer) access_observer(candidate_id, false, 0, data_size_);
                     char *currObj1 = (getDataByInternalId(candidate_id));
                     dist_t dist = fstdistfunc_(data_point, currObj1, dist_func_param_);
 
@@ -1421,6 +1429,8 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
         if (cur_element_count == 0) return result;
 
         tableint currObj = enterpoint_node_;
+        if (access_observer) access_observer(enterpoint_node_, false,
+                                             static_cast<unsigned>(maxlevel_), data_size_);
         dist_t curdist = fstdistfunc_(query_data, getDataByInternalId(enterpoint_node_), dist_func_param_);
 
         for (int level = maxlevel_; level > 0; level--) {
@@ -1431,6 +1441,8 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
 
                 data = (unsigned int *) get_linklist(currObj, level);
                 int size = getListCount(data);
+                if (access_observer) access_observer(currObj, true, level,
+                                                    sizeof(linklistsizeint) + size * sizeof(tableint));
                 metric_hops++;
                 metric_distance_computations+=size;
 
@@ -1439,6 +1451,7 @@ class HierarchicalNSW : public AlgorithmInterface<dist_t> {
                     tableint cand = datal[i];
                     if (cand < 0 || cand > max_elements_)
                         return Status("cand error");
+                    if (access_observer) access_observer(cand, false, level, data_size_);
                     dist_t d = fstdistfunc_(query_data, getDataByInternalId(cand), dist_func_param_);
 
                     if (d < curdist) {

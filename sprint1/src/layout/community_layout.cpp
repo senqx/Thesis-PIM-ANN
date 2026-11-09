@@ -12,7 +12,7 @@
 
 namespace pimann {
 
-void CommunityLayout::build(const GraphView& graph) {
+void CommunityLayout::build(const GraphView &graph) {
   const uint64_t n = graph.nodeCount();
 
   // --- Label propagation -------------------------------------------------
@@ -31,7 +31,7 @@ void CommunityLayout::build(const GraphView& graph) {
     std::shuffle(order.begin(), order.end(), rng);
     bool changed = false;
     for (const uint64_t node : order) {
-      const std::vector<uint32_t>& adj = graph.neighbors(node);
+      const std::vector<uint32_t> &adj = graph.neighbors(node);
       if (adj.empty()) {
         continue;
       }
@@ -41,7 +41,7 @@ void CommunityLayout::build(const GraphView& graph) {
       }
       uint64_t best = label[node];
       uint32_t bestCount = 0;
-      for (const auto& [lbl, count] : tally) {
+      for (const auto &[lbl, count] : tally) {
         if (count > bestCount || (count == bestCount && lbl < best)) {
           best = lbl;
           bestCount = count;
@@ -67,18 +67,17 @@ void CommunityLayout::build(const GraphView& graph) {
   }
   std::vector<std::vector<uint64_t>> communities;
   communities.reserve(groups.size());
-  for (auto& [lbl, members] : groups) {
+  for (auto &[lbl, members] : groups) {
     communities.push_back(std::move(members));
   }
-  std::sort(
-      communities.begin(), communities.end(),
-      [](const std::vector<uint64_t>& a, const std::vector<uint64_t>& b) {
-        return a.size() > b.size();
-      });
+  std::sort(communities.begin(), communities.end(),
+            [](const std::vector<uint64_t> &a, const std::vector<uint64_t> &b) {
+              return a.size() != b.size() ? a.size() > b.size() : a.front() < b.front();
+            });
 
   m_slotToNode.clear();
   m_slotToNode.reserve(n);
-  for (std::vector<uint64_t>& members : communities) {
+  for (std::vector<uint64_t> &members : communities) {
     std::sort(members.begin(), members.end());
     for (const uint64_t node : members) {
       m_slotToNode.push_back(node);
@@ -91,23 +90,21 @@ void CommunityLayout::build(const GraphView& graph) {
   }
 }
 
-uint64_t CommunityLayout::slotOf(uint64_t nodeId) const {
-  return m_nodeToSlot[nodeId];
-}
+uint64_t CommunityLayout::slotOf(uint64_t nodeId) const { return m_nodeToSlot.at(nodeId); }
 
-uint64_t CommunityLayout::nodeAt(uint64_t slot) const {
-  return m_slotToNode[slot];
-}
+uint64_t CommunityLayout::nodeAt(uint64_t slot) const { return m_slotToNode.at(slot); }
 
-void CommunityLayout::exportMapping(const std::string& path) const {
+void CommunityLayout::exportMapping(const std::string &path) const {
   std::ofstream out(path);
   if (!out) {
     throw std::runtime_error("cannot open layout export: " + path);
   }
+  out.exceptions(std::ios::badbit | std::ios::failbit);
   out << "logicalId,slot\n";
   for (uint64_t node = 0; node < m_nodeToSlot.size(); node++) {
     out << node << ',' << m_nodeToSlot[node] << '\n';
   }
+  out.close();
 }
 
-}  // namespace pimann
+} // namespace pimann

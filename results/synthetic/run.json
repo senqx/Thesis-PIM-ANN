@@ -1,0 +1,20 @@
+{
+  "command": [
+    "/home/artashes/proj/Thesis-PIM-ANN/sprint1/run_study",
+    "--max-base",
+    "8000",
+    "--train",
+    "300",
+    "--test",
+    "150",
+    "--seed",
+    "1",
+    "--window",
+    "16",
+    "--block-bytes",
+    "1024",
+    "--output",
+    "/home/artashes/proj/Thesis-PIM-ANN/work/synthetic"
+  ],
+  "binary": "7109d682cf4f43359511c4b00631656fe28c6d3273c24328eb9155cdd4337e3b"
+}

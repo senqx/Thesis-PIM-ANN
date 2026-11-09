@@ -1,0 +1,13 @@
+{
+  "work/robustness/graphs/index101/seed3/bfs_128.mapping.csv": "9395b53594fd8f43e6ca6eb315867ec671aa5c19d5d54e52ec370871863b1430",
+  "work/robustness/graphs/index101/seed3/bfs_512.mapping.csv": "9395b53594fd8f43e6ca6eb315867ec671aa5c19d5d54e52ec370871863b1430",
+  "work/robustness/graphs/index101/seed3/community_128.mapping.csv": "4bf05d4545df61ec6db5eda1f5392a6eea416f5572673229b4981651fb82ef06",
+  "work/robustness/graphs/index101/seed3/community_512.mapping.csv": "4bf05d4545df61ec6db5eda1f5392a6eea416f5572673229b4981651fb82ef06",
+  "work/robustness/graphs/index101/seed3/identity_128.mapping.csv": "abdcd29b585d32215d623a48631fef4193558b882e55df37b97f783ea5ef3998",
+  "work/robustness/graphs/index101/seed3/identity_512.mapping.csv": "abdcd29b585d32215d623a48631fef4193558b882e55df37b97f783ea5ef3998",
+  "work/robustness/graphs/index101/seed3/logical.csv": "a081963ef4e9feda02cde2eaedb01354bfccffe6d84d6fc7ce59183693f70ae8",
+  "work/robustness/graphs/index101/seed3/query_aware_128.mapping.csv": "abb109497526a65e6a63cd8a80dc111a38da2195a2e1243f3bd786041bcbec65",
+  "work/robustness/graphs/index101/seed3/query_aware_512.mapping.csv": "7eba32daa5ebf9953534d2dc65321917f8c87e8b54ae068801c29d120c5689f7",
+  "work/robustness/graphs/index101/seed3/random_128.mapping.csv": "ceeb970fc329d2dc2c9f6003ea15dcd3c8faa321660c101fb0a64933ab4a3775",
+  "work/robustness/graphs/index101/seed3/random_512.mapping.csv": "ceeb970fc329d2dc2c9f6003ea15dcd3c8faa321660c101fb0a64933ab4a3775"
+}

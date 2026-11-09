@@ -1,0 +1,8 @@
+# Preserve the bytes covered by the artifact's SHA-256 provenance on checkout.
+results/** -text
+
+# Python's CSV writer uses standard CRLF record terminators.
+results/**/*.csv whitespace=cr-at-eol
+# Raw recall records retain the driver's space-delimited ID lists, including
+# their final separator. Preserve these original records and equivalence proofs.
+results/**/recall.csv whitespace=cr-at-eol,-blank-at-eol

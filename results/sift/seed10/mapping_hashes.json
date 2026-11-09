@@ -1,0 +1,13 @@
+{
+  "/tmp/thesis-final-study/sift/seed10/bfs_128.mapping.csv": "2d294138c0f691006e046a09f9e0530f4925f9223c2a2d9c9991c0d4580a9779",
+  "/tmp/thesis-final-study/sift/seed10/bfs_512.mapping.csv": "2d294138c0f691006e046a09f9e0530f4925f9223c2a2d9c9991c0d4580a9779",
+  "/tmp/thesis-final-study/sift/seed10/community_128.mapping.csv": "76b3d92653784bc64e49f3ed29f2fc7eed604e3566f5679be1ae782499bec799",
+  "/tmp/thesis-final-study/sift/seed10/community_512.mapping.csv": "76b3d92653784bc64e49f3ed29f2fc7eed604e3566f5679be1ae782499bec799",
+  "/tmp/thesis-final-study/sift/seed10/identity_128.mapping.csv": "abdcd29b585d32215d623a48631fef4193558b882e55df37b97f783ea5ef3998",
+  "/tmp/thesis-final-study/sift/seed10/identity_512.mapping.csv": "abdcd29b585d32215d623a48631fef4193558b882e55df37b97f783ea5ef3998",
+  "/tmp/thesis-final-study/sift/seed10/logical.csv": "7342e47b00f849adfd676f0e883d8d10d9f79518e4b99b1169370ff64f07868c",
+  "/tmp/thesis-final-study/sift/seed10/query_aware_128.mapping.csv": "64ff05f8052cf954b35fd9ed4e9f8eea38c926802d3a0e1357b2a2927781c977",
+  "/tmp/thesis-final-study/sift/seed10/query_aware_512.mapping.csv": "258e845fbf8f117943035c6b666b10d1ec9d7ea65d082714d97769419e84cbd5",
+  "/tmp/thesis-final-study/sift/seed10/random_128.mapping.csv": "9462365a8c5bf30c5a8a2b786f54439aedfa6bf29cb7afa5e94a7d9c02c487e1",
+  "/tmp/thesis-final-study/sift/seed10/random_512.mapping.csv": "9462365a8c5bf30c5a8a2b786f54439aedfa6bf29cb7afa5e94a7d9c02c487e1"
+}

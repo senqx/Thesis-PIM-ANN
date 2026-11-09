@@ -10,7 +10,7 @@
 
 namespace pimann {
 
-void RandomLayout::build(const GraphView& graph) {
+void RandomLayout::build(const GraphView &graph) {
   const uint64_t n = graph.nodeCount();
   m_slotToNode.resize(n);
   std::iota(m_slotToNode.begin(), m_slotToNode.end(), uint64_t{0});
@@ -24,23 +24,21 @@ void RandomLayout::build(const GraphView& graph) {
   }
 }
 
-uint64_t RandomLayout::slotOf(uint64_t nodeId) const {
-  return m_nodeToSlot[nodeId];
-}
+uint64_t RandomLayout::slotOf(uint64_t nodeId) const { return m_nodeToSlot.at(nodeId); }
 
-uint64_t RandomLayout::nodeAt(uint64_t slot) const {
-  return m_slotToNode[slot];
-}
+uint64_t RandomLayout::nodeAt(uint64_t slot) const { return m_slotToNode.at(slot); }
 
-void RandomLayout::exportMapping(const std::string& path) const {
+void RandomLayout::exportMapping(const std::string &path) const {
   std::ofstream out(path);
   if (!out) {
     throw std::runtime_error("cannot open layout export: " + path);
   }
+  out.exceptions(std::ios::badbit | std::ios::failbit);
   out << "logicalId,slot\n";
   for (uint64_t node = 0; node < m_nodeToSlot.size(); node++) {
     out << node << ',' << m_nodeToSlot[node] << '\n';
   }
+  out.close();
 }
 
-}  // namespace pimann
+} // namespace pimann

@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/home/artashes/proj/Thesis-PIM-ANN/sprint1/run_study",
+    "--max-base",
+    "100000",
+    "--train",
+    "500",
+    "--test",
+    "200",
+    "--seed",
+    "8",
+    "--window",
+    "16",
+    "--block-bytes",
+    "1024",
+    "--output",
+    "/tmp/thesis-final-study/sift/seed8",
+    "--base",
+    "/home/artashes/proj/Thesis-PIM-ANN/data/sift_base.fvecs",
+    "--queries",
+    "/home/artashes/proj/Thesis-PIM-ANN/data/sift_query.fvecs"
+  ],
+  "binary": "7535d59a483626a267bd5fe909256ecc83a3d8c0f335e69ff09ba47b2c68b06c",
+  "data": {
+    "data/sift_base.fvecs": "7145bedfe09fe8d1afcc9ad743eb6ba6218dc766b77c4b0bbe82d22b78e265ba",
+    "data/sift_query.fvecs": "f7fc9be140accdfd64116c2fa2365ecdb69b8f084970c6b0532db5ff79ac8fdc"
+  }
+}
