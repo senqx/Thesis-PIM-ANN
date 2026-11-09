@@ -22,7 +22,7 @@ CORE := \
 
 .PHONY: all clean bench sift synth dtype multiseed figures
 
-all: run_bench run_synth run_sift run_dtype run_multiseed
+all: run_bench run_synth run_sift run_dtype run_multiseed run_sift_multiseed
 
 # Synthetic benchmark (no dataset needed): 4 layouts + efSearch sweep.
 run_bench: src/run_bench.cpp $(CORE)
@@ -45,6 +45,11 @@ run_dtype: src/run_dtype.cpp $(CORE)
 # Multi-seed statistical harness: one seeded run per invocation; aggregate with
 # scripts/multiseed.sh to get mean/stddev/95%CI per layout across seeds.
 run_multiseed: src/run_multiseed.cpp $(CORE)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
+
+# Multi-seed harness on a REAL .fvecs dataset: each seed re-shuffles the
+# train/test query split; aggregate with scripts/multiseed_sift.sh for CIs.
+run_sift_multiseed: src/run_sift_multiseed.cpp $(CORE)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
 
 # Convenience: run the synthetic benchmark and regenerate figures.
@@ -75,4 +80,4 @@ multiseed: run_multiseed
 	./scripts/multiseed.sh 10 15000 300 150 64
 
 clean:
-	rm -f run_bench run_synth run_sift run_dtype run_multiseed *.ldst *.png bench_human.txt
+	rm -f run_bench run_synth run_sift run_dtype run_multiseed run_sift_multiseed *.ldst *.png bench_human.txt
