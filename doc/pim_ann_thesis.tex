@@ -116,6 +116,27 @@ row-buffer hit rate from 93.6\% to 55.1\%, and increases memory latency by 40\%.
 quantitative heart of the thesis direction, and it is fully reproducible from the accompanying
 software repository.
 
+\begin{keybox}
+\textbf{What this report claims, and what it does not.} Every timing number here is a
+\emph{DRAM-locality} measurement --- row-hit rate, memory-access cycles, latency --- produced by a
+cycle-accurate memory simulator. It is \emph{not} an end-to-end Processing-in-Memory speedup: we
+model the memory path, not a near-memory compute datapath, so we deliberately make no claim about
+host-versus-PIM acceleration (Section~\ref{sec:limits} states this as a scope boundary). The
+contribution is an explanation of \emph{why} graph-based ANN is hard to accelerate near memory, and
+of exactly which lever --- and how much of one --- can recover the lost locality.
+\end{keybox}
+
+\paragraph{The central thesis.} Taken together, the experiments support a single, defensible claim:
+\emph{the effectiveness of graph-based ANN on Processing-in-Memory is fundamentally constrained by
+the interaction between graph traversal, physical data layout, and DRAM access granularity.}
+Locality lost to random traversal can be fully recovered in controlled synthetic workloads by
+co-locating co-visited vectors --- but on a \emph{real} HNSW index the graph structure already
+exposes substantial locality on its own, so a simple traversal-order (breadth-first) placement
+captures essentially all of the available benefit, and a learned, workload-aware layout adds little.
+The negative result is therefore not a failed optimisation but the finding itself: it maps the
+ceiling on how much physical placement can help graph-ANN on PIM, and explains where that ceiling
+comes from.
+
 % ============================================================
 \section{The problem: the memory wall}
 
@@ -361,6 +382,28 @@ is \term{trace-driven}: you supply a list of memory accesses, and it replays the
 model, reporting cycles, row hits and misses, latency, and bandwidth. Because it is peer-reviewed
 and widely used, results obtained with it are credible to a committee or reviewer.
 
+\subsection{What the model captures, and what it abstracts away}
+\label{sec:modelscope}
+
+Being explicit about the boundary of the model is essential to reading the results correctly.
+Ramulator, in our configuration, \emph{does} model the parts that decide locality: the row buffer
+and its activate/precharge timing, \term{bank-level parallelism} (multiple banks open at once), the
+\term{FR-FCFS} request scheduler that reorders the controller's queue to favour row hits, the
+address-mapping scheme that assigns physical addresses to rows/banks/columns, and the full DDR
+timing constraints of the HBM2 device. These are exactly the mechanisms that turn ``sequential
+vs.\ random'' into ``fast vs.\ slow,'' so for a \emph{DRAM-locality} question the model is faithful.
+
+It \emph{does not} model three things, and we claim nothing about them. First, there is \emph{no
+near-memory compute datapath}: Ramulator times the memory, not an in- or near-bank ALU, so our
+numbers are locality metrics, never an end-to-end PIM speedup. Second, there is \emph{no
+host$\leftrightarrow$PIM transfer or synchronisation cost}: a real PIM system pays to ship queries in
+and results out, which our single-channel memory trace does not capture. Third, we replay a
+\emph{single channel/one DPU's worth} of accesses, so inter-DPU concurrency and cross-DPU merge
+traffic are out of scope (we discuss their likely effect only analytically). The honest reading is
+therefore narrow and defensible: we measure how access pattern and layout move DRAM row-buffer
+locality, and we leave the translation of that into a full PIM speedup --- which requires all three
+abstracted pieces --- as future work.
+
 \subsection{The trace-driven workflow}
 
 The methodology has three steps, and it cleanly separates the \emph{workload} from the
@@ -510,11 +553,22 @@ effective. By contrast, \emph{graph-based} ANN (HNSW, DiskANN) on PIM is almost 
 literature --- precisely because its random, data-dependent traversal is hostile to the row-buffer
 locality that PIM relies on.
 
+There is a second, subtler gap. All three existing systems are \emph{hand-tuned point designs on a
+single fixed commercial chip} (UPMEM). Because the hardware is fixed, none of them can vary the DRAM
+geometry --- burst size, address mapping, page policy, row granularity --- and therefore none can ask
+the \emph{general} question of \emph{when} and \emph{why} a given access pattern wins or loses on
+near-memory DRAM. A simulator can. This points to a contribution of a different kind from ``another
+faster system'': a portable, simulator-based \emph{characterisation} of the interaction between graph
+traversal, physical layout, and row-buffer granularity, with the existing hardware systems serving as
+validation points rather than competitors.
+
 \begin{keybox}
 \textbf{The gap, stated precisely.} Cluster-based ANN on PIM is becoming crowded and works because
-it is sequential. Graph-based ANN on PIM is open because it is random. Our experiment turns that
-observation from an assertion into a measured fact, and provides a concrete baseline against which
-any locality-improving technique can be evaluated.
+it is sequential; graph-based ANN on PIM is open because it is random. But the deeper opening is one
+of \emph{generality and methodology}: the existing works are fixed-silicon point designs, so the
+reusable question --- \emph{under what memory geometry does layout matter, and by how much} --- is
+unanswered. This thesis answers that question on a cycle-accurate model and validates it on a real
+HNSW index, turning an assertion into a measured, portable characterisation.
 \end{keybox}
 
 \subsection{What the result de-risks}
@@ -696,6 +750,20 @@ work, notice the leftmost column of Table~\ref{tab:bytelaw}: even with
 \emph{no} co-location ($C{=}1$) the row-hit rate rises with dimension
 ($29.9\%, 55.1\%, 75.6\%$), because a bigger vector already occupies several
 contiguous 64-byte bursts and so collects some row-hits ``for free.''
+
+\paragraph{Scope of the rule: what is general and what is not.} The \emph{form}
+of Eq.~\ref{eq:cstar} --- that the recovery threshold is a fixed byte budget
+divided by the per-vector byte span --- is a row-buffer argument and should hold
+on any open-page DRAM. The \emph{constant}, $S_\text{eff}\approx1$\,KB, is
+\emph{not} universal: it is a property of \emph{this} HBM2 configuration and
+would change with the DRAM standard (DDR5, HBM3, LPDDR), the burst length, the
+address-mapping scheme (we use \texttt{RoBaRaCoCh}), the number of interleaved
+channels, and the page policy. In other words, a reader should take ``co-locate
+about one effective row's worth of co-visited data'' as the portable principle,
+and re-measure $S_\text{eff}$ for any target memory system rather than assuming
+$1$\,KB. Establishing how $S_\text{eff}$ moves across these knobs is a concrete
+item of future work; it does not affect any \emph{ordering} between layouts
+reported here, only the absolute knee position.
 
 \begin{table}[h]
 \centering
@@ -891,35 +959,80 @@ a synthetic corpus --- was overturned by checking it against reality.
 \end{keybox}
 
 % ============================================================
-\section{Limitations (stated honestly)}
+\section{Limitations and threats to validity}
+\label{sec:limits}
 
-A result is only as useful as its caveats are clear.
+A result is only as useful as its caveats are clear. We group them by the kind of validity each one
+threatens, in the usual empirical-methods sense, so a reader can see precisely how far each claim
+reaches.
+
+\subsection{Construct validity --- are we measuring the right thing?}
 
 \begin{description}
-\item[DRAM path only.] Ramulator models the memory timing, not a near-memory compute unit. We
-therefore report the \emph{locality degradation} (row-hit rate, latency, cycles), not a direct
-host-versus-PIM speedup. Producing a true PIM speedup number requires additionally modelling a
-near-bank compute datapath. Any speed-up figure printed by the teaching model (e.g.\ $2.36\times$) is
-an analytical estimate under assumed host/PIM bandwidths, not a measured result.
-\item[Single-seed runs.] The reported comparisons use one random seed each. The effects are large
-relative to run-to-run noise, but a rigorous study would repeat each configuration across several
-seeds and report variance; that is future work.
-\item[Static trace.] Real graph traversal is \emph{data-dependent}: the next node visited depends on
-distances computed at run time. The core experiments use a random trace that \emph{approximates} that
-irregularity; Section~\ref{sec:realhnsw} closes this gap with per-query traces from a real executing
-HNSW index, and reports the (negative) result that follows.
-\item[Single configuration.] We report one dataset size and one HBM2 preset. We separately showed,
-on the toy model, that the effect is independent of dataset size; re-running that sweep on Ramulator
-is a near-term next step.
-\item[Not yet hardware-validated.] Ramulator itself is validated against real DRAM, but our specific
-ANN-to-memory mapping should, where possible, be cross-checked against a measurement on a real
-UPMEM or HBM-PIM system.
+\item[DRAM locality is not PIM speedup.] This is the most important boundary. Ramulator models the
+memory path, not a near-memory compute unit, so every number we report is a \emph{locality} metric
+(row-hit rate, memory cycles, latency), never an end-to-end host-versus-PIM speedup
+(Section~\ref{sec:modelscope}). A better row-hit rate is necessary but not sufficient for a PIM win:
+the full picture additionally needs compute time, host$\leftrightarrow$PIM transfer, and
+synchronisation, none of which we model. Any speed-up figure printed by the teaching model
+(e.g.\ $2.36\times$) is an analytical estimate under assumed bandwidths, not a measurement, and we
+treat it as illustrative only.
+\item[Synthetic trace vs.\ real traversal.] Real graph traversal is \emph{data-dependent} --- the next
+node depends on distances computed at run time --- whereas the core sweeps use a random permutation as
+a stand-in. We treat the synthetic results as the controlled \emph{mechanism} study and give the
+\emph{real} HNSW/SIFT1M validation (Section~\ref{sec:realhnsw}) the final word; where the two
+disagree, the real-data result governs the conclusion. The random trace should be read as an upper
+bound on irregularity, not as equivalent to HNSW.
+\end{description}
+
+\subsection{Statistical-conclusion validity --- is the effect real?}
+
+\begin{description}
+\item[Large synthetic effects, small real-data margins.] The sequential-vs-random and
+layout-recovery effects are very large (tens of points of row-hit), so single-seed runs are adequate
+to establish \emph{them}. The real-SIFT1M layout comparison is different: the aggregate-cycle spread
+between layouts is small (under $0.5\%$), and a single seed cannot by itself carry a claim at that
+scale. We therefore (i) lead the real-data conclusion with the \emph{inter-vector} row-hit metric,
+where the separation is far larger and more stable, and (ii) flag multi-seed confidence intervals on
+the real-data runs as required confirmatory work; the harness for this already exists in the artifact
+(\texttt{run\_multiseed}). We do not overstate the practical magnitude of the real-data difference.
+\end{description}
+
+\subsection{External validity --- how far does it generalise?}
+
+\begin{description}
+\item[One DRAM configuration.] We report one HBM2 preset. As Section~\ref{sec:deep} states, the byte
+budget's \emph{constant} $S_\text{eff}$ is configuration-specific (standard, burst, mapping, channels,
+page policy); only the \emph{form} of the rule is expected to generalise. Confirming the rule on a
+second DRAM standard is future work.
+\item[One dataset and scale.] We validate on SIFT1M at $100$k base vectors, dimension $128$. Larger
+scale (full $1$M, GIST's dimension $960$) and other datasets would strengthen external validity; the
+pipeline is built to accept them.
+\item[Not yet hardware-validated.] Ramulator is validated against real DRAM, but our specific
+ANN-to-memory mapping should, where possible, be cross-checked against a measurement on a real UPMEM
+or HBM-PIM system.
+\end{description}
+
+\subsection{Internal validity --- could something else explain it?}
+
+\begin{description}
+\item[Controlled single variable.] In each core experiment only one factor changes (access order, or
+placement, or page policy) with everything else fixed, and the mechanism (row misses/conflicts) is
+reported directly, so the causal link from access pattern to timing is tightly controlled. The main
+residual risk is that the address-mapping scheme interacts with our contiguous placement in a way
+specific to \texttt{RoBaRaCoCh}; we note this and leave a mapping sweep to future work.
 \end{description}
 
 % ============================================================
 \section{Conclusions and future work}
 
 \subsection{Conclusions}
+
+The work supports one overarching conclusion: \emph{the effectiveness of graph-based ANN on
+Processing-in-Memory is fundamentally constrained by the interaction between graph traversal,
+physical data layout, and DRAM access granularity.} The specific findings below make that claim
+precise and bound it. Note throughout that these are \emph{DRAM-locality} results from a
+cycle-accurate memory model, not end-to-end PIM speedups (Section~\ref{sec:limits}).
 
 \begin{enumerate}
 \item ANN distance search is memory-bound: the arithmetic is trivial, so performance is governed by

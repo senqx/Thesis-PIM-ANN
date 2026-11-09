@@ -58,9 +58,14 @@ Finally, we validate the idea on a \emph{real} HNSW index over the real SIFT1M
 dataset (Sec.~\ref{sec:realval}) and report an honest \emph{negative} result: a
 learned, workload-aware layout does \emph{not} beat a simple breadth-first
 traversal-order layout, because on a real graph the traversed neighbours already
-are the co-visited vectors. The study is fully reproducible and identifies the
-correct lever --- and its limits --- for an under-explored problem:
-layout-aware graph-ANN on PIM.
+are the co-visited vectors. The thread through these results is a single thesis:
+graph-ANN-on-PIM performance is constrained by the interaction of traversal,
+layout, and DRAM granularity, and realistic HNSW already exposes enough
+structural locality to cap the benefit of learned placement. All numbers are
+cycle-accurate \emph{DRAM-locality} metrics, not end-to-end PIM speedups (we
+model the memory path, not a near-memory datapath); the study is fully
+reproducible and bounds the correct lever --- and its limits --- for an
+under-explored problem.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -159,13 +164,24 @@ $\textit{efConstruction}{=}128$, $\textit{efSearch}{=}64$~\cite{malkov2018hnsw}.
 \label{sec:related}
 \textbf{ANN on PIM.} DRIM-ANN~\cite{drimann}, UpANNS~\cite{upanns}, and
 PIMANN~\cite{pimann} implement IVF/PQ on UPMEM ($\sim\!2.4$--$4.3\times$ over
-CPU). All are cluster-based and sequential. We find no published, verifiable
-graph-based ANN system on PIM.
+CPU). All three share two properties: they are cluster-based (hence sequential),
+and they are \emph{hand-tuned point designs on one fixed commercial chip}. None
+reports a graph-based ANN system on PIM, and --- because the hardware is fixed ---
+none can vary the DRAM geometry (burst, mapping, page policy, row size) to ask
+\emph{when} and \emph{why} an access pattern wins or loses on near-memory DRAM.
+That is precisely the gap we target: not another point design, but a
+\emph{simulator-based characterisation}, portable across DRAM configurations, of
+the interaction between graph traversal, data layout, and row-buffer granularity.
+The existing UPMEM systems become validation points for that model, not
+competitors.
 \textbf{Locality for graph ANN (not PIM).} On CPUs, graph reordering co-locates
 neighbours for cache efficiency~\cite{coleman2022reorder}; on SSDs,
 DiskANN~\cite{diskann} optimises block I/O. These target caches or disk, not the
 DRAM row buffer under a PIM model, and --- as we show --- the \emph{layout}
-intuition they share transfers, while \emph{access reordering} does not.
+intuition they share transfers, while \emph{access reordering} does not. Our
+contribution relative to them is to move the question from caches/disk to the
+DRAM row buffer, and from ``does reordering help'' to a quantified
+\emph{granularity} rule bounded by a real HNSW validation.
 
 % =====================================================================
 \section{Methodology}
@@ -310,6 +326,11 @@ recover row-buffer locality. A consistency check confirms the mechanism: even at
 $C\!=\!1$ (no co-location) the row-hit rate rises with dimension ($29.9\%,
 55.1\%, 75.6\%$ for dim $64, 128, 256$), because a larger vector already spans
 several contiguous $64$-byte bursts and so captures intra-vector hits for free.
+We stress that the \emph{form} of Eq.~\ref{eq:cstar} is general to open-page DRAM,
+but the \emph{constant} $S_\text{eff}$ is configuration-specific: it depends on
+the DRAM standard, burst length, address mapping, channel interleaving, and page
+policy, and should be re-measured for any target memory rather than assumed to be
+$1$\,KB. This rescales the knee but not the layout ordering reported here.
 
 \begin{table}[t]
 \caption{Row-hit rate (\%) vs.\ cluster size and vector dimension
@@ -411,9 +432,13 @@ analytical model prints under assumed $8$ vs $64$\,GB/s host/PIM bandwidths) is 
 estimate, not a measurement; (ii) the core experiments' random and clustered
 traces \emph{approximate} data-dependent HNSW traversal; we address this in
 Sec.~\ref{sec:realval} with per-query traces from a real index over SIFT1M;
-(iii) the parallelism discussion is analytical; (iv) single-seed runs ---
-repeated-seed variance is future work; (v) the mapping should be cross-checked
-against real UPMEM/HBM-PIM measurement.
+(iii) the parallelism discussion is analytical; (iv) the real-data layout margins
+are small in \emph{aggregate} cycles ($<\!0.5\%$), so we base that conclusion on
+the larger, more stable inter-vector metric and flag multi-seed confidence
+intervals (harness already built) as the required confirmatory step --- we do not
+overstate the practical size of the real-data difference; (v) the byte-budget
+constant $S_\text{eff}$ is configuration-specific and the address mapping should
+be cross-checked against real UPMEM/HBM-PIM measurement.
 
 \subsection{Validation on a real HNSW index}
 \label{sec:realval}
