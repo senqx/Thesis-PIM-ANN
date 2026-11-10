@@ -36,6 +36,7 @@ def run(
     trace, output = Path(trace).resolve(), Path(output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     query_path = output.with_suffix(".queries.csv")
+    output.with_suffix(".queries.csv.gz").unlink(missing_ok=True)
     frontend = {
         "impl": "LoadStoreTrace",
         "clock_ratio": 1,

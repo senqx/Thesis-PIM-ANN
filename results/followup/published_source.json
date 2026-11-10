@@ -1,0 +1,28 @@
+{
+  "url": "https://proceedings.neurips.cc/paper_files/paper/2022/file/fb44a668c2d4bc984e9d6ca261262cbb-Supplemental-Conference.zip",
+  "archive_sha256": "d91aedfb460b530a1172370d0b2fc084885a67105f9b04d0c33e762c161ddfb7",
+  "headers": {
+    "reordering.h": "9ec71811c8e04c9d57f9ac9a0518146966d07f63fcd9fec16865ad24923d727c",
+    "ExplicitSet.h": "0a018d973d21107ad309e6076485cd7b7d0a680c54a13a1074e661ea5a1bb133",
+    "WeightedPriorityQueue.h": "826d85bc8767213d267bc29370ff62c6cffc6905cda83bb50960dc51bd27c696",
+    "GorderPriorityQueue.h": "1be0a6108e50ddd849d789ddfee03649008a15b0f8b1ed2b354068834ed00882"
+  },
+  "adapter_header_sha256": "d9a82ecf63ac6dfe6055ae95a72ad6cdb2acd05a72a4081f7215265ffe701eb0",
+  "priority_queue_sha256": "6f1e858c45e53e7b5cf6d553cfd4ae068f9c97c954e5b31a79349a0b4c2c568d",
+  "adaptation": "Replace weighted linked-list priority queue with an ordered set, preserving scores and update-recency tie order; retain published layout routines and window-expiration condition.",
+  "wrapper_sha256": "f1d9cdbfc578b950f8da9b41a685409afc8ec35dad3781a570890a8266dcdea5",
+  "executable_sha256": "ab246d77e46ae7df9d0fee471ab963c6b878061cab6d8822cb09c89e3da851f4",
+  "command": [
+    "c++",
+    "-std=c++20",
+    "-O2",
+    "-I",
+    "/home/artashes/proj/Thesis-PIM-ANN/src",
+    "-isystem",
+    "/home/artashes/proj/Thesis-PIM-ANN/.toolchain/coleman",
+    "/home/artashes/proj/Thesis-PIM-ANN/src/published_layouts.cpp",
+    "-o",
+    "/home/artashes/proj/Thesis-PIM-ANN/bin/published_layouts"
+  ],
+  "compiler": "c++ (GCC) 15.1.0"
+}

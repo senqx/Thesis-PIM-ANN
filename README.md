@@ -9,21 +9,39 @@ or [the reading guide](doc/READING_GUIDE.md), which gives a path through the arg
 The [project overview](PROJECT_OVERVIEW.md) and [remediation record](doc/REVIEW_FIXES.md)
 describe the project and link the review findings to repairs and validation.
 
+The [research-position note](doc/RESEARCH_POSITION.md) explains the current RQs,
+what related papers already established, and the claims supported at Master's
+scope. Query-guided placement is prior art: the published NeurIPS 2022 paper by
+Coleman et al. includes Porder. The thesis evaluates supplied RCM/Gorder/Porder
+routines alongside its initial baselines.
+
 The experiment uses stock float32 HNSW, all graph levels, non-overlapping
-adjacency allocations, five checked vector permutations, exact subset recall, and
+adjacency allocations, checked vector permutations, exact subset recall, and
 native 32-byte HBM2 requests that all complete before replay terminates.
 The hypothetical 128-byte footprint retains float32 search and is not an int8/PQ index.
 
-On ten paired SIFT100k splits, the query-aware heuristic uses **0.31% fewer cycles
+Under the original flat replay, on ten paired SIFT100k splits, the query-aware heuristic uses **0.31% fewer cycles
 than BFS at 512 bytes** (95% interval: 0.26–0.37% fewer), and **0.17% more at
 128 bytes** (0.11–0.24% more). These intervals vary query splits and random/community
 layout seeds on a fixed index and corpus. See [the generated paired results](results/paired_summary.csv)
 for full precision and all baselines. Additional graph constructions reverse the
 128-byte ranking, while the 512-byte query-aware advantage persists in the tested
-cases. The result therefore depends on graph construction as well as the memory
+flat-replay cases. The result therefore depends on graph construction as well as the memory
 configuration. These small conditional differences establish neither optimality
-of BFS nor application speedup. The old conclusions and numeric
-results are superseded; [the archive](archive/pre-review/README.md) preserves them explicitly.
+of BFS nor application speedup. The earlier validated work remains in place. [The preservation guide](doc/RESULTS_PRESERVATION.md)
+links its 44-page thesis, 5-page companion and supporting documents at commit
+`71ce10b`. The separate [pre-review archive](archive/pre-review/README.md) contains
+older material superseded by correctness repairs.
+
+The expansion-bounded follow-up tests ordering only candidate reads available
+inside a graph expansion. On the ten reference splits, round-robin on BFS uses
+**14.58% fewer service cycles at 512 bytes** (95% interval: 14.51–14.64% fewer),
+but **3.43% more at 128 bytes** (3.31–3.55% more). Address sorting is slower on
+average at both widths. Porder's bounded 512-byte advantage over BFS is smaller,
+about **0.38%**. These are simulated service effects before scheduling, mapping,
+computation and communication costs. The full thesis reports every selected graph
+construction separately and does not add separately measured layout and
+scheduling gains to predict an untested combination.
 
 ## Build and correctness checks
 
@@ -35,6 +53,7 @@ The analysis/data packages are pinned in `requirements.txt`.
 python3 -m venv .venv
 . .venv/bin/activate
 python3 -m pip install -r requirements.txt
+python3 scripts/setup_published.py
 make -j2 test
 ```
 
@@ -70,8 +89,9 @@ frontend rejects incompatible simulator geometry and unaligned addresses.
 Default settings: one channel, GenericDDR (at most one selected command per cycle),
 Open policy, readiness-first FRFCFS, 64 uncompleted
 reads, 32-entry read buffer, one issue opportunity per controller cycle. Query
-boundaries drain outstanding reads while retaining row state. Graph timing
-dependencies and CPU/PIM compute/transfer costs are not modelled.
+boundaries drain outstanding reads while retaining row state. The follow-up also
+drains between adjacency and candidate-vector phases. CPU/PIM computation and
+transfer costs remain outside the model.
 
 ## Prepare SIFT100k
 
@@ -97,6 +117,7 @@ full-million-vector ground truth. It rejects short, corrupt and nonfinite data.
 ```bash
 python3 scripts/experiments.py all --seeds 10 --jobs 2
 python3 scripts/strengthen.py all --jobs 2
+python3 scripts/followup.py --jobs 2
 python3 scripts/check_results.py
 python3 scripts/analyze.py
 ```
@@ -104,6 +125,11 @@ python3 scripts/analyze.py
 Baseline stages can also run separately: `micro`, `sift`, `sensitivity`, `synthetic`.
 The additional campaign provides `controllers`, `graphs`, and `mechanism` stages.
 Its fixed design is documented in [research closure](doc/RESEARCH_CLOSURE.md).
+The [follow-up design](doc/FOLLOWUP_DESIGN.md) adds published RCM/Gorder/Porder
+placements and expansion-bounded request schedules. `--pilot --jobs 1` runs its
+first graph/split case; the full command includes that case and reuses valid replay
+caches. `setup_published.py` verifies the NeurIPS supplementary archive and builds
+both the adapter and an untouched reference for differential tests.
 Run `sift` before `sensitivity`, which uses its first split. The full suite runs
 hundreds of simulator conditions; allow several GB of working space. Set
 `PIMANN_WORK=/path/to/scratch` to place large intermediates on another filesystem,
@@ -117,8 +143,17 @@ remain. Missing transaction traces are regenerated when needed.
   trace/library/frontend hashes and matching submitted/completed/classified counts.
 * `work/`: regenerable logs, logical traces, mappings and selected transaction traces.
 * `doc/generated/`: tables/plots generated from current results, with input hashes.
+* `archive/2026-11-09-validated/`: previous validated documents and generated visuals,
+  retained separately from the current narrative.
 * `archive/pre-review/`: invalidated old evidence and obsolete drivers, excluded
   from the maintained build and current documents.
+
+For follow-up bounded/sorted/round-robin runs, the simulator's query marker denotes
+an **expansion phase**. Consequently, the raw JSON `mean_query_cycles` is a phase
+mean in those modes. Use `results/followup_measurements.csv` and its
+`mean_original_query_cycles` field for reconstructed original-query service; it
+includes the gaps between phases. The lossless `.queries.csv.gz` files and
+`phases.csv.gz` retain the accounting needed to check that reconstruction.
 
 The analysis uses paired relative cycle differences per split and a Student 95%
 interval with nine degrees of freedom. Three controller settings are repeated
@@ -126,8 +161,8 @@ across all ten splits. The other controller
 settings and heuristic ablations use one fixed split. Three additional graph
 constructions use three matching query splits each, with descriptive ranges
 reported separately from the primary confidence intervals. Construction times are
-shared-host wall-clock observations. The 791 retained replays include command-count
-and component-stream diagnostics.
+shared-host wall-clock observations. The 1,289 retained replays comprise the
+previous 791, 494 follow-up comparisons and four scheduling diagnostics.
 The checker enumerates every expected result by name and verifies associated query
 files, graph identities, recall and preserved primary trace hashes. Cache reuse
 requires valid complete contents and matching hashes of outputs and sidecar files.

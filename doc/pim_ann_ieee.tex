@@ -3,12 +3,13 @@
 \usepackage[hidelinks]{hyperref}
 \input{generated/values.tex}
 \input{generated/strengthening_values.tex}
+\input{generated/followup_values.tex}
 \begin{document}
-\title{When Locality Does Not Reduce Memory Time:\\A Trace Study of Graph-Based Nearest-Neighbour Search}
-\author{\IEEEauthorblockN{Artashes}\IEEEauthorblockA{Computer Science / Computer Architecture (HPC)\\Companion paper to the thesis, 9 November 2026}}
+\title{When Locality Helps or Hurts:\\A Trace Study of Graph-Based Nearest-Neighbour Search}
+\author{\IEEEauthorblockN{Artashes}\IEEEauthorblockA{Computer Science / Computer Architecture (HPC)\\Companion paper to the thesis, 10 November 2026}}
 \maketitle
 \begin{abstract}
-Storing frequently accessed data together seems a natural way to speed up graph search. Yet a memory system can benefit both from reusing an open DRAM row and from serving work across different banks. This study examines that trade-off in approximate nearest-neighbour search. It records the vector and graph-list reads of stock HNSW search, changes their vector placement, and measures completed service in a pinned HBM2 simulator. On ten matched SIFT100k query splits, a workload-trained layout changes cycles relative to breadth-first placement by \QADeltaFloat\% at 512 bytes per vector and \QADeltaCompact\% at a hypothetical 128-byte footprint. In the latter case, it achieves more row hits but takes longer. Command counts and component-stream experiments explain how fewer row operations can coexist with more waiting. Repeated controller experiments preserve their conditional signs, while additional graph constructions reverse the 128-byte ranking. The footprint alone does not determine the winner. The contribution is a reproducible characterisation of memory-service behaviour, with practical guidance on metrics and effect size. Computation, caches and an integrated processing-in-memory system are outside the measured model.
+Storing co-accessed vectors together is a natural optimisation for graph search, but row reuse competes with bank parallelism. This study records stock HNSW demands on SIFT100k and measures their completed service in a pinned HBM2 simulator. It compares simple and workload-trained placements, including published graph-reordering routines, while preserving search work and recall. A follow-up withholds later graph expansions until preceding memory phases finish, then tests ordering only the candidate reads available within each phase. On ten reference query splits, transaction round-robin on BFS placement changes cycles by \RoundRobinBFSMeanFloat\% at 512 bytes and \RoundRobinBFSMeanCompact\% at a hypothetical 128-byte footprint. Command diagnostics explain how more row operations can coexist with less total time. Selected graph and controller variations test the conditions behind the results. The contribution is a reproducible memory-service characterisation: useful locality must be evaluated with available work, completed time and implementation cost. Computation, caches, real scheduling overhead and integrated PIM execution remain outside the measured model.
 \end{abstract}
 \begin{IEEEkeywords}approximate nearest neighbours, graph search, memory layout, DRAM simulation, processing-in-memory\end{IEEEkeywords}
 
@@ -17,9 +18,9 @@ A vector-search system stores an array of numbers for each item and retrieves it
 
 Hierarchical Navigable Small World (HNSW) search represents vectors as nodes in a proximity graph \cite{hnsw}. To expand a node, it reads an adjacency list of neighbour IDs, fetches candidate vectors, and evaluates their distances. Those distances guide the next expansion. For example, expanding node 17 might reveal candidates 4 and 29. Their addresses become useful through the earlier graph work; the complete future request sequence is not initially known to a real execution.
 
-A layout can store related nodes close together. This may improve memory service, but ``close'' is only an address property. The memory controller decides which commands can issue and which requests must wait. We ask three connected questions: how request order affects that service; whether a workload-trained placement improves on simple graph layouts; and whether the answer persists when memory assumptions or graph construction change.
+A layout can store related nodes close together. This may improve memory service, but ``close'' is only an address property. The memory controller decides which commands can issue and which requests must wait. We ask three connected questions: how request order affects that service; which tested placements and available-request schedules improve service; and whether the answer persists when memory assumptions or graph construction change.
 
-The study measures \emph{DRAM stream service}: the controller cycles required to complete an explicitly supplied read sequence. This isolates placement from search work. It also means that the measured cycles exclude computation, caches, scratch structures, mapping lookups and the time needed to discover future graph addresses. Processing-in-memory (PIM), which places computation in or near memory, motivates the investigation but is not implemented as an application platform.
+The study measures \emph{DRAM stream service}: the controller cycles required to complete an explicitly supplied read sequence. This isolates placement from search work. It also means that the measured cycles exclude computation, caches, scratch structures, mapping lookups and instruction-level control overhead. Flat replay offers a known trace; the follow-up adds memory boundaries between expansions. Processing-in-memory (PIM), which places computation in or near memory, motivates the investigation but is not implemented as an application platform.
 
 \section{Why locality can help or hurt}
 A DRAM bank has a row buffer holding an open row. An activate command (ACT) opens a row, a read command (RD) transfers data from it, and a precharge command (PRE) closes it before another row can open. A request to the already open row is a row hit. Avoiding repeated row changes can save commands and waiting time.
@@ -45,7 +46,7 @@ A layout assigns every corpus node a unique vector slot. If node $v$ is assigned
 
 Adjacency lists occupy separate, aligned allocations independent of vector layout. A list containing $d$ neighbour IDs requires $4+4d$ bytes: a four-byte header plus four bytes per ID. The emitter covers each payload with the simulator's native 32-byte reads. Thus a 512-byte vector needs sixteen reads and a 128-byte vector needs four. No cache or duplicate-read coalescing is assumed.
 
-\subsection{The five layouts}
+\subsection{The initial five layouts}
 Identity keeps corpus order; random supplies a shuffled control. Breadth-first search (BFS) placement visits graph neighbours before the next frontier and stores that visitation order. Community placement groups nodes using repeated neighbour-label updates. These two methods use graph structure without training queries.
 
 The query-aware method learns which different vectors are accessed close together in training searches. It counts pairs using a bounded history of 16 distinct nodes within each query. It then greedily places heavily co-visited nodes together, without crossing the current grouping boundary. This can capture shared visits between nodes that have no direct graph edge. It optimises a co-visitation objective, however, rather than simulator cycles.
@@ -91,7 +92,7 @@ Additional experiments vary disjoint request-sorting windows, contiguous run len
 Mean Recall@10 is \SiftRecall\%, with split-level interval [\SiftRecallLow, \SiftRecallHigh]\%. Table~\ref{tab:real} compares layouts at this fixed search operating point. The query-aware layout saves a small fraction of cycles at 512 bytes and costs a small fraction at 128 bytes. The sign is a measured result of each footprint-specific layout and controller interaction.
 
 \begin{table}[htbp]\centering\small\setlength{\tabcolsep}{4pt}
-\caption{Mean cycle difference relative to BFS and paired 95\% interval over ten query splits. Negative is faster. The 128-byte case changes storage footprint while retaining float32 search.}\label{tab:real}
+\caption{Flat-replay mean cycle difference relative to BFS and paired 95\% interval over ten query splits. Negative is faster. The 128-byte case changes storage footprint while retaining float32 search.}\label{tab:real}
 \input{generated/paper_results_table.tex}
 \end{table}
 
@@ -107,31 +108,30 @@ The repeated settings change concurrency, row closure and bank mapping separatel
 \input{generated/robust_controller_table.tex}
 \end{table}
 
-The additional graph constructions are compared on matching query splits in Figure~\ref{fig:graphs}. At 512 bytes, query-aware is faster than BFS in every tested construction/split pair. At 128 bytes, the original graph has a three-split mean of \GraphRefCompact\%, compared with \GraphOneCompact\% and \GraphTwoCompact\% for graph seeds 101 and 102. Shuffled insertion gives splits on both sides of zero. The original 128-byte loss therefore does not generalise even across these graph constructions. Changing the graph can also change the search work and recall, so the cycle ratios always compare layouts within that graph. Recall across the evaluated graph/split conditions ranges from \GraphRecallMin\% to \GraphRecallMax\%.
+The additional graph constructions are compared on matching query splits, with full ranges retained in the thesis. Under flat replay at 512 bytes, query-aware is faster than BFS in every tested construction/split pair. At 128 bytes, the original graph has a three-split mean of \GraphRefCompact\%, compared with \GraphOneCompact\% and \GraphTwoCompact\% for graph seeds 101 and 102. Shuffled insertion gives splits on both sides of zero. The original 128-byte loss therefore does not generalise even across these graph constructions. Changing the graph can also change the search work and recall, so the cycle ratios always compare layouts within that graph. Recall across the evaluated graph/split conditions ranges from \GraphRecallMin\% to \GraphRecallMax\%.
 
-\begin{figure*}[t]\centering
-\includegraphics[width=0.95\textwidth]{generated/graph_robustness.pdf}
-\caption{Query-aware/BFS differences for three matching query splits per construction. Teal points are split effects, the orange diamond is their mean, and the grey line spans the observed range. These are descriptive ranges, not confidence intervals over graphs.}\label{fig:graphs}
-\end{figure*}
+
 
 Training-size, history-length and grouping-size ablations expose the heuristic's dependence on its training objective. They are not an exhaustive tuning search. Default training covers \MeanCoverage\% of test vector accesses by node occurrence. High node coverage alone does not show that useful pair relationships or controller opportunities were learned.
 
+\input{followup_paper.tex}
+
 \section{What an engineer should take from the results}
-The default float32 advantage over BFS is approximately \SavedCyclesPerQuery{} simulated controller cycles per query. This provides a scale for judging proposed implementation costs. Under an illustrative additive model, any extra per-query overhead of that size would erase the advantage. CPU preprocessing seconds cannot be divided by simulated controller cycles to infer a real deployment break-even point.
+The initial flat-replay query-aware advantage over BFS at 512 bytes is approximately \SavedCyclesPerQuery{} simulated controller cycles per query. This provides a scale for judging proposed implementation costs. Under an illustrative additive model, any extra per-query overhead of that size would erase the advantage. CPU preprocessing seconds cannot be divided by simulated controller cycles to infer a real deployment break-even point.
 
 The two stored 64-bit mapping directions require \MappingMiB{} MiB for 100,000 nodes, excluding container overhead. A deployed implementation may use a different representation, but its translation, storage movement and rebuilding costs need measurement. Shared-host preprocessing timings are retained for accounting; they are not isolated platform benchmarks.
 
 The practical evaluation sequence is: hold answer quality and logical work fixed; measure completed time as well as locality; check the mapper and realistic concurrency; and compare the gain with the costs of integrating the layout. Simple graph placement is a useful baseline. The best measured layout under one controller is a candidate for further evaluation, not a universal recommendation.
 
 \section{Position relative to prior work and limits}
-Coleman et al. study HNSW graph reordering, cache misses and query time, reporting improvements up to 40\% in their evaluation \cite{coleman}. The present study examines uncached DRAM demands and controller interactions, so its smaller effects address a different part of the execution path. It neither reproduces that study nor establishes a better graph-reordering algorithm. DiskANN further illustrates that search performance depends on a complete storage-system design \cite{diskann}.
+The published NeurIPS 2022 paper by Coleman et al. includes profile-guided Porder, absent from its earlier preprint \cite{coleman}. Query-guided placement is therefore prior art. Their cache-aware query-time improvements, up to 40\% in their evaluation, address a different execution layer. The present work evaluates supplied placement routines under explicit DRAM and available-request assumptions; it does not claim a new query-guided principle or reproduce their application result. DiskANN further illustrates the importance of complete storage-system design \cite{diskann}.
 
-PIM research combines placement with computation and communication \cite{primer}. DRIM-ANN includes arithmetic lookup tables, load balancing and I/O optimisation; its headline speedups concern computationally enhanced PIM \cite{drim}. UpANNS evaluates commercial-PIM resource management and ANN co-design \cite{upanns}; PIMANN studies persistent kernels and fine-grained scheduling \cite{pimann}. The 2026 PIMCQG preprint directly addresses graph ANN on PIM with a compact index and asynchronous execution \cite{pimcqg}. This thesis contributes a controlled memory-service characterisation within that broader systems problem.
+PIM research combines placement with computation and communication \cite{primer}. DRIM-ANN includes arithmetic lookup tables, load balancing and I/O optimisation; its headline speedups concern computationally enhanced PIM \cite{drim}. UpANNS evaluates commercial-PIM resource management and ANN co-design \cite{upanns}; PIMANN studies persistent kernels and fine-grained scheduling \cite{pimann}. PIMCQG, whose current public revision states acceptance at SC26, directly addresses graph ANN on PIM with a compact index and asynchronous execution \cite{pimcqg}. This thesis contributes a controlled memory-service characterisation within that broader systems problem.
 
-The evidence covers one real corpus prefix, selected graph constructions, one HBM2 model and fixed ANN parameters. The smaller footprint does not implement quantisation. Flat replay knows future accesses earlier than a dependent execution may discover them. Caches, computation, scratch state, host/PIM transfers, energy, workload drift and actual mapping costs remain outside the evaluation. The simulator preset itself is not validated against a physical HBM2 device here.
+The evidence covers one real corpus prefix, selected graph constructions, one HBM2 model and fixed ANN parameters. The smaller footprint does not implement quantisation. Flat replay knows future accesses early; bounded replay adds memory phases but approximates available overlap. Concurrent queries, caches, computation, scratch state, host/PIM transfers, energy, workload drift and actual mapping costs remain outside the evaluation. The simulator preset itself is not validated against a physical HBM2 device here.
 
 \section{Conclusion}
-Vector placement affects memory service through both row reuse and the work exposed to the controller. The measured ranking can reverse even while the row-hit metric improves. Changing graph construction also reverses the 128-byte ranking under the same default controller. Paired workload comparisons quantify the small default effect; repeated controller settings, construction variation and command-level diagnostics show how to interpret it. The result is useful as an evaluation method and a bounded empirical characterisation. An application-speedup claim requires the next layer of evidence: a complete execution path with its computation, dependencies and integration costs.
+Placement and request order affect both row reuse and bank exposure. The original flat experiment shows that a higher hit rate can accompany a small timing loss; construction changes can reverse that ranking. The follow-up compares published placement methods and tests request schedules within a defined expansion boundary. Round-robin's opposite effects at the two footprints demonstrate a conditional opportunity rather than a universally favourable order. The useful outcome is an auditable path from an intuitive optimisation to measured service, checked assumptions and an explicit overhead allowance. Application speedup requires an execution path that includes computation, actual dependencies and integration costs.
 
 \begingroup\raggedright
 \input{references.tex}

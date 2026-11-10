@@ -1,3 +1,7 @@
+This record describes the completed 9 November robustness pass. The later
+[published-layout and available-request follow-up](FOLLOWUP_DESIGN.md) supplements
+it; the previous validated documents remain [archived](RESULTS_PRESERVATION.md).
+
 # Final research pass
 
 This record separates completed repairs, additional evidence, and deliberately
@@ -61,8 +65,28 @@ through the explanations and evidence.
 
 ## Questions outside the completed scope
 
-Other real datasets/corpus subsets, HNSW operating points, dependent execution,
+Other real datasets/corpus subsets, HNSW operating points, full dependent execution,
 caches, real quantisation, deployed mapping costs, energy, workload drift and an
 integrated PIM implementation remain future work. The thesis claims conditional
 DRAM-stream characterisation. None of these missing experiments is evidence of
 an application speedup or a universal layout winner.
+
+## 10 November extension
+
+The follow-up adds 494 comparisons and four non-perturbing scheduling diagnostics,
+for 1,289 retained replays. It compares published RCM/Gorder/Porder placements,
+adds memory boundaries between graph expansions, and tests sorting and transaction
+round-robin within available vector phases. All earlier measurements remain in
+place. The new boundaries approximate memory dependencies; they do not supply
+computation or a complete PIM execution.
+
+On ten reference splits, BFS round-robin reduces 512-byte service cycles by 14.58%
+but increases 128-byte cycles by 3.43%. Address sorting is slower on average at
+both widths. Published placement routines expose improvements beyond the local
+heuristic, with smaller effect sizes. Construction-specific ranges and descriptive
+per-query checks are reported in the current thesis. These are conditional
+findings, without a universal layout/schedule recommendation.
+
+The [research-position note](RESEARCH_POSITION.md) explains the Master's scope and
+which stronger claims would require additional work. The [validation record](VALIDATION.md)
+records completed checks for the current artifact.

@@ -28,31 +28,37 @@ actual graph-search traces, repeated experiments and command-level explanations.
    request count at one footprint. The addresses change.
 4. **Layouts and metrics.** Understand what information each layout uses. The
    query-aware heuristic learns co-visitation; it does not directly optimise
-   simulated time. Check the denominator of each reported percentage.
+   simulated time. Published Porder is a separate trained baseline. Check the
+   denominator of each reported percentage.
 5. **Protocol.** Distinguish query-split repetition from graph-construction
    variation. Paired comparisons use matching work; different kinds of repetition
    answer different robustness questions.
 6. **Results.** Start with sequential versus permuted reads. Follow the command
    accounting, then the SIFT layout comparison, repeated controller settings,
-   graph variations and vector/adjacency diagnostic streams.
+   graph variations and vector/adjacency diagnostic streams. Then follow the
+   expansion-boundary diagram: first a list reveals candidates, then their vector
+   reads become available. The published-layout and scheduling comparisons test
+   whether the original result depended on the heuristic or on early future work.
 7. **Interpretation and conclusion.** Read the overhead-budget example and
    decision path. These explain what an engineer can do with the findings and
    what additional evidence an application-speedup claim would require.
 
 Use the terminology appendix as a reference, not as a list to memorise.
 
-## Four distinctions that prevent most confusion
+## Distinctions that prevent most confusion
 
 | Distinction | Why it matters |
 | --- | --- |
 | A logical vector read versus a memory transaction | One 512-byte vector generates sixteen 32-byte transactions. Their row reuse can dominate an aggregate hit percentage. |
 | Address locality versus completed time | Nearby vectors may share a row, but the controller still has timing constraints and shared resources. |
 | A trace's offered bank diversity versus ready work in the controller | The former describes addresses in an input window. It does not measure instantaneous queue occupancy or how many banks can issue now. |
+| Flat replay versus expansion boundaries | Both omit compute, but the latter waits for earlier memory work before offering the next expansion. |
+| Phase service versus original-query service | One query has many phases. Its interval must include the gaps between them; a phase mean is not a query mean. |
 | A smaller stored footprint versus actual quantisation | Repacking the same float32 trace isolates size. A real quantised index can also change distances, traversal, accuracy and compute cost. |
 
-## How to explain the central result yourself
+## How to explain the original result yourself
 
-At the default 512-byte footprint, the trained layout saves about 0.31% of service
+Under flat replay at the default 512-byte footprint, the trained layout saves about 0.31% of service
 cycles relative to BFS. At the hypothetical 128-byte footprint, it costs about
 0.17%, despite a higher row-hit percentage. Both are small effects on the original graph within the specified model.
 The additional graph seeds reverse the 128-byte ranking. This demonstrates why
@@ -70,6 +76,35 @@ When discussing this result, preserve its scale and scope. It is evidence that
 these layout and controller choices interact. It is not evidence that layout is
 unimportant in a complete search engine, or that one layout always wins.
 
+## What the follow-up adds
+
+The published baselines prevent one local heuristic from representing an entire
+idea. Under expansion boundaries, Porder reduces the reference 512-byte service
+cycles by about 0.38% relative to BFS. Gorder reduces the hypothetical 128-byte
+case by about 1.33%. Both improve total service in all 19 selected graph/split
+cases at both widths, although the size varies. These are small placement gains
+before integration cost.
+
+The phase diagram then addresses which requests the controller can see. Read a
+list, make its candidate vectors available, finish that group, then move to the
+next expansion. Sorting that available group's addresses is slower on average.
+Offering chunks round-robin instead reduces 512-byte BFS service by **14.58%**,
+about **5,802 simulated cycles per query**, on the reference graph. Every tested
+query record improves in each of the 19 cases. At 128 bytes, however, round-robin
+adds **3.43%** on the reference graph. The opposite signs persist across the tested
+constructions and both evaluated placements.
+
+This is the positive/negative contrast to understand: exposing chunks from
+several vectors early can be more useful than maximising row hits, but the value
+depends on footprint and available overlap. At 512 bytes the command record shows
+more row operations and fewer total cycles. At 128 bytes, the extra operations
+are not recovered in total service. Scheduling cost, computation and application
+concurrency still need an execution-level evaluation.
+
+The new boundary model also changes small placement rankings. One seed-101
+512-byte query-aware comparison becomes a loss, despite the earlier flat-replay
+advantage. Keep the boundary mode attached to every performance statement.
+
 ## Questions to check your understanding
 
 * Why can a row hit still wait, and why does allowing other outstanding reads
@@ -79,6 +114,10 @@ unimportant in a complete search engine, or that one layout always wins.
 * What does the confidence interval vary, and what remains fixed?
 * Why can vector-only and adjacency-only replay times not be added to predict
   the mixed stream's time?
+* Why is sorting within one available expansion a different experiment from
+  sorting a complete future trace?
+* Why can a weak local query-aware result not stand in for published Porder?
+* Why should separately measured placement and scheduling gains not be added?
 * What implementation costs could erase a saving of about 97 simulated cycles
   per query, and which of those costs has this study actually measured?
 
@@ -86,6 +125,13 @@ The answers are in the main text. Being able to explain those points in your own
 words is more useful than memorising every result-table entry.
 
 ## Finding the supporting evidence
+
+* [Research position](RESEARCH_POSITION.md): current RQs, established prior work,
+  the Master's scope, and the claims that would require further research.
+* [Preservation guide](RESULTS_PRESERVATION.md): the earlier validated PDFs and
+  evidence, kept separately from superseded pre-review material.
+* [Follow-up design](FOLLOWUP_DESIGN.md): fixed comparisons and the explicitly
+  identified diagnostic addition after the pilot.
 
 * [Review fixes](REVIEW_FIXES.md): disposition of the original correctness and
   claim-scope findings.

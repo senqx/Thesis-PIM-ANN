@@ -1,0 +1,60 @@
+{
+  "study": {
+    "command": [
+      "/home/artashes/proj/Thesis-PIM-ANN/sprint1/run_study",
+      "--base",
+      "/home/artashes/proj/Thesis-PIM-ANN/data/sift_base.fvecs",
+      "--queries",
+      "/home/artashes/proj/Thesis-PIM-ANN/data/sift_query.fvecs",
+      "--max-base",
+      "100000",
+      "--train",
+      "500",
+      "--test",
+      "200",
+      "--seed",
+      "2",
+      "--index-seed",
+      "102",
+      "--insertion-seed",
+      "0",
+      "--no-traces",
+      "--export-training",
+      "--output",
+      "/home/artashes/proj/Thesis-PIM-ANN/work/followup/index102/seed2/study"
+    ],
+    "binary": "eeae71a7580d9e273bab82529779870a05513686c0c61bebe73130f18305d99a",
+    "data": {
+      "data/sift_base.fvecs": "7145bedfe09fe8d1afcc9ad743eb6ba6218dc766b77c4b0bbe82d22b78e265ba",
+      "data/sift_query.fvecs": "f7fc9be140accdfd64116c2fa2365ecdb69b8f084970c6b0532db5ff79ac8fdc"
+    }
+  },
+  "input_hashes": {
+    "work/followup/index102/seed2/study/bfs_128.mapping.csv": "22f0d23a25cf559152bca5bce83ec767b51efe31d898f6df8133c5a5a429a4cf",
+    "work/followup/index102/seed2/study/bfs_512.mapping.csv": "22f0d23a25cf559152bca5bce83ec767b51efe31d898f6df8133c5a5a429a4cf",
+    "work/followup/index102/seed2/study/community_128.mapping.csv": "e5b3056a254c7276a079f5534a39d82492ea9fff64c8db6c1cd76bd8452b4c2b",
+    "work/followup/index102/seed2/study/community_512.mapping.csv": "e5b3056a254c7276a079f5534a39d82492ea9fff64c8db6c1cd76bd8452b4c2b",
+    "work/followup/index102/seed2/study/gorder.mapping.csv": "c6d6cc2aa55d749e75e1677a9a05b140313e3017f03097b90ab0573dcccc1be5",
+    "work/followup/index102/seed2/study/graph.csv": "b8c1ff6bcdb71b1aeb09919673dd880983ee9704e644144129b8f6fac2187839",
+    "work/followup/index102/seed2/study/identity_128.mapping.csv": "abdcd29b585d32215d623a48631fef4193558b882e55df37b97f783ea5ef3998",
+    "work/followup/index102/seed2/study/identity_512.mapping.csv": "abdcd29b585d32215d623a48631fef4193558b882e55df37b97f783ea5ef3998",
+    "work/followup/index102/seed2/study/insertion.csv": "3a2574b611c660ec0a511cf0539f20ce79f195cbda47d3d71813188ed21b4356",
+    "work/followup/index102/seed2/study/logical.csv": "cc3a599d7a0b11b4e9ae7369a7aa911ae3c3ac0e36dfe5b558eacc59cda80db3",
+    "work/followup/index102/seed2/study/porder.mapping.csv": "db9149d2ed6046900f933b0df2c4ad9fa9b10130924eabcba6d835ab4b1ec6f8",
+    "work/followup/index102/seed2/study/profile.csv": "eb22e9a148629337ccbeaf57d13c9ba08bdbf34f164802be20c5643ce2c0eaee",
+    "work/followup/index102/seed2/study/query_aware_128.mapping.csv": "f73701d8281c8236ff1adbfbc13bbab6129f39f55486350ace47f5336dc01bad",
+    "work/followup/index102/seed2/study/query_aware_512.mapping.csv": "64fa2d0491213e81c2152224d52e780b2cec6091d8d20dd5fab31fd4a9d0180f",
+    "work/followup/index102/seed2/study/random_128.mapping.csv": "7aefe5e3babc7554ae968137d01c99ac9244861480fe498b190d0a5c343645fc",
+    "work/followup/index102/seed2/study/random_512.mapping.csv": "7aefe5e3babc7554ae968137d01c99ac9244861480fe498b190d0a5c343645fc",
+    "work/followup/index102/seed2/study/rcm.mapping.csv": "8428a1632b65a15d1df8778ec14bfd2fd607078d5baa0d7bf07ac1d84c535f45",
+    "work/followup/index102/seed2/study/recall.csv": "ed35e92ef0aff0d71a0d80e5f2793df7b02165b53f8cfe98b1720533d3773a37",
+    "work/followup/index102/seed2/study/split.csv": "8b8515a9cb1053c60d4d4911bca3af36724361bac948547f952dadade53de7d6",
+    "work/followup/index102/seed2/study/training.csv": "35d16c8b3bbe51a6a0828852aa89c90e1b2c9edb8c27b477a14cbfe635bd8859"
+  },
+  "original_equivalence": true,
+  "profile_edge_count": 379664,
+  "profile_traversals": 452178,
+  "published_executable_sha256": "ab246d77e46ae7df9d0fee471ab963c6b878061cab6d8822cb09c89e3da851f4",
+  "phases_sha256": "a56da2ef66d5fb84b41df670453725310352ac091aa36c52ed749f17ad11ee42",
+  "phase_generator_sha256": "e76d2cb4e068c3c35b8f41ea0d2175c3bd5ced6b7b22fa59388a62b1507279ae"
+}

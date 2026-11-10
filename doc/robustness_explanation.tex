@@ -22,7 +22,7 @@ The previous repetitions share one constructed graph. The next experiment keeps 
 \input{generated/graph_robustness_table.tex}
 \end{table}
 
-At 512 bytes, query-aware placement uses fewer cycles than BFS in every tested construction/split pair. At 128 bytes, the ranking changes: the reference graph's three-split mean is \GraphRefCompact\%, while seeds 101 and 102 give \GraphOneCompact\% and \GraphTwoCompact\%. Shuffled insertion has mean \GraphShuffleCompact\% and individual splits on both sides of zero. Thus the original 128-byte loss is not a stable property of the footprint alone. Query-split precision on one graph did not establish robustness to constructing another graph.
+Under flat replay at 512 bytes, query-aware placement uses fewer cycles than BFS in every tested construction/split pair. At 128 bytes, the ranking changes: the reference graph's three-split mean is \GraphRefCompact\%, while seeds 101 and 102 give \GraphOneCompact\% and \GraphTwoCompact\%. Shuffled insertion has mean \GraphShuffleCompact\% and individual splits on both sides of zero. Thus the original 128-byte loss is not a stable property of the footprint alone. Query-split precision on one graph did not establish robustness to constructing another graph.
 
 The reference row uses only those same three splits, making it comparable with the alternatives. Graph hashes confirm four distinct topologies, and repeated builds of each construction agree. Corpus IDs remain stable: changing insertion order does not redefine which vector a logical ID names, which vectors count as exact neighbours, or what identity placement means.
 

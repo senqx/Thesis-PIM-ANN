@@ -60,4 +60,9 @@ def expected_replays():
     paths = {label + ".json" for label in labels}
     if len(paths) != len(labels):
         raise ValueError("duplicate planned replay")
+    from followup import expected_followup
+    from followup_mechanism import expected_mechanism
+
+    paths |= expected_followup()
+    paths |= expected_mechanism()
     return paths

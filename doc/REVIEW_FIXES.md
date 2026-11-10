@@ -63,3 +63,25 @@ invalidates the completion marker. The result checker enumerates required names,
 and analysis validates the complete evidence before replacing figures or tables.
 The new corpus-ID translation is checked under shuffled insertion; all 100 original
 primary trace hashes remain unchanged.
+
+## Published baselines and available-request follow-up — 10 November
+
+The literature correction is explicit: Coleman's published NeurIPS 2022 paper
+adds profile-guided **Porder**, absent from its earlier preprint. Query-guided
+placement is established prior art. PIMCQG's current public manuscript states
+acceptance at SC26. Both documents now use that positioning and evaluate the
+supplied RCM/Gorder/Porder routines as stronger baselines.
+
+A fixed 494-comparison campaign adds expansion boundaries and within-expansion
+schedules; four diagnostic repeats explain the round-robin contrast. The artifact
+retains 1,289 named replays. Phase maps, per-phase transaction conservation, original
+query timing, source equivalence, published-layout differential tests and gzip
+recovery checks extend the previous correctness work. The full execution costs
+remain outside the model; the dependency gap is reduced, not represented as fully
+solved.
+
+The previous 791 replay records remain unchanged. The 44-page thesis, 5-page paper
+and all 37 document files from commit `71ce10b` are preserved byte for byte in
+[the validated archive](../archive/2026-11-09-validated/README.md). They remain useful
+evidence under their assumptions. This archive is distinct from the earlier
+material superseded by correctness repairs.

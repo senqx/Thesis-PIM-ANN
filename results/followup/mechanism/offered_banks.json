@@ -1,0 +1,26 @@
+{
+  "bounded_128": {
+    "mean_distinct_banks": 14.100048094907283,
+    "windows": 93565,
+    "bank_count_sum": 1319271,
+    "trace_sha256": "46ea685d12156f1c29df2e1e7c33a6c26f12cb4c3169d22c4633b43470315f2b"
+  },
+  "roundrobin_128": {
+    "mean_distinct_banks": 18.501672633997757,
+    "windows": 93565,
+    "bank_count_sum": 1731109,
+    "trace_sha256": "7117e95fcb268939009a5bba75fc59ac2d27239a6411c151ea9a64c90f137723"
+  },
+  "bounded_512": {
+    "mean_distinct_banks": 4.746530977288742,
+    "windows": 2287676,
+    "bank_count_sum": 10858525,
+    "trace_sha256": "7ec43b27127dc35c54a05fa8e53352e7fee4fd752c37c9a38437f7b78e8a0389"
+  },
+  "roundrobin_512": {
+    "mean_distinct_banks": 15.067166416922676,
+    "windows": 2287676,
+    "bank_count_sum": 34468795,
+    "trace_sha256": "5741a15d82aed3152c83971cc4b8093690604b4a79a4fd7d7d0ed963a7ed27b9"
+  }
+}

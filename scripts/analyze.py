@@ -442,6 +442,9 @@ def main():
     from analyze_strengthening import generate
 
     generate()
+    from analyze_followup import generate as generate_followup
+
+    generate_followup()
     inputs = sorted(
         p for p in RESULTS.rglob("*") if p.is_file() and ".cache." not in p.name
     )
@@ -452,6 +455,9 @@ def main():
     (OUT / "provenance.json").write_text(
         json.dumps(
             {
+                "followup_generator_sha256": hashlib.sha256(
+                    (ROOT / "scripts/analyze_followup.py").read_bytes()
+                ).hexdigest(),
                 "extension_generator_sha256": hashlib.sha256(
                     (ROOT / "scripts/analyze_strengthening.py").read_bytes()
                 ).hexdigest(),

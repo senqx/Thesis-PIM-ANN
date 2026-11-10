@@ -1,6 +1,7 @@
 """Validate complete replay artifacts before analysis or cache reuse."""
 
 import csv
+import gzip
 import hashlib
 import json
 import math
@@ -26,6 +27,20 @@ def sha256(path):
 def require(condition, message):
     if not condition:
         raise ValueError(message)
+
+
+def query_path(path):
+    plain = Path(path).with_suffix(".queries.csv")
+    compressed = Path(str(plain) + ".gz")
+    require(not (plain.exists() and compressed.exists()), "ambiguous query sidecars")
+    return compressed if compressed.exists() else plain
+
+
+def query_rows(path):
+    path = query_path(path)
+    opener = gzip.open if path.suffix == ".gz" else open
+    with opener(path, "rt", newline="") as stream:
+        return list(csv.DictReader(stream))
 
 
 def validate_replay(path, signature=None):
@@ -77,8 +92,7 @@ def validate_replay(path, signature=None):
         math.isfinite(hit) and abs(hit - 100 * ctrl["read_row_hits"] / count) < 1e-9,
         "invalid row-hit percentage",
     )
-    with path.with_suffix(".queries.csv").open() as stream:
-        queries = list(csv.DictReader(stream))
+    queries = query_rows(path)
     require(bool(queries), "empty query timing file")
     ids = [int(q["query"]) for q in queries]
     require(ids == sorted(set(ids)) and ids[0] >= 0, "invalid query sequence")
@@ -156,19 +170,19 @@ def cache_valid(stamp, output, signature):
         if saved["signature"] != signature:
             return False
         validate_replay(output, signature)
-        artifacts = [Path(output), Path(output).with_suffix(".queries.csv")]
+        artifacts = [Path(output), query_path(output)]
         if signature["parameters"].get("commands", 0):
             artifacts.append(Path(output).with_suffix(".commands.csv"))
         if signature["parameters"].get("commands", 0) == 2:
             artifacts.append(Path(output).with_suffix(".command_trace.csv.ch0"))
         return saved["artifacts"] == {p.name: sha256(p) for p in artifacts}
-    except (OSError, ValueError, KeyError, TypeError, OverflowError):
+    except (OSError, EOFError, ValueError, KeyError, TypeError, OverflowError):
         return False
 
 
 def write_cache(stamp, output, signature):
     validate_replay(output, signature)
-    artifacts = [Path(output), Path(output).with_suffix(".queries.csv")]
+    artifacts = [Path(output), query_path(output)]
     if signature["parameters"].get("commands", 0):
         artifacts.append(Path(output).with_suffix(".commands.csv"))
     if signature["parameters"].get("commands", 0) == 2:

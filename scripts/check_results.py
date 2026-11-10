@@ -4,7 +4,7 @@
 import csv
 import io
 import json
-from result_validation import validate_replay
+from result_validation import validate_replay, query_rows
 from experiment_matrix import expected_replays
 from pathlib import Path
 
@@ -33,7 +33,7 @@ def check():
             frontend["submitted"] == frontend["completed"] == checks["trace_reads"]
         ), path
         assert 0 < frontend["peak_inflight"] <= data["parameters"]["inflight"], path
-        query = rows(path.with_suffix(".queries.csv"))
+        query = query_rows(path)
         assert sum(int(q["reads"]) for q in query) == checks["trace_reads"], path
         assert all(
             int(q["cycles"]) == int(q["last_depart"]) - int(q["first_arrive"]) > 0
@@ -99,6 +99,10 @@ def check():
     assert original["trace_sha256"] == reordered["trace_sha256"]
     assert original["cycles"] == reordered["cycles"]
     validate_extension()
+    from followup_validation import validate_followup, validate_mechanism
+
+    validate_followup()
+    validate_mechanism()
     print(
         f"Validated all {len(timing)} named replays, read accounting, primary equivalence, "
         "graph/split identity, recall, component streams and command conservation."

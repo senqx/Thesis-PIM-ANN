@@ -81,11 +81,15 @@ int main(int argc, char **argv) try {
   std::string basepath, querypath, out = "work/synthetic";
   uint32_t n = 8000, train = 300, test = 150, ef = 64, seed = 1, indexseed = 100;
   uint32_t window = 16, block = 1024, k = 10, insertionseed = 0;
-  bool traces = true;
+  bool traces = true, exportTraining = false;
   for (int i = 1; i < argc; ++i) {
     std::string a = argv[i];
     if (a == "--no-traces") {
       traces = false;
+      continue;
+    }
+    if (a == "--export-training") {
+      exportTraining = true;
       continue;
     }
     if (i + 1 == argc)
@@ -199,6 +203,14 @@ int main(int argc, char **argv) try {
     graph.searchInstrumented(&queries.data[uint64_t(ids[i]) * base.dim], k, training);
   }
   double trainingsec = seconds(started);
+  if (exportTraining) {
+    auto profile = output(fs::path(out) / "training.csv");
+    profile << "query,node,kind,level,bytes\n";
+    for (const auto &r : training.trace())
+      profile << r.queryId << ',' << r.nodeId << ',' << (r.kind == AccessKind::Vector ? 'V' : 'A')
+              << ',' << r.level << ',' << r.byteSpan << '\n';
+    profile.close();
+  }
   auto recallout = output(fs::path(out) / "recall.csv");
   recallout << "query,source_query,recall,returned,truth\n";
   double recallsum = 0;
