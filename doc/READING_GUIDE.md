@@ -120,15 +120,24 @@ before interpreting the gain: selection may simply recover a good fixed schedule
 The oracle column asks how far that training choice is from the best fixed order
 selected after seeing the test outcomes. The oracle is a comparison tool, not an
 implementable policy. In this matrix the training choice matches that best order
-in all 140 cases. Each configuration receives the same choice across its ten
-training splits, so the result supports a configuration-specific fixed order;
-it does not establish that every new workload will select correctly.
+in all 140 cases: seven memory/batch settings × two footprints × ten splits.
+All use the same graph and query pool. Each setting receives the same choice
+across its ten training splits, so the result supports selecting a stable fixed
+order among three choices. It does not estimate a universal success probability;
+the cases are not independent trials across new workloads or hardware.
 
 Then read the published-baseline table. A selected BFS schedule is not necessarily
 better than Gorder or Porder, and their individual gains cannot be added to predict
 an untested combination. The appendix shows calibration service and absolute
 service under all tested configurations; an attractive percentage against a slower
-batch baseline is not automatically a better execution path.
+batch baseline is not automatically a better execution path. For example, default
+512-byte calibration uses about 5.72 million simulated cycles to find an order
+saving about 5,802 cycles per query. Their ratio is about 985 query services before
+extra cost; consuming half the saving doubles that ratio to about 1,971. This is
+an illustration using stable means in a serial service model, not a deployment
+break-even prediction. The 200-query evaluation does not itself repay calibration
+in that accounting. Only extra costs relative to the matching baseline should be
+charged as scheduling overhead; costs shared by both paths still affect total time.
 
 The execution diagram now assigns work and data to a concrete proposed host and
 near-memory engine. The host reads neighbour IDs, filters candidates and supplies

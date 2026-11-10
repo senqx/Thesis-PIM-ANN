@@ -6,16 +6,47 @@ previously validated records. Calibration runs are training evidence, not
 additional independent performance replications. Three separately retained fresh
 reproduction repeats are described below; they are not counted in that matrix.
 
+## Final editorial review
+
+The experimental scope and results are unchanged. The complete text of the
+incoming 69-page thesis was extracted and reviewed, including tables, captions,
+appendices and bibliography. This pass clarifies the 140-case denominator,
+distinguishes the contribution explicitly from Gorder/Porder and PIM-ANN systems,
+adds a worked service-only overhead example and tightens the conclusion. It also
+corrects the explanation of `efSearch`: the retained best-result set is bounded,
+while the pending candidate frontier can contain more entries. The stock source
+was checked for that distinction; search code was not changed.
+
+The final PDFs build offline with resolved citations/references and no significant
+horizontal overflow: **68 pages** for the thesis and **8 pages** for the companion.
+Page overviews cover both complete PDFs, with detailed visual checks of the
+changed passages and the conclusion. Removing repetition and short overflow
+pages reduced the thesis length. The
+[campaign inventory](REPRODUCIBILITY.md#record-counts-and-frozen-protocols)
+reconciles current and historical counts without altering frozen protocol hashes.
+Local documentation links and Git whitespace checks pass.
+
+The overhead arithmetic was recomputed from retained selection summaries:
+5,716,851.1 mean calibration cycles divided by 5,802.4195 mean saved cycles per
+query is 985.253 query services; consuming half the saving gives 1,970.506.
+The 200-query saving is 1,160,483.9 cycles. These are ratios and differences of
+existing means, not new simulations or deployment predictions. All **4,977
+protected evidence/source files** are unchanged, and no computational or analysis
+code changed. Source hashes and figure provenance reflect the editorial revision.
+The preceding commit's
+[full CI run](https://github.com/senqx/Thesis-PIM-ANN/actions/runs/42814930326)
+passed; that validation is distinguished from the document checks performed here.
+
 ## Architectural explanation and defence revision
 
-This documentation revision adds no experimental observations. It clarifies the
+The preceding documentation revision added no experimental observations. It clarified the
 original contribution, the proposed host/near-memory division of work, transfers,
 hardware requirements, statistical versus practical significance, profiling
 decisions and the limits of generalisation. The existing reading guide now gives
 answers to the thirteen defence questions. The README already reported 2,069
 records before this pass; 1,289 refers to a preserved earlier checkpoint.
 
-Both revised PDFs build offline with resolved citations/references and no
+At that checkpoint, both PDFs built offline with resolved citations/references and no
 significant horizontal overflow: **69 pages** for the thesis and **8 pages** for
 the IEEE companion. The new execution diagram and the changed contribution,
 profiling, interpretation, architecture and conclusion pages were visually

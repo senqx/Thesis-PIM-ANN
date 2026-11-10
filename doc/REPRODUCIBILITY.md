@@ -24,6 +24,24 @@ the uncertainty studied in the thesis; rerunning an identical trace checks
 reproducibility, not a new independent sample. Shared-host preprocessing seconds
 are wall-clock observations and are expected to vary on another machine.
 
+## Record counts and frozen protocols
+
+The current matrix contains **2,069 distinct replay records**:
+
+| Campaign | Records | Role |
+| --- | ---: | --- |
+| Earlier validated checkpoint | 1,289 | 791 original records, 494 published-layout/expansion comparisons and four command diagnostics |
+| Scheduling sensitivity | 360 | Six further conditions, two footprints, three orders and ten splits |
+| Training calibration | 420 | Seven conditions, two footprints, three orders and ten training splits |
+| **Current total** | **2,069** | Retained replay records, not independent statistical experiments |
+
+The three separately retained fresh reproduction checks are outside this count.
+Frozen designs describe the campaigns as planned at their checkpoints:
+[FOLLOWUP_DESIGN.md](FOLLOWUP_DESIGN.md) ends at 1,289 records, and
+[SCHEDULING_DESIGN.md](SCHEDULING_DESIGN.md) starts from that checkpoint.
+Their recorded text and hashes remain unchanged. Use this inventory and
+[VALIDATION.md](VALIDATION.md) for the current totals.
+
 ## Full reproduction from a fresh checkout
 
 Keep the reference checkout unchanged and use a second clone for the new run.

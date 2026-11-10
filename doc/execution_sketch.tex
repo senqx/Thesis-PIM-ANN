@@ -26,6 +26,7 @@ A gather-only engine that returns full vectors to host arithmetic still moves th
 \subsection{Dependencies and hardware requirements}
 Candidate discovery must precede its vector requests. After a list arrives, reads for its available candidates can overlap, but the next graph expansion may depend on their distances. Request completion order must not change the order of search-state updates, stopping rules or ties. Reproducing distances also requires compatible numerical precision and reduction behaviour; preserving memory order alone cannot guarantee identical search on a different arithmetic unit. The following pseudocode expresses this dependency, with distance computation assigned to the engine and search updates to the host in the example above. It sketches the expansion stage; entry-vector evaluation and initial search-state setup are omitted.
 
+\begin{minipage}{\textwidth}
 \begin{lstlisting}
 order = lookup_profile(configuration) or ORIGINAL
 while search_needs_an_expansion():
@@ -40,6 +41,7 @@ while search_needs_an_expansion():
             distance = compute_distance(candidate, query)
             update_search_state(candidate, distance)
 \end{lstlisting}
+\end{minipage}
 
 Original order offers all chunks of one vector before offering the next vector's chunks; it does not wait for completion between vectors. Sorting orders the batch's chunk addresses. Round-robin offers chunk zero of every vector, then chunk one of every vector, and so on. A configuration profile selects between these established orders. Selection and fallback costs are discussed in Section~\ref{sec:profile-deployment}.
 

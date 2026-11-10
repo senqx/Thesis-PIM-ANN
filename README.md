@@ -24,7 +24,7 @@ flowchart LR
 | Purpose | Document |
 | --- | --- |
 | Read the argument | [IEEE companion, 8 pages](doc/pim_ann_ieee.pdf) |
-| Study the methods and results | [Full thesis, 69 pages](doc/pim_ann_thesis.pdf) |
+| Study the methods and results | [Full thesis, 68 pages](doc/pim_ann_thesis.pdf) |
 | Follow the ideas without ANN/DRAM specialisation | [Reading guide](doc/READING_GUIDE.md) |
 | Understand the research questions and prior work | [Research position](doc/RESEARCH_POSITION.md) |
 | Check or reproduce a claim | [Reproducibility guide](doc/REPRODUCIBILITY.md) |
@@ -51,8 +51,9 @@ include all seven configurations, sorting and both footprints.
 
 A small training profile chooses among original, sorted and round-robin fetch
 orders, then freezes the choice for held-out queries. It matches the best fixed
-held-out order in all 140 evaluated configuration/split cases. The evaluation is
-exploratory: individual-query regressions remain, and the selected path does not
+held-out order among those three in all 140 cases: seven settings × two footprints
+× ten splits on one workload. This is an exploratory matrix result, not a general
+success probability. Individual-query regressions remain, and the selected path does not
 beat every published placement. The thesis compares it with RCM, Gorder and
 Porder and reports profiling costs and model limitations.
 
@@ -100,8 +101,11 @@ matrix and checks numerical table regeneration.
 | [`archive/`](archive/) | Earlier validated documents, superseded material and review history |
 
 The tracked artifact is about **397 MiB**, mostly losslessly compressed timing
-records needed to check individual queries and phases. The 420 calibration runs
-are training evidence, not additional independent performance repetitions.
+records needed to check individual queries and phases. The current **2,069 records**
+comprise the earlier **1,289-record checkpoint**, 360 scheduling runs and 420
+calibration runs. Calibration is training evidence, not additional independent
+performance replication. [The campaign inventory](doc/REPRODUCIBILITY.md#record-counts-and-frozen-protocols)
+explains the counts retained in historical protocols.
 Large local intermediates go in ignored `work/`; `make clean-work` removes those
 files without removing committed results, datasets, tools or document archives.
 See [storage and cleanup](doc/REPRODUCIBILITY.md#storage-and-cleanup) for details.

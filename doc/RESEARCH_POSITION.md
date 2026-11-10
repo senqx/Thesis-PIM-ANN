@@ -10,6 +10,7 @@ with a simulator and checks which execution assumptions determine the result.
 | Prior work | Public status checked on 10 November 2026 | Consequence for this thesis |
 | --- | --- | --- |
 | HNSW | Published in IEEE TPAMI, 2020 | The search algorithm is a baseline, not a new contribution. |
+| Gorder | Published at SIGMOD 2016 | Structural graph ordering is established; this artifact uses the routine supplied with Coleman et al.'s comparison. |
 | Coleman et al., graph reordering for cache-efficient near-neighbour search | Published at NeurIPS 2022 | Graph placement, including profile-guided **Porder**, already exists. The 2021 preprint omits that later extension. |
 | DRIM-ANN and UpANNS | Published at SC 2025 | ANN on commercial or enhanced PIM, including compute and data-movement co-design, is established research. |
 | PIMANN | Published at USENIX ATC 2025 | Fine-grained PIM scheduling is established; request sorting here is a different, narrower intervention. |
@@ -114,5 +115,8 @@ simulation result alone is not a guarantee of acceptance.
 
 The [preservation guide](RESULTS_PRESERVATION.md) distinguishes the validated
 checkpoints from material superseded by correctness repairs. All 1,289 earlier
-validated replays remain in their original paths. A tighter main narrative does
-not discard them or turn them into invalid evidence.
+validated replays remain in their original paths. The current matrix adds 360
+scheduling and 420 calibration records, for **2,069** in total; the
+[campaign inventory](REPRODUCIBILITY.md#record-counts-and-frozen-protocols) explains
+why frozen protocols still cite the earlier count. A tighter main narrative does
+not discard earlier work or turn it into invalid evidence.
