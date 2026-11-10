@@ -8,6 +8,8 @@ Start with [the thesis PDF](doc/pim_ann_thesis.pdf), [the short paper](doc/pim_a
 or [the reading guide](doc/READING_GUIDE.md), which gives a path through the argument.
 The [project overview](PROJECT_OVERVIEW.md) and [remediation record](doc/REVIEW_FIXES.md)
 describe the project and link the review findings to repairs and validation.
+For historical checkpoint references, the [commit identity correction](doc/HISTORY_REWRITE.md)
+maps three original IDs to their current IDs without changing checkpoint contents.
 
 The [research-position note](doc/RESEARCH_POSITION.md) explains the current RQs,
 what related papers already established, and the claims supported at Master's

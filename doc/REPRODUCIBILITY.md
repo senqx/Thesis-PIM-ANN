@@ -29,6 +29,9 @@ are wall-clock observations and are expected to vary on another machine.
 Keep the reference checkout unchanged and use a second clone for the new run.
 Choose the exact reviewed commit, not a moving branch, for both copies. The Git
 history and validated-document archives identify earlier checkpoints separately.
+The [commit identity correction](HISTORY_REWRITE.md) maps three original
+checkpoint IDs to their current IDs; each corrected checkpoint has an identical
+file tree. Use the corrected ID when following an older provenance reference.
 
 ```bash
 git clone https://github.com/senqx/Thesis-PIM-ANN.git Thesis-PIM-ANN-reproduced

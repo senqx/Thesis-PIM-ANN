@@ -10,14 +10,15 @@
     ".gitignore": "412e53f6d36c3f11eec71ddcf9d635dca6c8906b81c55feb04b482839395c764",
     "Makefile": "df433dd6fa5df887a130f2099e7ca7a616f3ea13e52d56f39ace6dc5b47dcc4b",
     "PROJECT_OVERVIEW.md": "ddf9344f987f1f0b24e936f530eba20ddd2cbed8e9e314d0bc8d96536cf14a80",
-    "README.md": "80241c25e7cd3674bd79c79b3a035f02caf032aa4dd92ba92e9f3ea4a52a52d6",
+    "README.md": "4667aa2e18015c55b9b5f142672190fbae5af3e9308c4856bc960453fbd9b35a",
     "doc/FOLLOWUP_DESIGN.md": "abd338572c3a4d9fed694bf26d5b030e40aaff3496b74c55e7b559a656b3ef13",
+    "doc/HISTORY_REWRITE.md": "4742b6ccdb64049f42a790fc4c695d4b091b5a240447e94d6b25ba5546fcca5c",
     "doc/PROFILED_FETCH_DESIGN.md": "418d2fa13b6ea8ab34ec149b71ef4dce8252b97da03c90405d97428ce150ed7e",
     "doc/READING_GUIDE.md": "f13e238d4d6d32cbbc6614b683f745b23a0e08c341b0835f3741ced6991ca5a4",
-    "doc/REPRODUCIBILITY.md": "b342c582a59242ae160cb6c6b062d1c95e62fd950c025ecc8d2e2c58b62fe382",
+    "doc/REPRODUCIBILITY.md": "79466d225a9967d205521e13975dbdb4f4e8e8d7bbcee9bcea51299e6f98ca76",
     "doc/RESEARCH_CLOSURE.md": "5ddf7fb1fbe0fcac37dccf3b201f4fae33c0a64dc9d40b275914c976467293f3",
     "doc/RESEARCH_POSITION.md": "37fea5e1325b3154598698f0422ebea9bb78f855ed9133c3345154d5f8e5770a",
-    "doc/RESULTS_PRESERVATION.md": "a0afcc357928cee2da7a02e4469cffd7b4b7b2e5d5ef0dff2d172e0264efc19d",
+    "doc/RESULTS_PRESERVATION.md": "e2a8fa904c827e00c7a2434ea3e9ec0786f37f1518cb1a18b495b95585c0f54d",
     "doc/REVIEW_FIXES.md": "84003cc630cb879766ba1bd92df1fd8f76442e742867a70bd4cbb9690a6b7d99",
     "doc/REVISION_DISPOSITION.md": "5e8aaa6a4db124c8527b2a9e7846f1bc39922125c6102f49ecbb48907cd42be5",
     "doc/SCHEDULING_DESIGN.md": "f1022771b92a62ae8c814ddc0227f2bab7ae22b4d4d96901dfdcccca4519b43b",
@@ -135,5 +136,6 @@
   "study_binary_sha256": "eeae71a7580d9e273bab82529779870a05513686c0c61bebe73130f18305d99a",
   "primary_recheck_record": "results/final_source_recheck.json",
   "followup_recheck_record": "results/followup_source_recheck.json",
-  "scheduling_recheck_record": "results/scheduling_source_recheck.json"
+  "scheduling_recheck_record": "results/scheduling_source_recheck.json",
+  "history_identity_correction": "doc/HISTORY_REWRITE.md"
 }

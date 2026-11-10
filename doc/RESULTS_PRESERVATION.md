@@ -3,6 +3,11 @@
 Earlier work remains part of this project even when the main argument becomes
 more focused. A revision to the interpretation is not a deletion of its evidence.
 
+Three checkpoint IDs changed when Git author/committer identities were corrected.
+The [translation table](HISTORY_REWRITE.md) gives their current IDs. Historical
+references below and inside preserved documents retain the original IDs; the
+corresponding checkpoint file trees are byte-identical.
+
 | Material | Location | Status |
 | --- | --- | --- |
 | Validated thesis, companion paper, source text, graphics and tables before the published-layout/expansion follow-up | [9 November checkpoint](../archive/2026-11-09-validated/README.md) | Byte-for-byte copies from commit `71ce10b`; useful prior version. |
