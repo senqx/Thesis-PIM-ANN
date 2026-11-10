@@ -41,6 +41,25 @@ print(
     "All three PDFs have resolved citations/references and no significant overflow."
 )
 
+# The validation table puts its counts in a separate cell from the PDF link.
+# Restrict this check to the current set; historical revisions retain old counts.
+validation = (ROOT / "doc/VALIDATION.md").read_text()
+current_set = re.search(
+    r"^## Current document set\n(.*?)(?=^## |\Z)", validation, re.M | re.S
+)
+if not current_set:
+    raise SystemExit("VALIDATION.md: missing current document set")
+documented_counts = {
+    (ROOT / "doc" / target).resolve(): int(count)
+    for target, count in re.findall(
+        r"^\| \[[^\]]+\]\(([^)]+)\) \| (\d+) (?:pages|slides)\b",
+        current_set.group(1), re.M,
+    )
+}
+if documented_counts != page_counts:
+    raise SystemExit("VALIDATION.md: current Extent column must match PDF page counts")
+print("Current validation table agrees with PDF page counts.")
+
 # Check maintained navigation, including relocated review notes. Byte-identical
 # historical snapshots deliberately retain the links and claims of their revision.
 documents = [

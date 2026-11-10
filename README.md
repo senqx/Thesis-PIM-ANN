@@ -26,6 +26,7 @@ of **1,289**, plus **360 scheduling sensitivity** and **420 training calibration
 runs. These are retained records, not 2,069 independent statistical experiments.
 The PDFs below and their [validation record](doc/VALIDATION.md#current-document-set)
 belong to the same Git revision; the record gives their page counts and SHA-256 hashes.
+Page counts include all PDF pages, including the title page and front matter.
 
 | Purpose | Document |
 | --- | --- |

@@ -8,6 +8,10 @@ reproduction repeats are described below; they are not counted in that matrix.
 
 ## Current document set
 
+**The current thesis has 68 PDF pages, including the title page and front matter.**
+The 69-page thesis mentioned in the historical notes belongs to the superseded
+architectural checkpoint `7f5dfdc`.
+
 Read these PDFs and this validation record from the **same Git revision**.
 The thesis is the full argument; the IEEE companion condenses it, and the defence
 presentation reuses its figures and values. Exact distributed-file hashes are
@@ -20,12 +24,26 @@ the numerical regeneration checks compare the evidence-derived content separatel
 | [IEEE companion](pim_ann_ieee.pdf) | 8 pages |
 | [Defence presentation](pim_ann_defence.pdf) | 14 slides: 12 main and 2 backup |
 
+These counts were confirmed by rebuilding the current sources and running
+`pdfinfo` on each output:
+
+```bash
+TECTONIC_OFFLINE=1 bash scripts/build_docs.sh
+pdfinfo doc/pim_ann_thesis.pdf   # Pages: 68
+pdfinfo doc/pim_ann_ieee.pdf     # Pages: 8
+pdfinfo doc/pim_ann_defence.pdf  # Pages: 14
+```
+
+The build checks both the README's linked counts and the **Extent** column above
+against the PDFs. A temporary copy with the thesis extent changed to 69 pages was
+rejected by that check. This document-only rebuild adds no experimental results.
+
 SHA-256 of the distributed PDFs (paths relative to the repository root):
 
 ```text
-8e7b142460173d24b856f0fbd3a5e69be269c1db6fa36caaf12051357c10f8ac  doc/pim_ann_thesis.pdf
-81c6edcc01cd118a7f3e44656e80844a7d04ffc34057731ac69482c6e805822e  doc/pim_ann_ieee.pdf
-721e67ccd92b0db86882b01733d2cc78cd9ece36d9c29be3521fb27c5a6f3d7a  doc/pim_ann_defence.pdf
+02f7807e0ee4600153e579843acf9f0dd58e5fdebfe3db629792a3d37a076526  doc/pim_ann_thesis.pdf
+f3b8db45b60c77646067e6d448a44794981e1bcce393c106ba503c83a1c2f878  doc/pim_ann_ieee.pdf
+d5b51271119007ed7ccf025232dfc0390b7c8b7f39df2f40ecba28e46a729f2e  doc/pim_ann_defence.pdf
 ```
 
 Check with `sha256sum doc/pim_ann_{thesis,ieee,defence}.pdf` from the repository root.
@@ -75,10 +93,15 @@ validation and baseline history are linked together.
   pre-edit hashes. Source inventory and generated provenance reflect the final
   documentation/build-check revision. No numerical analysis code changed.
 
-## Earlier editorial review
+## Historical editorial revisions
+
+<details>
+<summary>Superseded document versions: editorial and architectural review notes</summary>
+
+### Editorial checkpoint `44200ad`
 
 The experimental scope and results are unchanged. The complete text of the
-incoming 69-page thesis was extracted and reviewed, including tables, captions,
+incoming thesis from checkpoint `7f5dfdc` was extracted and reviewed, including tables, captions,
 appendices and bibliography. This pass clarifies the 140-case denominator,
 distinguishes the contribution explicitly from Gorder/Porder and PIM-ANN systems,
 adds a worked service-only overhead example and tightens the conclusion. It also
@@ -86,8 +109,8 @@ corrects the explanation of `efSearch`: the retained best-result set is bounded,
 while the pending candidate frontier can contain more entries. The stock source
 was checked for that distinction; search code was not changed.
 
-The final PDFs build offline with resolved citations/references and no significant
-horizontal overflow: **68 pages** for the thesis and **8 pages** for the companion.
+The PDFs at checkpoint `44200ad` built offline with resolved citations/references
+and no significant horizontal overflow: 68 pages for the thesis and 8 for the companion.
 Page overviews cover both complete PDFs, with detailed visual checks of the
 changed passages and the conclusion. Removing repetition and short overflow
 pages reduced the thesis length. The
@@ -106,7 +129,7 @@ The preceding commit's
 [full CI run](https://github.com/senqx/Thesis-PIM-ANN/actions/runs/42814930326)
 passed; that validation is distinguished from the document checks performed here.
 
-## Architectural explanation and defence revision
+### Architectural checkpoint `7f5dfdc`
 
 The preceding documentation revision added no experimental observations. It clarified the
 original contribution, the proposed host/near-memory division of work, transfers,
@@ -115,9 +138,9 @@ decisions and the limits of generalisation. The existing reading guide now gives
 answers to the thirteen defence questions. The README already reported 2,069
 records before this pass; 1,289 refers to a preserved earlier checkpoint.
 
-At that checkpoint, both PDFs built offline with resolved citations/references and no
-significant horizontal overflow: **69 pages** for the thesis and **8 pages** for
-the IEEE companion. The new execution diagram and the changed contribution,
+At the superseded checkpoint `7f5dfdc`, both PDFs built offline with resolved
+citations/references and no significant horizontal overflow: 69 pages for that
+historical thesis and 8 for its IEEE companion. The new execution diagram and the changed contribution,
 profiling, interpretation, architecture and conclusion pages were visually
 reviewed. Source/guide links, Ruff's `F` checks and Git whitespace checks pass.
 The figure generator's numerical-analysis code is unchanged, verified by
@@ -127,6 +150,8 @@ archives, core/search/simulator and test directories match their pre-edit hashes
 The source inventory and figure provenance are updated for the revised text and
 diagram. The simulation matrix, calibration records and fresh-reproduction
 records below are retained evidence; they were not rerun for this prose revision.
+
+</details>
 
 ## Checks executed for the scheduling and profiling extension
 
