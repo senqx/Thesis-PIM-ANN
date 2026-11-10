@@ -16,7 +16,7 @@ set. The detailed defence answers later in this guide support questions.
 | Slide | Speaking purpose |
 | --- | --- |
 | 1 — Question | Start with the apparent contradiction: putting related data together can reduce row operations yet delay completion. State immediately that timings are simulated DRAM service. |
-| 2 — RQs and contribution | Separate the three questions from established graph ordering and PIM systems. The contribution is the controlled interaction study and its reproducible evidence. |
+| 2 — RQs and contribution | Name the added evidence: placement failure cases, explained scheduling reversals and implementation cost thresholds. Gorder/Porder are measured placements; PIM systems are literature comparisons. The general techniques are established. |
 | 3 — Fixed work | Explain node IDs versus storage addresses. The same search results and logical reads are preserved. A paired split compares matching queries; ten splits are not ten independent datasets. |
 | 4 — Availability | Walk through one neighbour list and its vectors. Flat replay knows future requests; phase replay withholds them until memory completion. Neither executes real search control or distances. |
 | 5 — Small placement effect | Distinguish a conditional interval excluding zero from a worthwhile implementation. About 97 cycles/query is a small allowance for extra work. |
@@ -181,11 +181,25 @@ These are concise answers to practise explaining in your own words. The thesis
 provides the methods, qualifications and evidence behind each answer.
 
 1. **What is original when graph reordering and PIM ANN already exist?**
-   The contribution is the controlled comparison at fixed logical search work,
-   the measured reversals as request availability and memory settings change,
-   and the exploratory evaluation of configuration-specific fetch selection.
-   The study uses established placements and schedules. It neither invents those
-   ideas nor reproduces an existing system's application-speedup experiment.
+   My contribution is the measured failure cases, conditional alternatives and
+   their explanation for a fixed HNSW/HBM2 workload. For example, round-robin
+   within available expansions reduces default 512-byte service by 14.58%, but
+   changing only the address mapper makes it 112.71% slower than matching original
+   order. Command accounting explains how less waiting can outweigh extra row
+   operations in the default case. That gives a fetch-interface designer both a
+   useful case and a concrete counterexample to a universal recommendation.
+
+   Gorder/Porder contribute established placement algorithms; I evaluate their
+   supplied routines at fixed search work under explicit DRAM and availability
+   assumptions. The cited PIM systems contribute fuller execution designs; I do
+   not benchmark those accelerators. My artifact isolates candidate fetching and
+   quantifies its service savings and cost thresholds. About 5,802 saved cycles
+   per query in the default 512-byte case is a testable allowance for extra work
+   in an additive model, not a promised PIM speedup. The contribution is original
+   empirical evidence and reusable tests, not invention of the general
+   locality–parallelism trade-off or a new scheduling principle. The
+   [contribution statement](RESEARCH_POSITION.md#the-original-contribution)
+   connects each output to its evidence and intended use.
 
 2. **What does DRAM service establish about PIM?**
    It evaluates one component that a compatible near-memory engine must execute:

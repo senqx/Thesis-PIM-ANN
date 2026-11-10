@@ -8,9 +8,9 @@ reproduction repeats are described below; they are not counted in that matrix.
 
 ## Current document set
 
-**The current thesis has 68 PDF pages, including the title page and front matter.**
-The 69-page thesis mentioned in the historical notes belongs to the superseded
-architectural checkpoint `7f5dfdc`.
+**The current thesis has 69 PDF pages, including the title page and front matter.**
+The contribution clarification adds one page to the 68-page version at
+`bdab0e6`. Historical checkpoints below retain the counts of their own PDFs.
 
 Read these PDFs and this validation record from the **same Git revision**.
 The thesis is the full argument; the IEEE companion condenses it, and the defence
@@ -20,7 +20,7 @@ the numerical regeneration checks compare the evidence-derived content separatel
 
 | Document | Extent |
 | --- | --- |
-| [Full thesis](pim_ann_thesis.pdf) | 68 pages |
+| [Full thesis](pim_ann_thesis.pdf) | 69 pages |
 | [IEEE companion](pim_ann_ieee.pdf) | 8 pages |
 | [Defence presentation](pim_ann_defence.pdf) | 14 slides: 12 main and 2 backup |
 
@@ -29,21 +29,22 @@ These counts were confirmed by rebuilding the current sources and running
 
 ```bash
 TECTONIC_OFFLINE=1 bash scripts/build_docs.sh
-pdfinfo doc/pim_ann_thesis.pdf   # Pages: 68
+pdfinfo doc/pim_ann_thesis.pdf   # Pages: 69
 pdfinfo doc/pim_ann_ieee.pdf     # Pages: 8
 pdfinfo doc/pim_ann_defence.pdf  # Pages: 14
 ```
 
 The build checks both the README's linked counts and the **Extent** column above
-against the PDFs. A temporary copy with the thesis extent changed to 69 pages was
-rejected by that check. This document-only rebuild adds no experimental results.
+against the PDFs. At checkpoint `bdab0e6`, a temporary copy with an incorrect
+69-page extent for its 68-page thesis was rejected. The current document-only
+rebuild adds no experimental results.
 
 SHA-256 of the distributed PDFs (paths relative to the repository root):
 
 ```text
-02f7807e0ee4600153e579843acf9f0dd58e5fdebfe3db629792a3d37a076526  doc/pim_ann_thesis.pdf
-f3b8db45b60c77646067e6d448a44794981e1bcce393c106ba503c83a1c2f878  doc/pim_ann_ieee.pdf
-d5b51271119007ed7ccf025232dfc0390b7c8b7f39df2f40ecba28e46a729f2e  doc/pim_ann_defence.pdf
+e4b20517766772fb5fd9acdd358147b99ff581003b8d4b99394a006fef77202e  doc/pim_ann_thesis.pdf
+5b7dfeeedbbb32a9e14e0846693873591b2ac5395c4c422aee0e840e17e45cda  doc/pim_ann_ieee.pdf
+8fb16ff23e9d407df648a392358046d1f264b06cb03858d4ce676bb954b61607  doc/pim_ann_defence.pdf
 ```
 
 Check with `sha256sum doc/pim_ann_{thesis,ieee,defence}.pdf` from the repository root.
@@ -55,7 +56,27 @@ original correctness repairs; see the
 Historical checkpoints below retain their original page counts and validation
 scope. They do not describe the current PDFs.
 
-## Submission presentation check
+## Contribution clarification
+
+This editorial pass makes each contribution explicit in the thesis introduction,
+related-work section and conclusion, with corresponding updates to the README,
+research position, IEEE companion and defence material. It distinguishes the core
+empirical findings (placement limits and scheduling reversals) from the derived
+engineering guidance (an execution proposal with cost thresholds). Gorder/Porder
+are measured placement baselines; the cited PIM systems are literature comparisons.
+No new algorithm, general locality principle or application/PIM speedup is claimed.
+
+All three PDFs were rebuilt offline. The changed pages and contribution slides
+were visually checked; references, overflow, page counts and local navigation
+pass `scripts/check_docs.py`. The numerical examples use the retained generated
+values and tables. All **5,088 protected tracked files** outside this editorial
+scope match their pre-edit hashes, including raw evidence, generated numerical
+tables/figures, frozen protocols and experimental/analysis code. The **2,069**
+records remain unchanged; the simulation campaign and full numerical analysis
+were not rerun for this prose revision. PDF hashes, source inventory and
+provenance identify the revised document set.
+
+## Earlier submission presentation check (`bdab0e6`)
 
 The experimental scope remains frozen. At the start of this review, GitHub
 `main` and the local checkout both pointed to `44200ad`, whose README already

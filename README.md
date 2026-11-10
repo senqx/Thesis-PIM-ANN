@@ -31,7 +31,7 @@ Page counts include all PDF pages, including the title page and front matter.
 | Purpose | Document |
 | --- | --- |
 | Read the argument | [IEEE companion, 8 pages](doc/pim_ann_ieee.pdf) |
-| Study the methods and results | [Full thesis, 68 pages](doc/pim_ann_thesis.pdf) |
+| Study the methods and results | [Full thesis, 69 pages](doc/pim_ann_thesis.pdf) |
 | Follow the ideas without ANN/DRAM specialisation | [Reading guide](doc/READING_GUIDE.md) |
 | Understand the research questions and prior work | [Research position](doc/RESEARCH_POSITION.md) |
 | Check or reproduce a claim | [Reproducibility guide](doc/REPRODUCIBILITY.md) |
@@ -48,7 +48,22 @@ before reproducing an older result. This README is the maintained project overvi
 
 ## What the study shows
 
-Row reuse and bank parallelism can favour different layouts or request orders.
+**Original contribution:** measured failure cases and conditional alternatives
+for placing and fetching HNSW vectors, explained through DRAM command evidence
+and translated into implementation cost thresholds. The study fixes logical
+search work so that a timing change can be attributed to the tested memory choices.
+
+Gorder/Porder already establish graph reordering; DRIM-ANN, UpANNS, PIMANN and
+PIMCQG establish ANN/PIM system techniques, including fine-grained scheduling.
+This thesis evaluates supplied placement routines and isolates memory-service
+choices; the PIM systems are literature comparisons, not benchmarked accelerators.
+The [contribution and prior-work comparison](doc/RESEARCH_POSITION.md#the-original-contribution)
+ties each original output to evidence and an engineering decision.
+
+The practical value is a reproducible way to check a proposed fetch path before
+integration: test its locality and parallelism assumptions, retain regressions,
+and compare the available saving with implementation cost. Row reuse and bank
+parallelism can favour different layouts or request orders.
 The main HNSW comparisons cover **512-byte float32 vectors** and a **hypothetical
 128-byte footprint**. Both use the same recorded float32 search; the smaller
 footprint is not an implemented quantised index.
@@ -77,6 +92,10 @@ For PIM, the thesis develops a concrete [host/near-memory execution sketch](doc/
 host control supplies discovered candidates, and a proposed engine gathers resident
 vectors and returns distances. The scheduling evidence guides that interface;
 the engine and its communication costs still need implementation and measurement.
+For example, the default 512-byte round-robin gain leaves about **5,802 service
+cycles/query** for incremental costs in a simplified serial model. Reaching that
+cost erases the saving; this is an implementation test criterion, not a prediction
+of end-to-end PIM performance.
 
 ## Quick start
 

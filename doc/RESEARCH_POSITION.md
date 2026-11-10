@@ -19,20 +19,79 @@ with a simulator and checks which execution assumptions determine the result.
 Links and exact titles are in the [shared bibliography](references.tex). This is
 a targeted public-literature comparison; it cannot inventory unpublished work.
 
-Neither query-guided placement nor the row-reuse/bank-parallelism trade-off should
-be claimed as an invention. The contribution is the measured interaction of
-placement, request availability, footprint and controller service in the checked
-artifact. Published placement routines provide stronger comparisons than the
-local heuristic alone. Their application benchmarks include effects, particularly
-caches and native index allocation, that this DRAM study does not reproduce.
+## The original contribution
 
-The concrete original outputs are the checked comparison at fixed HNSW search
-work; the measured placement and scheduling reversals under explicit request
-availability, footprint and controller settings; and the exploratory evaluation
-of a training-selected order against fixed schedules and published placements.
-The accompanying execution sketch explains how to test those findings in a
-system. None of these claims requires ownership of graph reordering, profiling,
-round-robin scheduling or the idea of accelerating ANN near memory.
+**This thesis quantifies when established placement and fetch-order choices help
+or fail for a fixed HNSW/HBM2 workload, explains observed reversals with DRAM
+command evidence, and derives constraints for a compatible near-memory
+implementation.** The contribution is empirical: the measured cases, their
+explanation and the resulting design guidance. The general locality–parallelism
+trade-off, graph reordering, PIM-based ANN, locality optimisation and fine-grained
+scheduling are established ideas.
+
+The three contributions in the thesis introduction have the following evidence
+and intended use. All percentages below are mean paired changes across ten query
+splits in **simulated completed DRAM service cycles**; negative means fewer cycles.
+Both footprints retain the same float32 search; 128 bytes is hypothetical repacking.
+
+| Contribution | Concrete evidence produced here | What it helps an engineer decide |
+| --- | --- | --- |
+| **C1. Measured limits of locality-oriented placement** | The local query-aware placement changes default flat-replay cycles versus BFS by −0.31% at 512 bytes and +0.17% at 128 bytes, despite more row hits at 128 bytes. RCM/Gorder/Porder comparisons show that the local heuristic does not exhaust placement opportunities. | Whether a locality improvement actually reduces service time, and whether an established placement is a stronger baseline than the proposed heuristic. |
+| **C2. Conditional scheduling gains and explained reversals** | Expansion-bounded BFS round-robin changes cycles versus matching original order by −14.58% at 512 bytes and +3.43% at 128 bytes. Changing only the mapper makes the 512-byte effect +112.71%. On reference split one, the default 512-byte schedule adds 277,894 command cycles but removes 1,429,356 no-command cycles. | Whether the proposed fetch interface exposes useful parallelism, and which mapping, availability and request-limit assumptions must be checked before choosing an order. |
+| **C3. An exploratory execution recommendation with explicit cost thresholds** | A 50-query profile selects among three existing orders. The default 512-byte service gain is about 5,802 cycles/query; extra cost reaching that value erases the gain in a serial additive model. The selected BFS path beats original-order Porder by 14.25% there, but loses to original-order Gorder by 1.35% at 128 bytes. | Whether a fixed or profiled order merits implementation testing, and how much incremental scheduling, buffering and transfer cost the service saving could tolerate. |
+
+C1 and C2 are the core empirical findings. C3 is supporting engineering guidance
+derived from those findings using established selection and cost models; neither
+profiling nor the amortisation formula is claimed as an invention.
+
+The [placement comparisons](generated/followup_layout_table.tex),
+[scheduling matrix](generated/scheduling_table.tex),
+[command accounting](generated/followup_mechanism_table.tex) and
+[profiled comparisons](generated/profiled_fetch_baselines.tex) give the detailed
+evidence, including paired intervals where applicable. The
+[reproduction guide](REPRODUCIBILITY.md) connects the generated results to raw
+records, fixed protocols and runnable commands.
+
+### Exactly how this differs from the named systems
+
+**Compared with Gorder and Porder**, the added result is a controlled evaluation
+of their supplied placement routines at the DRAM-service layer, with logical
+search work fixed and request availability explicit. It does not introduce those
+ordering methods or reproduce their application benchmarks. Cache hits can avoid
+DRAM requests entirely, whereas row hits still require DRAM service. Consequently,
+their cache-aware application gains and these service differences answer
+different questions; a small effect here does not refute their results.
+
+**Compared with DRIM-ANN, UpANNS, PIMANN and PIMCQG**, the added result is a set of
+isolated fetch-path comparisons and implementation constraints within the larger
+ANN/PIM design problem. Those systems contribute architectures and execution
+techniques involving computation, storage and communication. This thesis measures
+neither those systems nor a replacement accelerator. Its percentages therefore
+cannot rank it against their reported application speedups. In particular,
+PIMANN already establishes fine-grained PIM scheduling, and PIMCQG directly
+addresses graph ANN on PIM. The question here is how a compatible engine should
+order the reads for already-discovered candidate vectors, under stated DRAM
+and availability assumptions.
+
+The targeted literature comparison supports this distinction in contribution
+and measurement scope. It is not proof that every aspect of the interaction is
+absent from all prior work, or that this is the first study of the general idea.
+
+### What the work gives other researchers and engineers
+
+The artifact supplies **reproducible failure cases, conditional alternatives and
+cost thresholds**. A researcher can use its fixed-search pipeline to compare a
+placement without confounding the result with changed traversal or recall. A
+memory-system engineer can reproduce the gain and regression of a candidate
+schedule under explicit request boundaries. An accelerator designer can use the
+measured saving as a budget to test against implementation costs, keeping a
+simple fixed schedule when profiling adds no value.
+
+These uses are concrete even though deployment gains remain unmeasured. The
+negative results rule out particular recommendations under the tested conditions;
+they do not prove that locality or scheduling is generally ineffective. The
+positive results identify where implementation testing is justified; they do not
+promise a working speedup on another workload or memory platform.
 
 The DRAM mechanism can affect host systems too. The specific PIM implication is
 to evaluate a configurable gather-and-distance interface: host control discovers
