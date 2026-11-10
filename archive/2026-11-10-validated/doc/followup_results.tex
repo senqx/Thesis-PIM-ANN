@@ -1,0 +1,80 @@
+\section{Published layouts and requests available within an expansion}
+\label{sec:followup-results}
+The earlier results leave two natural questions. Would established placement methods do better than the local heuristic? And does their ranking depend on offering future graph work before its preceding reads finish? The follow-up tests both questions while preserving the original experiments. Its comparisons use the default controller; the previously reported policy and mapper sweeps remain supporting evidence for that controller choice's importance.
+
+\subsection{The cost of restricting future work}
+Table~\ref{tab:barriers} shows the scale of the memory-boundary intervention. There are \MeanPhasesPerQuery{} phases per query on average on the reference graph, and \MeanVectorsPerPhase{} vectors per vector phase. These are properties of the recorded search at this operating point, not architecture constants. The bounded model gives a different service time because it withholds later work until the preceding phase drains. A global outstanding limit alone does not represent that dependency.
+
+\begin{table}[htbp]\centering\small
+\caption[Effect of expansion boundaries]{Reference graph, ten splits. Query service intervals include gaps between phases. The final column is the paired completed-stream difference with a 95\% interval, comparing bounded with flat replay of the same layout.}\label{tab:barriers}
+\resizebox{\textwidth}{!}{\input{generated/followup_barrier_table.tex}}
+\end{table}
+
+These boundaries are not added arithmetic time. They change when requests become available. Bounded timing remains incomplete as an application model: candidate reads in a phase can overlap subject to the outstanding limit, while computation, local buffering and scheduler costs are omitted. A flat/bounded comparison is therefore a sensitivity to execution assumptions, not a measured host/PIM comparison.
+
+\subsection{Placement against stronger baselines}
+Table~\ref{tab:followup-layouts} compares all six follow-up placements with BFS under matching boundaries, and with identity under bounded replay. Figure~\ref{fig:followup-layouts} makes the change of scale and ranking easier to see. The prior random and community results remain in Table~\ref{tab:real} and the artifact; they were not part of this prespecified follow-up matrix.
+
+\begin{table}[htbp]\centering\small
+\caption[Published and local placement comparisons]{Reference graph, ten paired splits. Entries are mean cycle differences and 95\% intervals; negative values mean fewer cycles. Each baseline uses the same footprint and boundary mode.}\label{tab:followup-layouts}
+\resizebox{\textwidth}{!}{\input{generated/followup_layout_table.tex}}
+\end{table}
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{generated/followup_layouts.pdf}
+\caption[Placement under flat and bounded replay]{Layout differences relative to matching BFS, with split-level 95\% intervals. The panels use different horizontal scales. The 128-byte representation is hypothetical.}\label{fig:followup-layouts}
+\end{figure}
+
+On the reference graph with expansion boundaries, Porder's cycle difference relative to BFS is \PorderBoundedFloat\% at 512 bytes, compared with \QABoundedFloat\% for the local query-aware heuristic. At 128 bytes, Gorder gives \GorderBoundedCompact\%, while the local heuristic gives \QABoundedCompact\%. These comparisons show why stronger baselines matter: a local heuristic's weak result does not exhaust the available placement improvements.
+
+Porder and the local query-aware heuristic must not be treated as interchangeable implementations of one idea. Their training relationships and placement objectives differ. A weak result for the local heuristic cannot establish that query-guided placement fails in general. Conversely, a gain by a published method in this replay does not reproduce its authors' application-speedup claim. The complete numerical comparisons, including flat replay against identity, are retained in \texttt{results/followup\_summary.csv}.
+
+\subsection{Ordering only the currently available vector reads}
+Figure~\ref{fig:followup-schedules} and Table~\ref{tab:followup-schedules} compare address sorting and transaction round-robin with original-order bounded replay on the same placement. The comparison changes order alone: each phase contains exactly the same multiset of transactions. Saved cycles per original query put the relative effect beside an absolute service-time allowance before any scheduling overhead.
+
+\begin{table}[htbp]\centering\small
+\caption[Within-expansion request schedules]{Reference graph, ten paired splits. Each schedule is compared with original-order bounded replay of the same layout. Negative percentage differences and positive saved-cycle counts favour the schedule.}\label{tab:followup-schedules}
+\resizebox{\textwidth}{!}{\input{generated/followup_schedule_table.tex}}
+\end{table}
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{generated/followup_schedules.pdf}
+\caption[When available-request schedules help or hurt]{Mean cycle differences and 95\% intervals on the reference graph. Both panels share the same scale. Every point compares a schedule with original-order bounded replay on the same layout; values left of zero favour the schedule.}\label{fig:followup-schedules}
+\end{figure}
+
+The two widths expose different amounts of logical work through a 64-transaction limit. Sixteen chunks belong to one 512-byte vector, but only four to a 128-byte vector. Round-robin exposes several vectors' chunks earlier instead of submitting every chunk of one vector first. This can improve the distribution of offered work, but can also disrupt useful row reuse. Sorting pursues nearby addresses and can have the opposite effect on bank diversity. Neither choice is automatically beneficial.
+
+The per-query check uses the same reconstructed original-query service intervals. For BFS round-robin at 512 bytes, \RRFasterQueriesFloat\% of query records improve in each of the 19 graph/split cases. The within-case empirical 95th-percentile service difference ranges from \RRPtailRangeFloat\%. These are descriptive checks on sets of 200 queries; query IDs can recur between splits, and these records are not additional independent replications. They are service-time observations, not application latency guarantees.
+
+\subsection{Explaining the scheduling contrast}
+Four diagnostic replays add command recording to the first reference split's BFS original and round-robin streams at both widths. These repeats were selected after the pilot to explain its contrast; they are not independent statistical observations. They reproduce every original phase service interval and total timing exactly.
+
+\begin{table}[htbp]\centering\small
+\caption[Scheduling mechanism on the pilot split]{BFS, reference split one, bounded replay. ACT and PRE count row-opening and row-closing commands. ``No command'' counts controller cycles without a selected command. ``Banks'' is the mean number of distinct bank instances in full 64-request input windows wholly within one phase.}\label{tab:followup-mechanism}
+\resizebox{\textwidth}{!}{\input{generated/followup_mechanism_table.tex}}
+\end{table}
+
+At 512 bytes, round-robin adds \RRCmdExtraFloat{} command-issue cycles but removes \RRNoCmdDeltaFloat{} cycles with no selected command, saving \RRStreamDeltaFloat{} cycles overall. Offered bank diversity increases from \RRBanksBeforeFloat{} to \RRBanksAfterFloat{} in the measured windows, while the classified row-hit fraction falls from \RRHitBeforeFloat{}\% to \RRHitAfterFloat{}\%. This is consistent with useful overlap outweighing additional row operations. At 128 bytes, the corresponding changes add \RRCmdExtraCompact{} command cycles and \RRNoCmdDeltaCompact{} no-command cycles, costing \RRStreamDeltaCompact{} cycles. Its original stream already offers \RRBanksBeforeCompact{} banks on average in those windows; round-robin raises that to \RRBanksAfterCompact{} without improving total service. These are within-width comparisons, because the two widths produce different numbers of full windows.
+
+The accounting is exact, but it does not assign every no-command cycle to a particular DRAM timing rule. Phase completion waits, frontend availability, refresh and timing restrictions can contribute. Offered-bank diversity is an input statistic, not instantaneous controller occupancy. Even mean individual read latency falls in both cases; the slower 128-byte total therefore reinforces the need to measure completion of the whole workload. A proxy can explain part of a result without being an adequate optimisation target.
+
+\subsection{Construction variation and preprocessing}
+Tables~\ref{tab:followup-graphs} and \ref{tab:followup-schedule-graphs} retain all selected construction comparisons on matched splits one through three. They give means and observed ranges, without treating four selected graphs as a sampled population. The broader reference-graph estimate remains the ten-split interval reported above.
+
+The boundaries can change a placement verdict. With graph seed 101, the local query-aware method loses to BFS at 128 bytes under bounded replay, although the earlier flat comparison favoured it. At 512 bytes, graph seed 101 on split two also reverses the small query-aware advantage. The earlier claim of improvement in every selected 512-byte case therefore applies specifically to flat replay. Gorder and Porder reduce total bounded service relative to BFS in all 19 cases at both widths. Round-robin retains its 512-byte improvement and 128-byte loss across all tested constructions on both evaluated placements.
+
+\begin{table}[htbp]\centering\small
+\caption[Bounded placement across graph constructions]{Cycle differences relative to BFS under bounded replay. Entries show means and observed ranges over three matched splits, all in percent.}\label{tab:followup-graphs}
+\resizebox{\textwidth}{!}{\input{generated/followup_graph_table.tex}}
+\end{table}
+\begin{table}[htbp]\centering\small
+\caption[Scheduling across graph constructions]{Cycle differences relative to the same placement's original-order bounded replay. Entries show means and observed ranges over three matched splits, in percent. QA denotes the local query-aware placement.}\label{tab:followup-schedule-graphs}
+\resizebox{\textwidth}{!}{\input{generated/followup_schedule_graph_table.tex}}
+\end{table}
+
+\begin{table}[htbp]\centering
+\caption[Published-layout preprocessing]{Observed shared-host layout construction time across the 19 graph/split cases. Porder uses the adapted queue; graph loading, training searches and profile extraction are excluded. These are implementation cost observations, not isolated algorithm throughput benchmarks.}\label{tab:followup-cost}
+\input{generated/followup_cost_table.tex}
+\end{table}
+The scheduling matrix covers BFS and the local query-aware placement. It does not test every published-layout/schedule combination, so separate placement and scheduling gains must not be added to predict a combined result.
+
+Published methods also require preprocessing (Table~\ref{tab:followup-cost}). Porder additionally requires a training profile. Round-robin needs candidate addresses and enough temporary state to keep track of chunks; sorting needs that state plus ordering work. The replay times charge neither schedule for those operations. A useful next implementation must measure them against the saved service cycles and account for cache or local-memory reuse. The evidence identifies conditional memory-service opportunities, rather than a free deployment gain.

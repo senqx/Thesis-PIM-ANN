@@ -62,7 +62,11 @@ def expected_replays():
         raise ValueError("duplicate planned replay")
     from followup import expected_followup
     from followup_mechanism import expected_mechanism
+    from scheduling import expected_scheduling
+    from profiled_fetch import expected_calibration
 
     paths |= expected_followup()
     paths |= expected_mechanism()
+    paths |= expected_scheduling()
+    paths |= expected_calibration()
     return paths

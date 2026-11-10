@@ -2,7 +2,7 @@ CXX ?= g++
 CXXFLAGS ?= -std=c++20 -O2 -Wall -Wextra
 PYTHON ?= python3
 TOOLS := bin/ann_kernel bin/gen_trace bin/toy_timing bin/reorder bin/gen_layout
-.PHONY: all test test-simulator setup setup-published followup demo-ramulator micro study sensitivity strengthen figures docs clean
+.PHONY: all test test-simulator setup setup-published followup scheduling profiled-fetch demo-ramulator micro study sensitivity strengthen figures docs clean
 all: $(TOOLS)
 	$(MAKE) -C sprint1 all
 bin:
@@ -15,6 +15,9 @@ test: all
 	$(PYTHON) tests/test_pipeline.py
 	$(PYTHON) tests/test_experiments.py
 	$(PYTHON) tests/test_followup.py
+	$(PYTHON) tests/test_scheduling.py
+	$(PYTHON) tests/test_profiled_fetch.py
+	$(PYTHON) tests/test_reproduction.py
 test-simulator:
 	$(PYTHON) tests/test_simulator.py
 setup:
@@ -23,6 +26,10 @@ setup-published:
 	$(PYTHON) scripts/setup_published.py
 followup: all
 	$(PYTHON) scripts/followup.py --jobs 2
+scheduling: all
+	$(PYTHON) scripts/scheduling.py --jobs 2
+profiled-fetch: all
+	$(PYTHON) scripts/profiled_fetch.py --jobs 2
 demo-ramulator: all
 	mkdir -p work/demo
 	bin/gen_trace --pattern seq --burst 32 > work/demo/seq.trace

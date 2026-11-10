@@ -1,0 +1,32 @@
+{
+  "reference": "calibration/seed1/default/roundrobin_512.json",
+  "fresh_output": "/home/artashes/proj/Thesis-PIM-ANN/work/fresh-calibration-reproduction/fresh.json",
+  "search_reconstructed": true,
+  "replay_cache_used": false,
+  "reconstructed_inputs": {
+    "bfs_128.mapping.csv": "2d294138c0f691006e046a09f9e0530f4925f9223c2a2d9c9991c0d4580a9779",
+    "bfs_512.mapping.csv": "2d294138c0f691006e046a09f9e0530f4925f9223c2a2d9c9991c0d4580a9779",
+    "community_128.mapping.csv": "4c6fa4fc62b97aa0a9b6e8f05518a02dc053e0a3fbdda4bc176e06ae3ec2f310",
+    "community_512.mapping.csv": "4c6fa4fc62b97aa0a9b6e8f05518a02dc053e0a3fbdda4bc176e06ae3ec2f310",
+    "graph.csv": "1cbbb303684c4bc8b53c58473be807c421706917fd999a9fce92662069b836ec",
+    "identity_128.mapping.csv": "abdcd29b585d32215d623a48631fef4193558b882e55df37b97f783ea5ef3998",
+    "identity_512.mapping.csv": "abdcd29b585d32215d623a48631fef4193558b882e55df37b97f783ea5ef3998",
+    "insertion.csv": "3a2574b611c660ec0a511cf0539f20ce79f195cbda47d3d71813188ed21b4356",
+    "logical.csv": "182500ff81827517280f7d243d528a760c548b435ba6b2c7dd13b414a6bb5a78",
+    "query_aware_128.mapping.csv": "1bc8dbee871ee8fa55e855737fc1711e5be8392e32b7721dec7211e0fd40b6af",
+    "query_aware_512.mapping.csv": "3459da07e5943ff5a262b84ae457e7ffd4b5098881f9547d942d65638370a1ce",
+    "random_128.mapping.csv": "650618d721841839a025f350b67307e865baad80616fa478e7b008e368c3491e",
+    "random_512.mapping.csv": "650618d721841839a025f350b67307e865baad80616fa478e7b008e368c3491e",
+    "recall.csv": "3872124deea19fb0072f5ee39aaf51cf596d6d9ded8a9a707c2f6d4856885f1e",
+    "split.csv": "5235fa9d75f7b9e4596a08abffb4a893df6301cb420cecad39810bf507302200",
+    "training.csv": "1697c5758ba4cd94ef386a37d2c12a007400d569be3fe162ba32e910614b007c"
+  },
+  "comparison": {
+    "matched": true,
+    "differences": [],
+    "reference_cycles": 1780689,
+    "candidate_cycles": 1780689,
+    "reference_library_sha256": "79de1f9cf03c56b5fb122d20a05fae24c6642892e620c92574f2adf11ea53dcf",
+    "candidate_library_sha256": "79de1f9cf03c56b5fb122d20a05fae24c6642892e620c92574f2adf11ea53dcf"
+  }
+}

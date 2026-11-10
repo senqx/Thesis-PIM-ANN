@@ -1,0 +1,2 @@
+index built: 100000 vectors, 39.2856 seconds
+study complete: /home/artashes/proj/Thesis-PIM-ANN/work/fresh-default-reproduction/study, Recall@10=0.9935

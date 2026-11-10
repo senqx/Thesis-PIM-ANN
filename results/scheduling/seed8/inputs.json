@@ -1,0 +1,21 @@
+{
+  "source_hashes": {
+    "results/followup/reference/seed8/emissions.json": "f8f3c8be0c54d777e847b01a062dcfb707102423ee253d7f627e69fed821a42b",
+    "results/followup/reference/seed8/inputs.json": "c597e1d4aba998808c1fb765adb28615050c6f9f06356a3329170fe244c409e8",
+    "results/followup/reference/seed8/phases.csv.gz": "e8d71c6ec687dc1c3079893e9859a33d2b56f7776b281514dfbf7a4b868242c0",
+    "results/followup/reference/seed8/recall.csv": "70f0ca35486f1bf31234cf3120d9f49a70ecf167443c0eec9e1a28a07b60d858",
+    "results/followup/reference/seed8/split.csv": "cc6a64209d461a6f83f8ac44e84042480437e5646ef114af7123a9515e33ce5d",
+    "work/followup/reference/seed8/study/bfs_128.mapping.csv": "2d294138c0f691006e046a09f9e0530f4925f9223c2a2d9c9991c0d4580a9779",
+    "work/followup/reference/seed8/study/bfs_512.mapping.csv": "2d294138c0f691006e046a09f9e0530f4925f9223c2a2d9c9991c0d4580a9779",
+    "work/followup/reference/seed8/study/graph.csv": "1cbbb303684c4bc8b53c58473be807c421706917fd999a9fce92662069b836ec",
+    "work/followup/reference/seed8/study/logical.csv": "b9ade92dd0c2d130d294d242b1c28df96079d4d2ac88d07f25992430cf1df089"
+  },
+  "phase_hashes": {
+    "phases_batch0.csv.gz": "fb83ba95dcb406da34bf459d46c022a3ec8e17cc6914eba5a7c94a633aabf613",
+    "phases_batch2.csv.gz": "68605731726cd0e0b9791c1e14bb08c7bb74d47fc07eac84ce278decb76ace72",
+    "phases_batch8.csv.gz": "15088cdcd337ce4348db983a64be4311c9f028472670f67382e8935c1af5f1a0"
+  },
+  "generator_sha256": "2900356a847a55c8fa58ae687980792cd8306e0e445d01b6e3f2219fa394f3cf",
+  "design_sha256": "f1022771b92a62ae8c814ddc0227f2bab7ae22b4d4d96901dfdcccca4519b43b",
+  "emissions_sha256": "cfade9000cd2b19f6807c38d70a5eae790423db831e4642068f327a6b53c3f22"
+}

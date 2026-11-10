@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-10",
+  "distinct_matrix_replays": 2069,
+  "fresh_reproduction_repeats": 3,
+  "comparison": "reproduction/2026-11-10/comparison.json",
+  "tool_hashes": {
+    "scripts/reproduce_replay.py": "f3d70932e45bd7eff03edd8d4342e31e6cd7912d0faa7b6cd9766b433381a078",
+    "scripts/compare_reproduction.py": "8962e5ed4a66e7f5ef14149119d900fb256de62522bab13a97a5f8576c40c718"
+  },
+  "retained_files": {
+    "reproduction/2026-11-10/comparison.json": "542d65f8d89e1b81eff27a9703d8f67c2eb5d20f422856d6d470f7fc40247a65",
+    "reproduction/2026-11-10/details/calibration/comparison.json": "564502f279fce09e257116b33ee22933bfb2f9b0fcc0af7aa2309dd6f2540490",
+    "reproduction/2026-11-10/details/calibration/replay.txt": "8ac6561a185a8781e632d6e3c3fd099537394c788c80027b05462e7e542c96b4",
+    "reproduction/2026-11-10/details/calibration/search.txt": "c75420cce6f625a3893f83517c3283ce6f6109d711b6e7908869325444efff2f",
+    "reproduction/2026-11-10/details/default/comparison.json": "81ad4ab180da4590654bda10a7b3c91b4e3fdfc3e0d47b6cd8c517e63371425a",
+    "reproduction/2026-11-10/details/default/replay.txt": "28ecd9b2ba4d45708e57122bc50e1ea13542de955b434ca9b22a797f406be3c0",
+    "reproduction/2026-11-10/details/default/search.txt": "ed35157d880dcae8129dd682dd6b84d29fba5d65c180653213f0ea1317f659e8",
+    "reproduction/2026-11-10/details/mapping/comparison.json": "9403b94e0b37d5eb033e231a5e16c51171bb7f4a32577b9f419ab5c1ee38a2e7",
+    "reproduction/2026-11-10/details/mapping/replay.txt": "c6040deecf44a72f4d59cc609e974645225117d9b5854a1f0d8780bc585de5be",
+    "reproduction/2026-11-10/details/mapping/search.txt": "bd5d0a1eeca7cfadc3af7ebf4919568cb7e0f7488c56bf292d86a68acbce0a70",
+    "reproduction/2026-11-10/results/calibration/seed1/default/roundrobin_512.json": "e119d14b45d94147a60b18ae8d33fce3990a68e9477c72cc0f52c76fdbf2c2e3",
+    "reproduction/2026-11-10/results/calibration/seed1/default/roundrobin_512.queries.csv.gz": "38fdf49c8ff6cccf7a83c0a23ff497e6add5b91b6abe44eb3cf35c22d58e2830",
+    "reproduction/2026-11-10/results/followup/reference/seed1/roundrobin/bfs_512.json": "bc18b6b11e9b81c49d2d2f0650e30c7e81644ddf253bcf32b8b6983a57edac06",
+    "reproduction/2026-11-10/results/followup/reference/seed1/roundrobin/bfs_512.queries.csv.gz": "ca02c3f14c958baa18e8f0bd21d912c470522ccac0e53e9fdde817aa60133716",
+    "reproduction/2026-11-10/results/scheduling/seed1/alternate_mapping/roundrobin_512.json": "6ccf7b9a240af4f4700c2c368a1c38096de8ee8815f3bd065589c32ea1856138",
+    "reproduction/2026-11-10/results/scheduling/seed1/alternate_mapping/roundrobin_512.queries.csv.gz": "39660295eee0859c1d376f3251251656df34bbca30a10a3214557f18c32cbf36"
+  },
+  "note": "Each repeat reconstructs HNSW inputs in a fresh directory and bypasses replay caches. All three match complete simulator statistics and each query/phase timing. These are spot checks using existing checked binaries, not another full-matrix run or independent performance samples."
+}

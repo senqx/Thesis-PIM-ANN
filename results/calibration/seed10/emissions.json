@@ -1,0 +1,92 @@
+{
+  "batch0/bounded_128": {
+    "trace_sha256": "accfcba5729fc6b058529a6d315914a9e6da333fb12b8e1df216c29cc7de223f",
+    "phase_multiset_sha256": "b5e76005f75517b15f95669dba9b1e9c876d310451857a458ccf8367ffa9b5b9",
+    "reads": 219153
+  },
+  "batch0/sorted_128": {
+    "trace_sha256": "5b985bb701f16236b7e8184a76e97d648f34f8fca46859d2abc2b44a8d286ed9",
+    "phase_multiset_sha256": "b5e76005f75517b15f95669dba9b1e9c876d310451857a458ccf8367ffa9b5b9",
+    "reads": 219153
+  },
+  "batch0/roundrobin_128": {
+    "trace_sha256": "1825670094befdb7df322cb81cc187fbe7f24ee46395b29b5fca09712550ffd2",
+    "phase_multiset_sha256": "b5e76005f75517b15f95669dba9b1e9c876d310451857a458ccf8367ffa9b5b9",
+    "reads": 219153
+  },
+  "batch0/bounded_512": {
+    "trace_sha256": "6da12ecc74a940e16d2b2c36308a7acccd73ed44cbcf4e1c04262627fea75f88",
+    "phase_multiset_sha256": "5ae7cbcb0e04c26d918978e9665cf339b361ee069949853700eb461a6e8269de",
+    "reads": 842529
+  },
+  "batch0/sorted_512": {
+    "trace_sha256": "886214fd3e67e28f797e29a1418290509e167362bb3654eaf78ef8b0d344c1c4",
+    "phase_multiset_sha256": "5ae7cbcb0e04c26d918978e9665cf339b361ee069949853700eb461a6e8269de",
+    "reads": 842529
+  },
+  "batch0/roundrobin_512": {
+    "trace_sha256": "aacd8d97fd136b6c8a140af6fac6403efb7a5f2e1ac153213615c260d5e6426e",
+    "phase_multiset_sha256": "5ae7cbcb0e04c26d918978e9665cf339b361ee069949853700eb461a6e8269de",
+    "reads": 842529
+  },
+  "batch2/bounded_128": {
+    "trace_sha256": "32b2825d7d65c95461c90f9c1762dd32b6cdd270dfe700894d7d701e65779b86",
+    "phase_multiset_sha256": "333af42f6bb687d3cbf165cdfbd2b43672315a447be121245215bc910c4f4adb",
+    "reads": 219153
+  },
+  "batch2/sorted_128": {
+    "trace_sha256": "03db211a20505394450c53679715222548f2fa7539927fe75a01876e826888cb",
+    "phase_multiset_sha256": "333af42f6bb687d3cbf165cdfbd2b43672315a447be121245215bc910c4f4adb",
+    "reads": 219153
+  },
+  "batch2/roundrobin_128": {
+    "trace_sha256": "c6618fdf8d56eaa2df32fa51177caf412e1d6f731be28d4894881dc6829f9c22",
+    "phase_multiset_sha256": "333af42f6bb687d3cbf165cdfbd2b43672315a447be121245215bc910c4f4adb",
+    "reads": 219153
+  },
+  "batch2/bounded_512": {
+    "trace_sha256": "f43253cadf883cc43527ff0a568192e00046b4ccc14e59cb456d1782547c1f57",
+    "phase_multiset_sha256": "e917b0faab728f84e358c88ff76c32b93f99349b483cb7560f5c733047b3e3bd",
+    "reads": 842529
+  },
+  "batch2/sorted_512": {
+    "trace_sha256": "9c484a356823eea3b063445b5907172f26d350aa345e5cda26ff5946350bd09c",
+    "phase_multiset_sha256": "e917b0faab728f84e358c88ff76c32b93f99349b483cb7560f5c733047b3e3bd",
+    "reads": 842529
+  },
+  "batch2/roundrobin_512": {
+    "trace_sha256": "3f70e8bace663e14440a9954f11955007e1884f0646e61d94b00af96e9dc6508",
+    "phase_multiset_sha256": "e917b0faab728f84e358c88ff76c32b93f99349b483cb7560f5c733047b3e3bd",
+    "reads": 842529
+  },
+  "batch8/bounded_128": {
+    "trace_sha256": "9330a818652348437525cd7a77906ba9051d090b6dff9605b5979e9f8b7270e4",
+    "phase_multiset_sha256": "0d1918927f51aa7110c1fe0830fafcbe81f965a005107fe0811a00c34aa8dcf3",
+    "reads": 219153
+  },
+  "batch8/sorted_128": {
+    "trace_sha256": "28a417c6163a5db1c7db71dca7b0758b2b046a6e2a04a02b31ecc5ff18706614",
+    "phase_multiset_sha256": "0d1918927f51aa7110c1fe0830fafcbe81f965a005107fe0811a00c34aa8dcf3",
+    "reads": 219153
+  },
+  "batch8/roundrobin_128": {
+    "trace_sha256": "efb826876ce90a2a04bcff0fa4f9328e051be21f63087b8d0619ed494947338d",
+    "phase_multiset_sha256": "0d1918927f51aa7110c1fe0830fafcbe81f965a005107fe0811a00c34aa8dcf3",
+    "reads": 219153
+  },
+  "batch8/bounded_512": {
+    "trace_sha256": "b1995764b3e87f286053ae3748d6d23e5b3fdcef62c49eaf0658623ec3d1ad67",
+    "phase_multiset_sha256": "815c5133d951f08b3457baf63532541e250add714f895d89926e4adbce549a52",
+    "reads": 842529
+  },
+  "batch8/sorted_512": {
+    "trace_sha256": "bb8122b1bcc722dec4c7ce725af14d190363ab6453a62c51eb683d8da1f35e63",
+    "phase_multiset_sha256": "815c5133d951f08b3457baf63532541e250add714f895d89926e4adbce549a52",
+    "reads": 842529
+  },
+  "batch8/roundrobin_512": {
+    "trace_sha256": "5c91f2345022e01b169b141c933ec3fdc4f855a02447caeb22b0db670a1e3e1f",
+    "phase_multiset_sha256": "815c5133d951f08b3457baf63532541e250add714f895d89926e4adbce549a52",
+    "reads": 842529
+  }
+}

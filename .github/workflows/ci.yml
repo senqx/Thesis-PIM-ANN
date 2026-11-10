@@ -13,6 +13,6 @@ jobs:
       - run: make -j2 test
       - run: bash scripts/setup_ramulator.sh --jobs 2
       - run: make test-simulator
-      - run: python scripts/check_results.py
+      # Analysis validates the full matrix before writing any generated output.
       - run: python scripts/analyze.py
-      - run: git diff --exit-code -- results/real_summary.csv results/paired_summary.csv doc/generated/values.tex doc/generated/*_table.tex
+      - run: git diff --exit-code -- 'results/*.csv' 'doc/generated/*.tex'

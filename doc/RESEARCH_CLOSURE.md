@@ -52,8 +52,8 @@ the same; command recording uses the pinned simulator's observer plugins.
 
 ## Observed outcome
 
-All 791 named replay records pass validation. At 512 bytes the query-aware layout
-beats BFS in every tested graph/split pair. At 128 bytes, graph seeds 101 and 102
+All 791 named replay records pass validation. Under flat replay at 512 bytes, the
+query-aware layout beats BFS in every tested graph/split pair. At 128 bytes, graph seeds 101 and 102
 reverse the original graph's loss, and shuffled insertion gives mixed split-level
 signs. The three repeated controller settings retain their conditional signs
 across all ten query splits. These observations reinforce the need to evaluate the
@@ -90,3 +90,15 @@ findings, without a universal layout/schedule recommendation.
 The [research-position note](RESEARCH_POSITION.md) explains the Master's scope and
 which stronger claims would require additional work. The [validation record](VALIDATION.md)
 records completed checks for the current artifact.
+
+
+## Scheduling and execution revision
+
+The subsequent sensitivity and training-selected fetch extension is documented in
+[SCHEDULING_DESIGN.md](SCHEDULING_DESIGN.md) and
+[PROFILED_FETCH_DESIGN.md](PROFILED_FETCH_DESIGN.md). It adds 360 scheduling and 420
+calibration replays while preserving the 1,289-replay checkpoint. Conclusions
+about sorting and round-robin above refer to their stated default configuration;
+the new matrix tests how request limits, candidate batches and mapping change
+those recommendations. See [revision disposition](REVISION_DISPOSITION.md) and
+[validation](VALIDATION.md) for the current state.

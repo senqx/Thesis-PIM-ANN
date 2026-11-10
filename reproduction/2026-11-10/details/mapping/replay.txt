@@ -1,0 +1,12 @@
+{
+  "cycles": 44097986,
+  "row_hit_pct": 70.50203566487336,
+  "mean_query_cycles": 1506.7992209389736,
+  "checks": {
+    "trace_reads": 3227938,
+    "completed_callbacks": 3227938,
+    "submitted": 3227938,
+    "served": 3227938,
+    "classified": 3227938
+  }
+}

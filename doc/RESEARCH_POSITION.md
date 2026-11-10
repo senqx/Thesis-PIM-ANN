@@ -30,7 +30,8 @@ caches and native index allocation, that this DRAM study does not reproduce.
 1. **Mechanism:** how do order, contiguous runs and concurrency affect completed
    service, and when do locality statistics disagree with timing?
 2. **Central workload question:** which tested placements and schedules help on
-   held-out SIFT queries at fixed logical search work?
+   held-out SIFT queries at fixed logical search work, and can a short training
+   profile select a useful schedule?
 3. **Robustness:** do those conclusions survive selected changes in available
    requests, footprint, controller settings and graph construction?
 
@@ -56,6 +57,21 @@ are not treated as additional independent experimental replications.
 
 ## Where to stop, and what would justify more work
 
+The proposed execution extension stays inside the central question. It selects
+original, sorted or round-robin vector fetch using 50 training queries for each
+configuration, then freezes that choice for held-out service. The sensitivity
+matrix shows why footprint alone cannot select an order: outstanding capacity
+and address mapping can reverse its effect. The proposal is a configuration-aware
+gather path for hardware that exposes the required requests. It is not an
+algorithmic novelty claim or an assumed interface of commercial UPMEM.
+
+The [fixed design](PROFILED_FETCH_DESIGN.md) records the policy, comparisons and
+exploratory status. It was motivated by previously inspected test outcomes.
+Training and test queries are disjoint within each split, but that separation
+does not turn the research process into untouched confirmation. The complete
+held-out results, selection counts, oracle gaps and profiling costs are presented
+in the thesis; published placements combined with this selector remain untested.
+
 A defensible Master's conclusion can be conditional on one real corpus prefix,
 a specified HNSW operating point and a specified simulator. The thesis must say
 that clearly and complete the checks needed for those comparisons. It does not
@@ -75,6 +91,6 @@ simulation result alone is not a guarantee of acceptance.
 ## Earlier work remains available
 
 The [preservation guide](RESULTS_PRESERVATION.md) distinguishes the validated
-checkpoint from material superseded by correctness repairs. All 791 earlier
+checkpoints from material superseded by correctness repairs. All 1,289 earlier
 validated replays remain in their original paths. A tighter main narrative does
 not discard them or turn them into invalid evidence.

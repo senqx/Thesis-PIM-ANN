@@ -1,0 +1,114 @@
+{
+  "default/128": {
+    "training_cycles": {
+      "bounded": 774250,
+      "sorted": 775688,
+      "roundrobin": 800987
+    },
+    "selected_order": "bounded"
+  },
+  "inflight16/128": {
+    "training_cycles": {
+      "bounded": 969107,
+      "sorted": 978073,
+      "roundrobin": 868566
+    },
+    "selected_order": "roundrobin"
+  },
+  "inflight32/128": {
+    "training_cycles": {
+      "bounded": 790341,
+      "sorted": 793800,
+      "roundrobin": 802613
+    },
+    "selected_order": "bounded"
+  },
+  "inflight128/128": {
+    "training_cycles": {
+      "bounded": 774250,
+      "sorted": 775688,
+      "roundrobin": 800987
+    },
+    "selected_order": "bounded"
+  },
+  "alternate_mapping/128": {
+    "training_cycles": {
+      "bounded": 2884812,
+      "sorted": 2873677,
+      "roundrobin": 4073481
+    },
+    "selected_order": "sorted"
+  },
+  "default/512": {
+    "training_cycles": {
+      "bounded": 1941833,
+      "sorted": 1950980,
+      "roundrobin": 1660133
+    },
+    "selected_order": "roundrobin"
+  },
+  "inflight16/512": {
+    "training_cycles": {
+      "bounded": 3005862,
+      "sorted": 3013366,
+      "roundrobin": 2016876
+    },
+    "selected_order": "roundrobin"
+  },
+  "inflight32/512": {
+    "training_cycles": {
+      "bounded": 2150215,
+      "sorted": 2158666,
+      "roundrobin": 1683937
+    },
+    "selected_order": "roundrobin"
+  },
+  "inflight128/512": {
+    "training_cycles": {
+      "bounded": 1941833,
+      "sorted": 1950980,
+      "roundrobin": 1660133
+    },
+    "selected_order": "roundrobin"
+  },
+  "alternate_mapping/512": {
+    "training_cycles": {
+      "bounded": 5214309,
+      "sorted": 5427199,
+      "roundrobin": 10842653
+    },
+    "selected_order": "bounded"
+  },
+  "batch2/128": {
+    "training_cycles": {
+      "bounded": 1830342,
+      "sorted": 1829654,
+      "roundrobin": 1802862
+    },
+    "selected_order": "roundrobin"
+  },
+  "batch2/512": {
+    "training_cycles": {
+      "bounded": 3531202,
+      "sorted": 3527750,
+      "roundrobin": 3257175
+    },
+    "selected_order": "roundrobin"
+  },
+  "batch8/128": {
+    "training_cycles": {
+      "bounded": 986572,
+      "sorted": 989786,
+      "roundrobin": 961956
+    },
+    "selected_order": "roundrobin"
+  },
+  "batch8/512": {
+    "training_cycles": {
+      "bounded": 2247709,
+      "sorted": 2253735,
+      "roundrobin": 1901780
+    },
+    "selected_order": "roundrobin"
+  }
+}

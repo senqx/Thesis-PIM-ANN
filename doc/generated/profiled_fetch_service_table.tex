@@ -1,0 +1,20 @@
+\begin{tabular}{lrrr}
+\toprule
+Condition & Bytes & Original cycles/query & Selected cycles/query \\
+\midrule
+Default (64 outstanding) & 512 & 39,811 & 34,008 \\
+Default (64 outstanding) & 128 & 15,768 & 15,768 \\
+16 outstanding & 512 & 61,734 & 41,316 \\
+16 outstanding & 128 & 19,853 & 17,747 \\
+32 outstanding & 512 & 44,116 & 34,471 \\
+32 outstanding & 128 & 16,095 & 16,095 \\
+128 outstanding & 512 & 39,811 & 34,008 \\
+128 outstanding & 128 & 15,768 & 15,768 \\
+Candidate batches of 2 & 512 & 72,625 & 66,981 \\
+Candidate batches of 2 & 128 & 37,662 & 37,103 \\
+Candidate batches of 8 & 512 & 46,150 & 38,974 \\
+Candidate batches of 8 & 128 & 20,197 & 19,697 \\
+Alternative address mapping & 512 & 108,034 & 108,034 \\
+Alternative address mapping & 128 & 59,417 & 59,215 \\
+\bottomrule
+\end{tabular}

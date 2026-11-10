@@ -103,6 +103,12 @@ def check():
 
     validate_followup()
     validate_mechanism()
+    from scheduling_validation import validate_scheduling
+
+    validate_scheduling()
+    from profiled_fetch_validation import validate_calibration
+
+    validate_calibration()
     print(
         f"Validated all {len(timing)} named replays, read accounting, primary equivalence, "
         "graph/split identity, recall, component streams and command conservation."

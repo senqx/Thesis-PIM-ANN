@@ -81,6 +81,40 @@ def savefig(name):
     plt.close()
 
 
+def write_provenance():
+    inputs = sorted(
+        p for p in RESULTS.rglob("*") if p.is_file() and ".cache." not in p.name
+    )
+    manifest = {
+        str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in inputs
+    }
+    (OUT / "provenance.json").write_text(
+        json.dumps(
+            {
+                "profiled_fetch_generator_sha256": hashlib.sha256(
+                    (ROOT / "scripts/analyze_profiled_fetch.py").read_bytes()
+                ).hexdigest(),
+                "scheduling_generator_sha256": hashlib.sha256(
+                    (ROOT / "scripts/analyze_scheduling.py").read_bytes()
+                ).hexdigest(),
+                "followup_generator_sha256": hashlib.sha256(
+                    (ROOT / "scripts/analyze_followup.py").read_bytes()
+                ).hexdigest(),
+                "extension_generator_sha256": hashlib.sha256(
+                    (ROOT / "scripts/analyze_strengthening.py").read_bytes()
+                ).hexdigest(),
+                "generator_sha256": hashlib.sha256(
+                    Path(__file__).read_bytes()
+                ).hexdigest(),
+                "inputs": manifest,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+
+
 def main():
     # Fail before replacing any figure or table when the evidence is incomplete.
     from check_results import check
@@ -445,31 +479,13 @@ def main():
     from analyze_followup import generate as generate_followup
 
     generate_followup()
-    inputs = sorted(
-        p for p in RESULTS.rglob("*") if p.is_file() and ".cache." not in p.name
-    )
-    manifest = {
-        str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
-        for p in inputs
-    }
-    (OUT / "provenance.json").write_text(
-        json.dumps(
-            {
-                "followup_generator_sha256": hashlib.sha256(
-                    (ROOT / "scripts/analyze_followup.py").read_bytes()
-                ).hexdigest(),
-                "extension_generator_sha256": hashlib.sha256(
-                    (ROOT / "scripts/analyze_strengthening.py").read_bytes()
-                ).hexdigest(),
-                "generator_sha256": hashlib.sha256(
-                    Path(__file__).read_bytes()
-                ).hexdigest(),
-                "inputs": manifest,
-            },
-            indent=2,
-        )
-        + "\n"
-    )
+    from analyze_scheduling import generate as generate_scheduling
+
+    generate_scheduling()
+    from analyze_profiled_fetch import generate as generate_profiled_fetch
+
+    generate_profiled_fetch()
+    write_provenance()
     print(
         "Generated tables and figures from 10 paired SIFT splits and the completed sensitivity matrix."
     )

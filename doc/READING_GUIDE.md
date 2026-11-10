@@ -7,8 +7,8 @@ know HNSW internals or memorise the address-bit table before reading the results
 
 ## The question that holds the story together
 
-**If a graph search reads the same data, can changing where the vectors are stored
-make memory finish that work sooner?**
+**If a graph search reads the same data, can changing its storage locations
+and the order of available reads make memory finish that work sooner?**
 
 The initial intuition is that data used together should live together. The
 complication is that memory can benefit both from reusing a row and from spreading
@@ -87,7 +87,7 @@ before integration cost.
 
 The phase diagram then addresses which requests the controller can see. Read a
 list, make its candidate vectors available, finish that group, then move to the
-next expansion. Sorting that available group's addresses is slower on average.
+next expansion. Sorting that available group's addresses is slower on average under the default settings.
 Offering chunks round-robin instead reduces 512-byte BFS service by **14.58%**,
 about **5,802 simulated cycles per query**, on the reference graph. Every tested
 query record improves in each of the 19 cases. At 128 bytes, however, round-robin
@@ -96,7 +96,7 @@ constructions and both evaluated placements.
 
 This is the positive/negative contrast to understand: exposing chunks from
 several vectors early can be more useful than maximising row hits, but the value
-depends on footprint and available overlap. At 512 bytes the command record shows
+depends on footprint, address mapping and available overlap. At 512 bytes the command record shows
 more row operations and fewer total cycles. At 128 bytes, the extra operations
 are not recovered in total service. Scheduling cost, computation and application
 concurrency still need an execution-level evaluation.
@@ -104,6 +104,38 @@ concurrency still need an execution-level evaluation.
 The new boundary model also changes small placement rankings. One seed-101
 512-byte query-aware comparison becomes a loss, despite the earlier flat-replay
 advantage. Keep the boundary mode attached to every performance statement.
+
+## The final step: choose the execution order from training
+
+The new sensitivity study asks whether the default scheduling recommendation
+survives smaller request limits, smaller candidate batches and a different address
+mapper. It does not. At the same footprint, a different amount of exposed work or
+a different mapping can change the preferred schedule. A rule based only on
+vector size would miss that interaction.
+
+The proposed path therefore tries original order, sorting and round-robin on
+50 training queries for each configuration, stores the fastest choice and uses it
+for all 200 held-out queries. Read the selection-count and paired-result table
+before interpreting the gain: selection may simply recover a good fixed schedule.
+The oracle column asks how far that training choice is from the best fixed order
+selected after seeing the test outcomes. The oracle is a comparison tool, not an
+implementable policy. In this matrix the training choice matches that best order
+in all 140 cases. Each configuration receives the same choice across its ten
+training splits, so the result supports a configuration-specific fixed order;
+it does not establish that every new workload will select correctly.
+
+Then read the published-baseline table. A selected BFS schedule is not necessarily
+better than Gorder or Porder, and their individual gains cannot be added to predict
+an untested combination. The appendix shows calibration service and absolute
+service under all tested configurations; an attractive percentage against a slower
+batch baseline is not automatically a better execution path.
+
+The execution diagram and pseudocode make the PIM connection concrete: HNSW
+supplies a candidate batch, a compatible near-memory gather operation applies the
+profiled order, and distance/state updates retain the original order. The replay
+times the DRAM requests; it does not execute that whole engine. The next necessary
+step for an application-speedup claim is to implement and charge those operations.
+That is directly related future work, not a result already established here.
 
 ## Questions to check your understanding
 
@@ -118,6 +150,8 @@ advantage. Keep the boundary mode attached to every performance statement.
   sorting a complete future trace?
 * Why can a weak local query-aware result not stand in for published Porder?
 * Why should separately measured placement and scheduling gains not be added?
+* Why can a schedule chosen on training queries still regress on held-out work?
+* Why does a smaller candidate batch differ from a smaller transaction limit?
 * What implementation costs could erase a saving of about 97 simulated cycles
   per query, and which of those costs has this study actually measured?
 
@@ -138,6 +172,8 @@ words is more useful than memorising every result-table entry.
 * [Research closure](RESEARCH_CLOSURE.md): the bounded additional experiment design
   and remaining research questions.
 * [Validation](VALIDATION.md): checks actually performed and their limits.
+* [Reproducibility](REPRODUCIBILITY.md): claim-to-data links, fresh simulation
+  commands and exact comparison against retained evidence.
 * [Results](../results/): raw statistics and generated summaries.
 * [Reproduction instructions](../README.md): build, data, experiment and document
   commands.

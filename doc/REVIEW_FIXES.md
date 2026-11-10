@@ -85,3 +85,15 @@ and all 37 document files from commit `71ce10b` are preserved byte for byte in
 [the validated archive](../archive/2026-11-09-validated/README.md). They remain useful
 evidence under their assumptions. This archive is distinct from the earlier
 material superseded by correctness repairs.
+
+
+## Scheduling and execution revision
+
+The subsequent sensitivity and training-selected fetch extension is documented in
+[SCHEDULING_DESIGN.md](SCHEDULING_DESIGN.md) and
+[PROFILED_FETCH_DESIGN.md](PROFILED_FETCH_DESIGN.md). It adds 360 scheduling and 420
+calibration replays while preserving the 1,289-replay checkpoint. Conclusions
+about sorting and round-robin above refer to their stated default configuration;
+the new matrix tests how request limits, candidate batches and mapping change
+those recommendations. See [revision disposition](REVISION_DISPOSITION.md) and
+[validation](VALIDATION.md) for the current state.
