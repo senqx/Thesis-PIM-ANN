@@ -130,33 +130,133 @@ an untested combination. The appendix shows calibration service and absolute
 service under all tested configurations; an attractive percentage against a slower
 batch baseline is not automatically a better execution path.
 
-The execution diagram and pseudocode make the PIM connection concrete: HNSW
-supplies a candidate batch, a compatible near-memory gather operation applies the
-profiled order, and distance/state updates retain the original order. The replay
-times the DRAM requests; it does not execute that whole engine. The next necessary
-step for an application-speedup claim is to implement and charge those operations.
-That is directly related future work, not a result already established here.
+The execution diagram now assigns work and data to a concrete proposed host and
+near-memory engine. The host reads neighbour IDs, filters candidates and supplies
+resolved addresses. The engine retains the query, gathers resident vectors and
+returns tagged distances; the host updates search state in the original order.
+Gathering alone would still transfer full vectors to the host. Local distance
+evaluation is the operation that could avoid that payload. Its arithmetic,
+buffering, interface and numerical behaviour need implementation and measurement.
 
-## Questions to check your understanding
+## Preparing for the defence
 
-* Why can a row hit still wait, and why does allowing other outstanding reads
-  change the value of row reuse?
-* Why must all layouts use the same queries and logical traversal for a placement
-  comparison to be interpretable?
-* What does the confidence interval vary, and what remains fixed?
-* Why can vector-only and adjacency-only replay times not be added to predict
-  the mixed stream's time?
-* Why is sorting within one available expansion a different experiment from
-  sorting a complete future trace?
-* Why can a weak local query-aware result not stand in for published Porder?
-* Why should separately measured placement and scheduling gains not be added?
-* Why can a schedule chosen on training queries still regress on held-out work?
-* Why does a smaller candidate batch differ from a smaller transaction limit?
-* What implementation costs could erase a saving of about 97 simulated cycles
-  per query, and which of those costs has this study actually measured?
+These are concise answers to practise explaining in your own words. The thesis
+provides the methods, qualifications and evidence behind each answer.
 
-The answers are in the main text. Being able to explain those points in your own
-words is more useful than memorising every result-table entry.
+1. **What is original when graph reordering and PIM ANN already exist?**
+   The contribution is the controlled comparison at fixed logical search work,
+   the measured reversals as request availability and memory settings change,
+   and the exploratory evaluation of configuration-specific fetch selection.
+   The study uses established placements and schedules. It neither invents those
+   ideas nor reproduces an existing system's application-speedup experiment.
+
+2. **What does DRAM service establish about PIM?**
+   It evaluates one component that a compatible near-memory engine must execute:
+   serving available list and vector reads. Moving arithmetic near memory does
+   not remove bank timing constraints. The result guides the engine's fetch
+   interface; it does not establish a benefit unique to PIM or a PIM speedup.
+   The same mechanism can matter to a host memory controller.
+
+3. **Why HNSW and SIFT100k?**
+   HNSW supplies a widely used graph index and a stock implementation to observe.
+   Public SIFT supplies a fixed, reproducible corpus and query pool. The 100k
+   prefix makes exact subset ground truth and repeated simulation tractable.
+   This is a deliberate case study, not a representative sample of ANN workloads.
+   New dimensions, datasets, graph families and recall targets remain untested.
+
+4. **How do layouts perform the same search?**
+   Stock HNSW produces one logical record sequence for each graph/query split.
+   Every layout maps those same node IDs to unique physical slots; it does not
+   rerun a different traversal. Instrumented and unobserved search answers must
+   agree, and independent-index tests check the observer. Permutation checks,
+   read accounting and phase-membership checks verify the physical transformation.
+   Fixed logical work isolates placement; an implementation must still validate
+   its mapping, arithmetic and ordered updates.
+
+5. **Why ten paired splits?**
+   They give an estimate of variability from query selection on the fixed graph
+   and query pool, with the achieved precision shown by paired Student intervals
+   and individual split effects. No prospective power calculation proves ten is
+   sufficient for every claim. Pairing compares each alternative on the same
+   work. Repeating an identical deterministic replay adds no sampling information;
+   neither do the 2,069 retained records constitute 2,069 independent experiments.
+   More splits would refine this conditional estimate, not establish generality.
+
+6. **What can the simulator miss?**
+   It enforces the configured DRAM command/timing rules, but the preset has not
+   been checked here against a physical HBM2 device. It omits caches, computation,
+   local storage, control and communication. It models one channel and sequential
+   queries. Actual application dependencies and concurrent queries can change
+   what requests are available, so the cycle ratio is not an application ratio.
+
+7. **Why can higher row-hit rate mean slower service?**
+   A row hit still waits for command timing and shared resources. Concentrating
+   reads can reduce opportunities for other banks to make progress. The command
+   records show cases where fewer row operations coincide with more no-command
+   cycles. Those counts explain the arithmetic of the loss; they do not identify
+   every wait cause. Offered-bank diversity is a trace diagnostic, not measured
+   instantaneous controller occupancy.
+
+8. **Why can the ranking change at 128 bytes?**
+   A vector uses four native reads instead of sixteen. At the same transaction
+   limit, more vectors can be exposed, and more vector starts fit in a contiguous
+   grouping span. Both placement and ordering therefore interact differently
+   with the address map. This explains why unchanged behaviour cannot be assumed.
+   The experiment retains float32 traversal; it measures neither a quantised
+   distance kernel nor the accuracy consequences of compression.
+
+9. **Why does default round-robin help at 512 bytes but hurt at 128?**
+   It exposes chunks of several vectors earlier. On the diagnostic 512-byte
+   stream, extra row operations are outweighed by fewer no-command cycles.
+   The 128-byte original order already exposes more bank diversity; interleaving
+   adds both command and no-command cycles there. This supports an overlap/locality
+   explanation without claiming a universal size threshold. The 128-byte result
+   becomes favourable with a 16-read limit, and the alternative mapper makes
+   round-robin much worse at both widths.
+
+10. **How does bounded replay differ from flat replay?**
+    Flat replay can offer requests from future expansions before real search
+    could discover them. Bounded replay drains a list phase, exposes its recorded
+    vector group, then drains before later work. It withholds future memory
+    requests but still omits distance and control time. Smaller candidate batches
+    add drains between vector groups; a transaction limit only caps uncompleted
+    reads. Neither model is an execution-latency bound for every implementation.
+
+11. **What would an actual PIM implementation require?**
+    Implement the host/engine split described above, including query transfer,
+    list traffic, candidate descriptors, local arithmetic/storage and returned
+    distances. The target must expose suitable request ordering and enough
+    independent reads; whole-vector DMA or bank-local access may require a
+    different design. Compare host-only HNSW, the accelerator with original fetch,
+    and the same accelerator with fixed and profiled alternatives, at equal
+    accuracy and concurrency. Measure complete latency and throughput.
+
+12. **How much benefit remains after overhead?**
+    We do not know. The flat 512-byte placement saving is about 97 service cycles
+    per query; default bounded round-robin saves about 5,802. These are different
+    comparisons, not additive gains. In an illustrative additive model, if the
+    affected service were half of baseline time, a retained 14.58% service
+    reduction would reduce total time by 7.29% before overhead. That fraction,
+    overhead and compute/memory overlap are unmeasured. Statistical detectability
+    does not establish practical value; the architectural value is learning which
+    interface assumptions change the result.
+
+13. **When is profiling not worthwhile, and what if it fails?**
+    A correctly chosen fixed schedule gives the same measured benefit without
+    repeated calibration. Short-lived configurations, low gains, frequent drift
+    or expensive profiling/dispatch can erase the value of selection. Training
+    can choose poorly on a changed workload, and aggregate gains can hide slower
+    queries. The study discloses that previously inspected outcomes motivated
+    the policy; this remains exploratory. A proposed deployment would monitor
+    mean and tail costs, re-evaluate after relevant changes, and return to a
+    validated fixed baseline when complete execution regresses. There is no
+    measured reprofiling interval or automatic guarantee from original order.
+
+Two further comparison rules matter: vector-only and adjacency-only times cannot
+be added to predict their mixed-stream time, because they interact in the
+controller; separately measured placement and scheduling gains cannot be added
+to predict an untested combination. A weak local heuristic also cannot stand in
+for published Porder, which uses a different trained placement method.
 
 ## Finding the supporting evidence
 

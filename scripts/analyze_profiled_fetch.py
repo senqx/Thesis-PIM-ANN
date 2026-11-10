@@ -319,76 +319,118 @@ def generate():
 
 
 def execution_diagram():
-    fig, ax = plt.subplots(figsize=(8.5, 4.2))
+    fig, ax = plt.subplots(figsize=(8.5, 5.5))
     ax.set_xlim(0, 10)
-    ax.set_ylim(0, 5)
+    ax.set_ylim(0, 6.5)
     ax.axis("off")
 
-    def box(x, y, width, label, colour="#eef0f2", edge="#687682"):
+    def box(x, y, width, height, label, colour="#eef0f2", edge="#687682"):
         ax.add_patch(
             FancyBboxPatch(
                 (x, y),
                 width,
-                0.85,
+                height,
                 boxstyle="round,pad=0.04",
                 facecolor=colour,
                 edgecolor=edge,
                 linewidth=1.3,
             )
         )
-        ax.text(x + width / 2, y + 0.425, label, ha="center", va="center", fontsize=10)
+        ax.text(
+            x + width / 2, y + height / 2, label, ha="center", va="center", fontsize=10
+        )
 
-    def arrow(start, end, dashed=False):
+    def arrow(start, end, dashed=False, both=False):
         ax.annotate(
             "",
             xy=end,
             xytext=start,
             arrowprops=dict(
-                arrowstyle="->",
-                color="#687682",
+                arrowstyle="<->" if both else "->",
+                color="#bd5938" if dashed else "#006c80",
                 lw=1.4,
                 linestyle="--" if dashed else "-",
             ),
         )
 
-    ax.text(
-        0.2, 4.7, "Once per configuration: training only", fontsize=12, weight="bold"
+    box(
+        0.2,
+        5.65,
+        9.55,
+        0.65,
+        "Training: 50 queries × three orders → store one choice per configuration",
+        "#f9eee7",
+        "#bd5938",
     )
-    for x, label in (
-        (0.2, "50 training queries"),
-        (3.55, "Time all three orders"),
-        (6.9, "Store minimum-cost order"),
-    ):
-        box(x, 3.45, 2.85, label, "#f9eee7", "#bd5938")
-    arrow((3.05, 3.875), (3.5, 3.875))
-    arrow((6.4, 3.875), (6.85, 3.875))
+    ax.text(0.2, 5.05, "Host control", fontsize=12, weight="bold")
+    ax.text(6.4, 5.05, "Near-memory engine", fontsize=12, weight="bold")
+    box(
+        0.2,
+        2.75,
+        3.25,
+        1.9,
+        "Read neighbour IDs\nSelect unvisited candidates\nResolve vector addresses\nUpdate search queues in order",
+    )
+    box(
+        6.4,
+        2.75,
+        3.35,
+        1.9,
+        "Retain query vector\nApply stored fetch order\nBuffer data / partial sums\nCompute tagged distances",
+    )
+    arrow((3.5, 4.25), (6.35, 4.25), dashed=True)
+    ax.text(
+        4.93,
+        4.34,
+        "Query once; then\nbatch addresses + tags",
+        ha="center",
+        va="bottom",
+        fontsize=9,
+    )
+    arrow((6.35, 3.2), (3.5, 3.2), dashed=True)
+    ax.text(
+        4.93,
+        3.28,
+        "Distances + tags",
+        ha="center",
+        va="bottom",
+        fontsize=9,
+    )
+    box(
+        6.4,
+        0.65,
+        3.35,
+        0.95,
+        "DRAM service\nVectors + adjacency lists",
+        "#def1f2",
+        "#006c80",
+    )
+    arrow((8.08, 2.7), (8.08, 1.65), both=True)
+    ax.text(8.28, 2.15, "Vector reads\nand data", va="center", fontsize=9)
+    ax.annotate(
+        "",
+        xy=(6.35, 1.12),
+        xytext=(1.83, 2.7),
+        arrowprops=dict(
+            arrowstyle="<->",
+            color="#bd5938",
+            lw=1.4,
+            linestyle="--",
+            connectionstyle="angle,angleA=-90,angleB=180,rad=0",
+        ),
+    )
+    ax.text(
+        3.95,
+        1.3,
+        "Neighbour-list reads / IDs",
+        ha="center",
+        va="bottom",
+        fontsize=9,
+    )
     ax.text(
         0.2,
-        2.9,
-        "For each expansion: proposed execution boundary",
-        fontsize=12,
-        weight="bold",
-    )
-    for x, label in (
-        (0.2, "HNSW control:\nrequest neighbour list"),
-        (2.7, "Select candidates;\nresolve addresses"),
-        (7.7, "Distance compute;\nordered state updates"),
-    ):
-        box(x, 1.4, 2.05, label)
-    box(5.2, 1.4, 2.05, "Fetch vector batch\nusing stored order", "#def1f2", "#006c80")
-    for x in (2.25, 4.75, 7.25):
-        arrow((x, 1.825), (x + 0.4, 1.825))
-    arrow((8.325, 3.4), (6.23, 2.3), dashed=True)
-    ax.text(
-        0.2,
-        0.72,
-        "Teal: reorderable vector service. Replay also includes neighbour-list DRAM reads.",
-        fontsize=10,
-    )
-    ax.text(
-        0.2,
-        0.22,
-        "Control, compute and integration costs are unmeasured; search order stays fixed.",
-        fontsize=10,
+        0.1,
+        "Teal: replayed memory service. Grey blocks and interface costs: unmeasured.",
+        fontsize=9.5,
     )
     savefig("profiled_fetch_execution.pdf")

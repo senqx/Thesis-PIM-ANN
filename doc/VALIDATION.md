@@ -1,12 +1,34 @@
 # Validation performed on 10 November 2026
 
-The current artifact contains **2,069 distinct replay records**. This revision
-adds 360 scheduling-sensitivity and 420 training-calibration runs to the 1,289
+The current artifact contains **2,069 distinct replay records**. The scheduling
+and profiling extension added 360 sensitivity and 420 calibration runs to the 1,289
 previously validated records. Calibration runs are training evidence, not
 additional independent performance replications. Three separately retained fresh
 reproduction repeats are described below; they are not counted in that matrix.
 
-## Checks executed for this revision
+## Architectural explanation and defence revision
+
+This documentation revision adds no experimental observations. It clarifies the
+original contribution, the proposed host/near-memory division of work, transfers,
+hardware requirements, statistical versus practical significance, profiling
+decisions and the limits of generalisation. The existing reading guide now gives
+answers to the thirteen defence questions. The README already reported 2,069
+records before this pass; 1,289 refers to a preserved earlier checkpoint.
+
+Both revised PDFs build offline with resolved citations/references and no
+significant horizontal overflow: **69 pages** for the thesis and **8 pages** for
+the IEEE companion. The new execution diagram and the changed contribution,
+profiling, interpretation, architecture and conclusion pages were visually
+reviewed. Source/guide links, Ruff's `F` checks and Git whitespace checks pass.
+The figure generator's numerical-analysis code is unchanged, verified by
+comparing its Python syntax tree with the preceding revision while excluding the
+diagram function. All **4,977 protected files** in the evidence, reproduction,
+archives, core/search/simulator and test directories match their pre-edit hashes.
+The source inventory and figure provenance are updated for the revised text and
+diagram. The simulation matrix, calibration records and fresh-reproduction
+records below are retained evidence; they were not rerun for this prose revision.
+
+## Checks executed for the scheduling and profiling extension
 
 * **Core and pipeline tests:** `make -j2 test` passes 27 root-tool checks, 800
   independent-index stock-search comparisons, four pipeline groups, three
@@ -63,8 +85,8 @@ reproduction repeats are described below; they are not counted in that matrix.
   costs and absolute service values are generated from raw evidence. Ruff's `F`
   checks and Git whitespace checks pass. CI checks regeneration of every root
   result CSV and generated TeX table/value file.
-* **Documents:** both PDFs build offline with resolved citations/references and no
-  significant horizontal overflow. The thesis has **65 pages** and the IEEE
+* **Documents at that checkpoint:** both PDFs built offline with resolved citations/references and no
+  significant horizontal overflow. The thesis had **65 pages** and the IEEE
   companion **8 pages**. Page overviews and representative full-size pages were
   inspected, including the availability diagram, sensitivity/selection figures,
   execution sketch, result tables, conclusion and reproduction appendix. A shared
@@ -114,7 +136,7 @@ retains these checks, which were not repeated as fresh experiments in this revis
   reproduction of 114 earlier identity/BFS/query-aware flat-trace hashes.
 
 `results/artifact_manifest.json` inventories maintained source hashes.
-`results/scheduling_source_recheck.json` records this revision's preservation and
+`results/scheduling_source_recheck.json` records the scheduling extension's preservation and
 input-proof checks; `results/reproduction_checks.json` hashes the fresh evidence.
 Earlier `followup_source_recheck.json` and `final_source_recheck.json` retain their
 original scope. `doc/generated/provenance.json` identifies the inputs and

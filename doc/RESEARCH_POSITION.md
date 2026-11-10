@@ -25,6 +25,23 @@ artifact. Published placement routines provide stronger comparisons than the
 local heuristic alone. Their application benchmarks include effects, particularly
 caches and native index allocation, that this DRAM study does not reproduce.
 
+The concrete original outputs are the checked comparison at fixed HNSW search
+work; the measured placement and scheduling reversals under explicit request
+availability, footprint and controller settings; and the exploratory evaluation
+of a training-selected order against fixed schedules and published placements.
+The accompanying execution sketch explains how to test those findings in a
+system. None of these claims requires ownership of graph reordering, profiling,
+round-robin scheduling or the idea of accelerating ANN near memory.
+
+The DRAM mechanism can affect host systems too. The specific PIM implication is
+to evaluate a configurable gather-and-distance interface: host control discovers
+candidates and supplies addresses, while an engine consumes resident vectors and
+returns tagged distances. Gathering alone still sends the vector payload to host
+arithmetic. Local distance evaluation could avoid that transfer, but requires
+arithmetic, query storage, buffering and a compatible request interface. The
+thesis's [execution section](execution_sketch.tex) specifies this division and its
+unmeasured costs. This is architectural guidance, not measured PIM acceleration.
+
 ## The research questions
 
 1. **Mechanism:** how do order, contiguous runs and concurrency affect completed
@@ -73,9 +90,14 @@ held-out results, selection counts, oracle gaps and profiling costs are presente
 in the thesis; published placements combined with this selector remain untested.
 
 A defensible Master's conclusion can be conditional on one real corpus prefix,
-a specified HNSW operating point and a specified simulator. The thesis must say
-that clearly and complete the checks needed for those comparisons. It does not
-need to claim a universal winning layout or redesign the ANN/PIM field.
+a specified HNSW operating point and a specified simulator. Here that point is
+128-dimensional SIFT, `M=16`, construction width 200, search width 64 and `k=10`.
+The additional construction seeds test limited graph variation, not different
+datasets, dimensions, graph families or recall targets. The 128-byte repacking
+changes transfer size while keeping float32 search. Ten paired splits estimate
+query-selection variability conditional on those choices; they do not establish
+generality or a universal sample-size requirement. The thesis must complete the
+checks needed for these comparisons, without claiming a universal winning layout.
 
 If the intended claim becomes **practical PIM application acceleration**, the next
 necessary experiment is an execution path that charges the proposed schedule for

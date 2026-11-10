@@ -24,7 +24,7 @@ flowchart LR
 | Purpose | Document |
 | --- | --- |
 | Read the argument | [IEEE companion, 8 pages](doc/pim_ann_ieee.pdf) |
-| Study the methods and results | [Full thesis, 65 pages](doc/pim_ann_thesis.pdf) |
+| Study the methods and results | [Full thesis, 69 pages](doc/pim_ann_thesis.pdf) |
 | Follow the ideas without ANN/DRAM specialisation | [Reading guide](doc/READING_GUIDE.md) |
 | Understand the research questions and prior work | [Research position](doc/RESEARCH_POSITION.md) |
 | Check or reproduce a claim | [Reproducibility guide](doc/REPRODUCIBILITY.md) |
@@ -55,6 +55,11 @@ held-out order in all 140 evaluated configuration/split cases. The evaluation is
 exploratory: individual-query regressions remain, and the selected path does not
 beat every published placement. The thesis compares it with RCM, Gorder and
 Porder and reports profiling costs and model limitations.
+
+For PIM, the thesis develops a concrete [host/near-memory execution sketch](doc/READING_GUIDE.md#the-final-step-choose-the-execution-order-from-training):
+host control supplies discovered candidates, and a proposed engine gathers resident
+vectors and returns distances. The scheduling evidence guides that interface;
+the engine and its communication costs still need implementation and measurement.
 
 ## Quick start
 

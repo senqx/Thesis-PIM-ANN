@@ -11,6 +11,6 @@ A row-hit improvement can accompany a timing loss. & Identical-work microbenchma
 Established placements can outperform the local heuristic. & RCM, Gorder and Porder under matching flat and bounded replay. & Does not reproduce their cache-aware application benchmarks.\\
 Interleaving available vector chunks can reduce service. & Original/sorted/round-robin on matching expansions, including paired and per-query effects. & Depends on footprint, mapping, available work and omitted overhead.\\
 A training profile can guide the fetch schedule. & Fixed 50-query rule, held-out comparisons to every fixed order, oracle gaps and calibration cost. & Exploratory, one corpus and operating point; future-query gains are not guaranteed.\\
-A configurable near-memory gather path merits implementation testing. & Conditional service savings and an explicit buffering/execution sketch. & No implemented accelerator, end-to-end speedup or energy result.\\\bottomrule
+A configurable near-memory gather-and-distance path merits implementation testing. & Conditional service savings and a host/engine split with transfer and storage requirements. & The DRAM mechanism is general; no PIM-specific speedup or energy result.\\\bottomrule
 \end{tabular}
 \end{table}
