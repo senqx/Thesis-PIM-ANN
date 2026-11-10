@@ -13,4 +13,5 @@ FLAGS=(--web-bundle "$BUNDLE" --keep-logs)
 if [[ "${TECTONIC_OFFLINE:-0}" == "1" ]]; then FLAGS+=(--only-cached); fi
 "$TECTONIC" "${FLAGS[@]}" doc/pim_ann_thesis.tex
 "$TECTONIC" "${FLAGS[@]}" doc/pim_ann_ieee.tex
+"$TECTONIC" "${FLAGS[@]}" doc/pim_ann_defence.tex
 python3 scripts/check_docs.py

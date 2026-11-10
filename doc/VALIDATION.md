@@ -6,7 +6,76 @@ previously validated records. Calibration runs are training evidence, not
 additional independent performance replications. Three separately retained fresh
 reproduction repeats are described below; they are not counted in that matrix.
 
-## Final editorial review
+## Current document set
+
+Read these PDFs and this validation record from the **same Git revision**.
+The thesis is the full argument; the IEEE companion condenses it, and the defence
+presentation reuses its figures and values. Exact distributed-file hashes are
+recorded below. PDF metadata may differ on a later rebuild;
+the numerical regeneration checks compare the evidence-derived content separately.
+
+| Document | Extent |
+| --- | --- |
+| [Full thesis](pim_ann_thesis.pdf) | 68 pages |
+| [IEEE companion](pim_ann_ieee.pdf) | 8 pages |
+| [Defence presentation](pim_ann_defence.pdf) | 14 slides: 12 main and 2 backup |
+
+SHA-256 of the distributed PDFs (paths relative to the repository root):
+
+```text
+8e7b142460173d24b856f0fbd3a5e69be269c1db6fa36caaf12051357c10f8ac  doc/pim_ann_thesis.pdf
+81c6edcc01cd118a7f3e44656e80844a7d04ffc34057731ac69482c6e805822e  doc/pim_ann_ieee.pdf
+721e67ccd92b0db86882b01733d2cc78cd9ece36d9c29be3521fb27c5a6f3d7a  doc/pim_ann_defence.pdf
+```
+
+Check with `sha256sum doc/pim_ann_{thesis,ieee,defence}.pdf` from the repository root.
+
+All 2,069 current records and the previous 1,289-record checkpoint use the same
+corrected pinned simulator. Only the pre-review evidence was invalidated by the
+original correctness repairs; see the
+[baseline distinction](REPRODUCIBILITY.md#corrected-baseline-and-historical-evidence).
+Historical checkpoints below retain their original page counts and validation
+scope. They do not describe the current PDFs.
+
+## Submission presentation check
+
+The experimental scope remains frozen. At the start of this review, GitHub
+`main` and the local checkout both pointed to `44200ad`, whose README already
+reported 2,069 records. The historical overview now has a prominent status label;
+the old root overview address leads to the maintained README. The current PDFs,
+validation and baseline history are linked together.
+
+* **Retained evidence:** `python3 scripts/analyze.py` completed the full validation
+  of all **2,069 replays**, including phase/query accounting and training selection,
+  and regenerated the analyses. All **18 root CSV summaries** and **36 generated
+  TeX files** are byte-identical to their prior versions. All **17 figure renders**
+  match at 120 dpi; original figure PDF bytes were retained to avoid timestamp-only
+  changes. No new simulations or independent performance observations were added.
+* **PDF review:** all **30 tables and 16 figures** in the thesis and **six tables
+  and three figures** in the companion were checked on rendered pages. Numeric
+  entries from the 31 generated table bodies match the corresponding PDF-page
+  text; the five authored explanatory tables were reviewed against the model and
+  cited scope. Captions, baselines and interval labels were checked. The conclusion
+  now answers RQ1–RQ3 explicitly. All 14 defence slides were visually checked.
+* **References:** revised entries were checked against Crossref and official
+  proceedings metadata. The PIM primer and Coleman/Porder entries now include
+  their published DOIs and pages; the SC/USENIX entries include page ranges, and
+  DiskANN links to its paper record. PIMCQG retains its dated public acceptance
+  disclosure. This is a bibliography check, not a new comprehensive literature survey.
+* **Build and navigation:** all three PDFs build offline, with resolved references
+  and no significant horizontal or vertical overflow. Checks resolve **118 local
+  Markdown links** and all **14 presentation evidence links**. The build rejects
+  stale current evidence totals, linked page counts and slides spilling onto extra
+  pages. The preceding revision's
+  [full CI run](https://github.com/senqx/Thesis-PIM-ANN/actions/runs/42818960856)
+  passed; the retained-record and document checks above were also run locally here.
+* **Preservation:** all retained measurements, frozen protocols, search/simulator
+  sources and validated snapshots are unchanged. Of 4,980 initially protected
+  paths, only the two archive navigation pages changed; the other 4,978 match their
+  pre-edit hashes. Source inventory and generated provenance reflect the final
+  documentation/build-check revision. No numerical analysis code changed.
+
+## Earlier editorial review
 
 The experimental scope and results are unchanged. The complete text of the
 incoming 69-page thesis was extracted and reviewed, including tables, captions,

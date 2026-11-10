@@ -21,6 +21,12 @@ flowchart LR
 
 ## Start here
 
+**Current evidence: 2,069 replay records** = the previous validated checkpoint
+of **1,289**, plus **360 scheduling sensitivity** and **420 training calibration**
+runs. These are retained records, not 2,069 independent statistical experiments.
+The PDFs below and their [validation record](doc/VALIDATION.md#current-document-set)
+belong to the same Git revision; the record gives their page counts and SHA-256 hashes.
+
 | Purpose | Document |
 | --- | --- |
 | Read the argument | [IEEE companion, 8 pages](doc/pim_ann_ieee.pdf) |
@@ -29,6 +35,15 @@ flowchart LR
 | Understand the research questions and prior work | [Research position](doc/RESEARCH_POSITION.md) |
 | Check or reproduce a claim | [Reproducibility guide](doc/REPRODUCIBILITY.md) |
 | See which checks were performed | [Validation record](doc/VALIDATION.md) |
+| Prepare the defence | [Presentation, 14 slides](doc/pim_ann_defence.pdf) and [speaking guide](doc/READING_GUIDE.md#defence-presentation) |
+
+All current results use the corrected, pinned **Ramulator 2.1 implementation**
+(`7bead6cb7c4b…`) with native **32-byte transactions**. The 1,289-record checkpoint
+uses that same baseline and remains part of the current evidence. Only the
+[pre-review material](archive/pre-review/README.md) was superseded by correctness
+repairs; it is excluded from current comparisons. See the
+[baseline history](doc/REPRODUCIBILITY.md#corrected-baseline-and-historical-evidence)
+before reproducing an older result. This README is the maintained project overview.
 
 ## What the study shows
 
@@ -101,10 +116,8 @@ matrix and checks numerical table regeneration.
 | [`archive/`](archive/) | Earlier validated documents, superseded material and review history |
 
 The tracked artifact is about **397 MiB**, mostly losslessly compressed timing
-records needed to check individual queries and phases. The current **2,069 records**
-comprise the earlier **1,289-record checkpoint**, 360 scheduling runs and 420
-calibration runs. Calibration is training evidence, not additional independent
-performance replication. [The campaign inventory](doc/REPRODUCIBILITY.md#record-counts-and-frozen-protocols)
+records needed to check individual queries and phases.
+[The campaign inventory](doc/REPRODUCIBILITY.md#record-counts-and-frozen-protocols)
 explains the counts retained in historical protocols.
 Large local intermediates go in ignored `work/`; `make clean-work` removes those
 files without removing committed results, datasets, tools or document archives.

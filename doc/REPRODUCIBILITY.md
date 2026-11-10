@@ -42,6 +42,29 @@ Frozen designs describe the campaigns as planned at their checkpoints:
 Their recorded text and hashes remain unchanged. Use this inventory and
 [VALIDATION.md](VALIDATION.md) for the current totals.
 
+## Corrected baseline and historical evidence
+
+The entire current 2,069-record matrix uses the pinned **Ramulator 2.1
+implementation**, revision `7bead6cb7c4b03e095c6d4769ae3181a8e0bf6da`, with
+native **32-byte transactions**. The Ramulator 2.0 architecture paper is cited
+separately from this implementation. The 512-byte and hypothetical 128-byte
+vector footprints generate sixteen and four transactions per vector respectively.
+They are payload sizes, not the simulator's transaction size.
+
+| Evidence | Baseline and status |
+| --- | --- |
+| Current 2,069 records in `results/` | Corrected pinned simulator, checked addresses and completion accounting; used by the current PDFs |
+| Previous validated 1,289-record checkpoint | Same corrected baseline; all records remain included in the current total |
+| Validated document snapshots in `archive/2026-11-09-validated/` and `archive/2026-11-10-validated/` | Earlier interpretations and smaller evidence inventories, preserved byte for byte |
+| `archive/pre-review/` | Superseded results: unidentified old simulator revision, address aliasing/placement collisions and incomplete completion accounting; excluded from all current comparisons |
+
+The corrected baseline was established during the original correctness repair;
+this final presentation revision introduces no new simulator baseline or campaign.
+Its results are not claimed as a reproduction of the invalidated pre-review
+numbers. The [repair record](../archive/review-notes/REVIEW_FIXES.md) gives the
+individual corrections. The [current document set](VALIDATION.md#current-document-set)
+binds the thesis, companion and defence PDF to their validation and file hashes.
+
 ## Full reproduction from a fresh checkout
 
 Keep the reference checkout unchanged and use a second clone for the new run.
@@ -227,8 +250,10 @@ Install Tectonic 0.15.0 (on `PATH`, or at `.toolchain/bin/tectonic`) and Poppler
 make docs
 ```
 
-This validates evidence, regenerates tables/figures, compiles both PDFs and checks
-unresolved references and horizontal overflow. The build pins the TeX bundle to
+This validates evidence, regenerates tables/figures and compiles the thesis, IEEE
+companion and defence PDFs. Document checks cover references, overflow, local
+links, linked page counts and current evidence totals against the retained JSON
+inventory. The build pins the TeX bundle to
 `https://data1b.fullyjustified.net/tlextras-2022.0r0.tar`; the first compilation
 needs network access. Packages are cached under `.toolchain/cache`.
 With a populated cache, use `TECTONIC_OFFLINE=1 make docs`. To compile only the

@@ -1,4 +1,13 @@
-# Project overview
+# Historical project overview
+
+> **Historical review narrative.** The maintained overview is the
+> [root README](../../README.md). Current evidence is **2,069 replay records**:
+> the **1,289-record previous validated checkpoint**, plus **360 scheduling
+> sensitivity** and **420 training calibration** runs. Read the
+> [current PDFs and matching validation](../../doc/VALIDATION.md#current-document-set)
+> together. Both checkpoints use the corrected simulator baseline; only the
+> [pre-review evidence](../pre-review/README.md) was invalidated by correctness
+> repairs. Counts below describe successive stages of the work.
 
 The thesis evaluates how request order and vector placement affect a specified
 HBM2 DRAM service model during graph ANN. It separates logical HNSW traversal,

@@ -5,6 +5,34 @@ Start with [the companion paper](pim_ann_ieee.pdf) for the argument, then use
 limits. Both introduce the required ANN and DRAM concepts. You do not need to
 know HNSW internals or memorise the address-bit table before reading the results.
 
+## Defence presentation
+
+Use the [defence PDF](pim_ann_defence.pdf) for a roughly 15-minute talk: twelve
+main slides followed by two backup slides. It reuses the thesis's generated
+figures and values and builds with the same `make docs` command. The
+[validation record](VALIDATION.md#current-document-set) identifies this document
+set. The detailed defence answers later in this guide support questions.
+
+| Slide | Speaking purpose |
+| --- | --- |
+| 1 — Question | Start with the apparent contradiction: putting related data together can reduce row operations yet delay completion. State immediately that timings are simulated DRAM service. |
+| 2 — RQs and contribution | Separate the three questions from established graph ordering and PIM systems. The contribution is the controlled interaction study and its reproducible evidence. |
+| 3 — Fixed work | Explain node IDs versus storage addresses. The same search results and logical reads are preserved. A paired split compares matching queries; ten splits are not ten independent datasets. |
+| 4 — Availability | Walk through one neighbour list and its vectors. Flat replay knows future requests; phase replay withholds them until memory completion. Neither executes real search control or distances. |
+| 5 — Small placement effect | Distinguish a conditional interval excluding zero from a worthwhile implementation. About 97 cycles/query is a small allowance for extra work. |
+| 6 — Larger scheduling contrast | Explain original, sorted and round-robin orders in words before reading the graph. A negative cycle change is favourable; the hypothetical smaller footprint reverses the recommendation. |
+| 7 — Mechanism | Read the command-cycle identity aloud. More banks are offered and fewer no-command cycles outweigh extra row work. Do not describe the input-window diagnostic as live bank occupancy. |
+| 8 — Sensitivity | Highlight the 16-outstanding and alternative-mapper reversals. All seven conditions remain visible. This is one-setting-at-a-time evidence, not an optimal combination search. |
+| 9 — Profiling | Expand 140 into 7 × 2 × 10. The training rule is frozen, but the policy was motivated by inspected test results. Matching a fixed winner does not beat that winner or establish a universal success rate. |
+| 10 — Overhead | Explain the 985-query ratio as service-only arithmetic. Costs, overlap and reuse lifetime determine real amortisation; a known good fixed schedule avoids repeated calibration. |
+| 11 — PIM direction | Trace query, candidate addresses and returned distances. Local distance computation could avoid returning whole vectors, but the proposed engine and its costs are unmeasured. |
+| 12 — Answers | Answer all RQs, state the conditional engineering lesson, then name what is needed before claiming end-to-end PIM speedup. Stop here; use slides 13–14 for questions and references. |
+
+Spend most of the time on slides 4 and 6–10. Keep the arithmetic illustrative,
+and use the named baseline whenever quoting a percentage. If asked for expected
+application speedup, explain which costs and overlap remain unmeasured instead
+of converting a service percentage into an end-to-end prediction.
+
 ## The question that holds the story together
 
 **If a graph search reads the same data, can changing its storage locations
