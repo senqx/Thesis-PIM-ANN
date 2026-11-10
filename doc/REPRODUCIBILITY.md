@@ -39,9 +39,34 @@ cd Thesis-PIM-ANN-reproduced
 git checkout <reviewed-commit>
 ```
 
-Follow the root README to install its pinned Python dependencies, build the C++
-tools and verified simulator source, and download/convert the hash-identified SIFT
-file. Then run the complete sequence:
+Requirements: Linux, a C++20 compiler, Make, CMake 3.15+, Python 3.12+ with
+development headers, and curl. The recorded compiler/Python versions above are
+the starting point for exact graph reproduction. Install the Python dependencies:
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -r requirements.txt
+```
+
+Download the approximately 500 MB ANN-Benchmarks SIFT file:
+
+```bash
+mkdir -p .downloads
+curl -L --fail --retry 2 https://ann-benchmarks.com/sift-128-euclidean.hdf5 \
+  -o .downloads/sift-128-euclidean.hdf5
+```
+
+Expected source SHA-256:
+`dd6f0a6ed6b7ebb8934680f861a33ed01ff33991eaee4fd60914d854a0ca5984`.
+Conversion uses the first 100,000 training vectors and all 10,000 test vectors.
+It records source/output hashes in `data/manifest.json`; the committed identity is
+[`results/sift/dataset.json`](../results/sift/dataset.json). Search evaluates exact
+neighbours over the indexed subset, rather than using full-million-vector ground
+truth. Short, corrupt and nonfinite inputs are rejected.
+
+Then run the complete sequence. The final command requires the document tools
+described under [building the PDFs](#building-the-pdfs).
 
 ```bash
 python3 scripts/setup_published.py
@@ -59,13 +84,29 @@ bash scripts/build_docs.sh
 ```
 
 `analyze.py` runs the complete evidence checker before generating outputs.
-The dataset must be downloaded to the README's documented location before
-conversion. Tectonic and its bundle are needed only for PDF compilation.
+Tectonic and its bundle are needed only for PDF compilation.
 The simulator/source setup verifies pinned archives; SIFT conversion verifies
 the source hash. The complete matrix is 2,069 replays, including 420 calibration
 runs. It is a substantial CPU workload; use the documented worker count or adapt
 it to available resources. Exact runtime depends on the host. Large traces live
 in `work/` and may be regenerated after cleanup.
+
+The simulator pin is `7bead6cb7c4b03e095c6d4769ae3181a8e0bf6da`
+(Ramulator 2.1 implementation). Setup builds the verified source and dependencies,
+installs `simulator/thesis_trace.cpp`, and writes `ramulator2/build-manifest.json`.
+`--offline` reuses verified local archives. Each input line represents one native
+32-byte transaction; incompatible geometry and unaligned addresses fail.
+The default model has one channel, Open pages, readiness-first FRFCFS, 64
+uncompleted reads, a 32-entry read buffer and one issue opportunity per cycle.
+Query/phase boundaries drain outstanding reads while retaining row state.
+
+For partial campaigns, `experiments.py` supports `micro`, `sift`, `sensitivity`
+and `synthetic`; run `sift` before `sensitivity`. `strengthen.py` supports
+`controllers`, `graphs` and `mechanism`. The designs are recorded in
+[RESEARCH_CLOSURE.md](RESEARCH_CLOSURE.md),
+[FOLLOWUP_DESIGN.md](FOLLOWUP_DESIGN.md),
+[SCHEDULING_DESIGN.md](SCHEDULING_DESIGN.md) and
+[PROFILED_FETCH_DESIGN.md](PROFILED_FETCH_DESIGN.md).
 
 **A fresh clone has no replay cache stamps.** The `.cache.json` files are ignored
 by Git. The first complete run therefore invokes the simulator even though the
@@ -142,6 +183,66 @@ to choose an order. All alternatives and regressions remain available.
 [validation record](VALIDATION.md) states what was actually executed in this
 revision, distinguishing retained earlier checks from fresh reproduction checks.
 Published algorithm adapters also have pinned source and differential tests.
+
+## Reading the timing files
+
+In bounded/sorted/round-robin replays, the simulator's query marker denotes an
+expansion phase. Raw JSON `mean_query_cycles` is therefore a phase mean in those
+modes. For reconstructed original-query service, use
+`followup_measurements.csv` and `scheduling_measurements.csv` with their
+`mean_original_query_cycles` field. `profiled_fetch_selections.csv` provides the
+selected path's equivalent accounting. These intervals include gaps between
+phases; lossless `.queries.csv.gz` sidecars and phase maps retain the details.
+
+Paired intervals use ten reference split effects and a Student 95% interval with
+nine degrees of freedom. Additional graph constructions use three matching splits
+each and descriptive ranges. Per-query checks are descriptive, and shared-host
+preprocessing seconds are expected to vary. Replays and reused queries must not
+be counted as independent statistical replications.
+
+## Building the PDFs
+
+Install Tectonic 0.15.0 (on `PATH`, or at `.toolchain/bin/tectonic`) and Poppler's
+`pdftotext` and `pdfinfo`. Then run:
+
+```bash
+make docs
+```
+
+This validates evidence, regenerates tables/figures, compiles both PDFs and checks
+unresolved references and horizontal overflow. The build pins the TeX bundle to
+`https://data1b.fullyjustified.net/tlextras-2022.0r0.tar`; the first compilation
+needs network access. Packages are cached under `.toolchain/cache`.
+With a populated cache, use `TECTONIC_OFFLINE=1 make docs`. To compile only the
+document sources against already generated figures, run `bash scripts/build_docs.sh`.
+
+## Storage and cleanup
+
+The tracked artifact is about 397 MiB. Most of it is losslessly compressed raw
+timing evidence: per-query/phase intervals, profiles and mappings. Removing those
+files would prevent the complete checks above. Current PDFs and validated
+document snapshots together are small; earlier work is indexed under
+[`archive/`](../archive/README.md).
+
+`work/` contains regenerable traces, mappings, logs and rendered page previews.
+Experiments may need several GB of scratch space. Set `PIMANN_WORK=/path/to/scratch`
+to use another filesystem, consistently across dependent campaign stages.
+
+```bash
+make clean-work
+```
+
+This removes only repository-local `work/`, legacy generated `traces/` and the
+Ruff cache. It preserves committed evidence, datasets, built tools, verified
+download archives and PDF-build dependencies. External `PIMANN_WORK` directories
+are left for their owner to manage. `make clean` separately removes compiled
+project binaries. Reproduction tools regenerate missing intermediates as needed.
+
+After canonical data conversion is verified, the downloaded SIFT HDF5 is a
+redundant copy and may be removed; repeating conversion then requires downloading
+it again. The approximately 55 MB canonical `data/` files remain sufficient for
+search and replay. Installer archives may likewise be removed after installation;
+retaining the small pinned simulator/source archives supports offline rebuilding.
 
 The reproducible claim is about this defined DRAM-service model. Reproducibility
 does not remove its limits: fixed float32 traversal, hypothetical smaller

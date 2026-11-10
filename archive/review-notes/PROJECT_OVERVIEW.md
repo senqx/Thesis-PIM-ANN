@@ -20,8 +20,8 @@ cycles when concurrency exposes different banks. Neither BFS optimality nor a
 universal byte-budget law follows. The controller and heuristic sensitivities are
 reported in the thesis and retained as raw evidence.
 
-Read [README.md](README.md) for commands, [the thesis](doc/pim_ann_thesis.pdf) for
-methods and interpretation, and [the remediation record](doc/REVIEW_FIXES.md) for
+Read [README.md](../../README.md) for commands, [the thesis](../../doc/pim_ann_thesis.pdf) for
+methods and interpretation, and [the remediation record](REVIEW_FIXES.md) for
 the correction history. `archive/pre-review` is explicitly superseded material.
 
 The final research pass adds ten-split comparisons for three controller settings,
@@ -29,8 +29,8 @@ three additional graph constructions on matching query splits, and command-level
 analysis of the locality/timing reversal. It preserves the original primary traces
 and distinguishes within-vector traffic from locality between different vectors.
 That checkpoint retains 791 replay records; these are not 791 independent statistical
-replications. Read the [research design](doc/RESEARCH_CLOSURE.md) for the comparison
-units and the [reading guide](doc/READING_GUIDE.md) for the narrative path.
+replications. Read the [research design](../../doc/RESEARCH_CLOSURE.md) for the comparison
+units and the [reading guide](../../doc/READING_GUIDE.md) for the narrative path.
 
 The 10 November follow-up adds 494 comparisons and four scheduling diagnostics,
 bringing that checkpoint to 1,289 replays. It tests published RCM/Gorder/Porder placements and limits
@@ -40,8 +40,8 @@ the hypothetical 128-byte case by 3.43%. Sorting is slower on average at both
 widths under those default settings. All selected graph constructions and the smaller placement gains remain
 in the complete comparison, with explicit overhead and model limits.
 
-[Research position](doc/RESEARCH_POSITION.md) states the current RQs and existing
-prior art. [Preservation](doc/RESULTS_PRESERVATION.md) links the previous validated
+[Research position](../../doc/RESEARCH_POSITION.md) states the current RQs and existing
+prior art. [Preservation](../../doc/RESULTS_PRESERVATION.md) links the previous validated
 PDFs, source text and graphics. The added evidence does not discard earlier work.
 
 The current extension adds 360 scheduling sensitivity replays and 420 training
@@ -57,6 +57,6 @@ default 512-byte setting it beats Porder with original-order fetch by 14.25%; at
 128 bytes the selected BFS path remains 1.35% slower than Gorder. The evaluation is exploratory;
 it neither implements a PIM accelerator nor claims a new ANN algorithm.
 
-[Revision disposition](doc/REVISION_DISPOSITION.md) maps the latest review
+[Revision disposition](REVISION_DISPOSITION.md) maps the latest review
 priorities to the changes. The author's requested thesis and IEEE formats are
 retained, with Artashes Atanesyan as author and supervisor details left for later.

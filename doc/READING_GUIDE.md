@@ -167,7 +167,7 @@ words is more useful than memorising every result-table entry.
 * [Follow-up design](FOLLOWUP_DESIGN.md): fixed comparisons and the explicitly
   identified diagnostic addition after the pilot.
 
-* [Review fixes](REVIEW_FIXES.md): disposition of the original correctness and
+* [Review fixes](../archive/review-notes/REVIEW_FIXES.md): disposition of the original correctness and
   claim-scope findings.
 * [Research closure](RESEARCH_CLOSURE.md): the bounded additional experiment design
   and remaining research questions.
@@ -175,5 +175,3 @@ words is more useful than memorising every result-table entry.
 * [Reproducibility](REPRODUCIBILITY.md): claim-to-data links, fresh simulation
   commands and exact comparison against retained evidence.
 * [Results](../results/): raw statistics and generated summaries.
-* [Reproduction instructions](../README.md): build, data, experiment and document
-  commands.

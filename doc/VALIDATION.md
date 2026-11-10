@@ -72,11 +72,25 @@ reproduction repeats are described below; they are not counted in that matrix.
   entries. The author and format follow the supplied preferences; no unspecified
   university-template compliance is claimed.
 
+## Repository cleanup
+
+After removing local scratch files and redundant download/installer copies,
+`make -j2 test` and `make test-simulator` pass. The retained 2,069-record
+matrix is unchanged from the complete validation described above.
+All 4,918 protected evidence/source files match their pre-cleanup hashes,
+including the current PDFs and both validated document snapshots. Canonical SIFT
+hashes were checked before deleting the redundant downloaded HDF5. Document
+checks, relocated links and Git whitespace checks pass. Historical progress notes
+were archived, the unused microbenchmark wrapper removed, and a `clean-work`
+target added. The source inventory reflects these documentation/build-file
+changes; computational source and numerical evidence are unchanged. This cleanup
+adds no experimental observations.
+
 ## Preservation and earlier validation
 
 All prior tracked results are unchanged except the maintained source manifest.
-The 49 inventoried core/search/simulator files and the measured study executable
-match the previous checkpoint. Twenty new per-seed input-proof records bind the
+At the scheduling checkpoint, the 49 inventoried core/search/simulator files
+and the measured study executable matched the preceding checkpoint. Twenty new per-seed input-proof records bind the
 scheduling and calibration campaigns to their source inputs.
 
 All **57 document files** from `94d3f1d` are preserved byte for byte in

@@ -75,7 +75,7 @@
     "results/ablations/window64/timing/query_aware_128.queries.csv": "d48b08371a08f3cbd0643d3aa27fe21e08b1f2bc35fb4e54dfa817d320b311a3",
     "results/ablations/window64/timing/query_aware_512.json": "5ad8f9b5b5f1b7fa32083849f7124ba903218954cbeae01babc557bbe2040910",
     "results/ablations/window64/timing/query_aware_512.queries.csv": "7439adf92fb789800562d7d221aeaf40148c9ada06f33962281d7a20144f1f91",
-    "results/artifact_manifest.json": "ce5455e3d6b15bd081bb44ff0e83569c182dbb0f683807f5cd97c1fa31552adf",
+    "results/artifact_manifest.json": "2a9a544fa8aef5a366fc0caee4ed6e40a0e7319512b5aef777da2e5f6f447898",
     "results/calibration/seed1/alternate_mapping/bounded_128.json": "5333aff17fb90eb8a684363f122bb13ad50ca74372471cad587467d4deac4298",
     "results/calibration/seed1/alternate_mapping/bounded_128.queries.csv.gz": "4cf1fc8d693ed6a58a84203666ec15617b5749eead16420cb8ee16d9213ea258",
     "results/calibration/seed1/alternate_mapping/bounded_512.json": "6ca09127895dd77d182c97807fe1ab10fca966c4f0f0c4a5de207c2b68f51bc4",

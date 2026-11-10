@@ -29,7 +29,7 @@ optional CPU prefetch address. The maintained build disables that path with
 `HNSWLIB_USE_PREFETCH=0`; SIMD distance computation and stock search decisions remain.
 The normal and sanitizer suites cover the maintained configuration.
 
-The [validation record](VALIDATION.md) lists the completed checks and their limits.
+The [validation record](../../doc/VALIDATION.md) lists the completed checks and their limits.
 
 The completed matrix consists of 175 controlled microbenchmark replays, 100 primary
 SIFT replays, 80 controller sensitivities, 20 heuristic-ablation replays and ten
@@ -44,7 +44,7 @@ accelerator or a general claim about all ANN datasets and hardware.
 
 ## Final robustness and explanation pass
 
-The additional design in [RESEARCH_CLOSURE.md](RESEARCH_CLOSURE.md) is complete:
+The additional design in [RESEARCH_CLOSURE.md](../../doc/RESEARCH_CLOSURE.md) is complete:
 300 repeated controller replays, 90 graph-construction replays, and 16 command or
 component-stream diagnostic replays. Together with the initial 385, the artifact
 retains **791 named timing records**. These include deliberate diagnostic repeats;
@@ -82,7 +82,7 @@ solved.
 
 The previous 791 replay records remain unchanged. The 44-page thesis, 5-page paper
 and all 37 document files from commit `71ce10b` are preserved byte for byte in
-[the validated archive](../archive/2026-11-09-validated/README.md). They remain useful
+[the validated archive](../2026-11-09-validated/README.md). They remain useful
 evidence under their assumptions. This archive is distinct from the earlier
 material superseded by correctness repairs.
 
@@ -90,10 +90,10 @@ material superseded by correctness repairs.
 ## Scheduling and execution revision
 
 The subsequent sensitivity and training-selected fetch extension is documented in
-[SCHEDULING_DESIGN.md](SCHEDULING_DESIGN.md) and
-[PROFILED_FETCH_DESIGN.md](PROFILED_FETCH_DESIGN.md). It adds 360 scheduling and 420
+[SCHEDULING_DESIGN.md](../../doc/SCHEDULING_DESIGN.md) and
+[PROFILED_FETCH_DESIGN.md](../../doc/PROFILED_FETCH_DESIGN.md). It adds 360 scheduling and 420
 calibration replays while preserving the 1,289-replay checkpoint. Conclusions
 about sorting and round-robin above refer to their stated default configuration;
 the new matrix tests how request limits, candidate batches and mapping change
 those recommendations. See [revision disposition](REVISION_DISPOSITION.md) and
-[validation](VALIDATION.md) for the current state.
+[validation](../../doc/VALIDATION.md) for the current state.

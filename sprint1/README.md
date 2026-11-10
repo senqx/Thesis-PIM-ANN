@@ -15,6 +15,6 @@ Distance computation remains float32 in both cases.
 
 Outputs retain exact-subset recall, query partitions, all-level logical accesses,
 bijective vector mappings, model/cost metadata, proxy metrics, and 32-byte DRAM
-transaction streams. See [the root README](../README.md) for simulator configuration,
-complete experiments, statistics, and document generation. Old duplicated drivers
+transaction streams. See [the reproduction guide](../doc/REPRODUCIBILITY.md) for
+simulator configuration, complete experiments, statistics, and document generation. Old duplicated drivers
 and figures are under `archive/pre-review/sprint1`; they are not part of this build.

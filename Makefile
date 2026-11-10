@@ -2,7 +2,7 @@ CXX ?= g++
 CXXFLAGS ?= -std=c++20 -O2 -Wall -Wextra
 PYTHON ?= python3
 TOOLS := bin/ann_kernel bin/gen_trace bin/toy_timing bin/reorder bin/gen_layout
-.PHONY: all test test-simulator setup setup-published followup scheduling profiled-fetch demo-ramulator micro study sensitivity strengthen figures docs clean
+.PHONY: all test test-simulator setup setup-published followup scheduling profiled-fetch demo-ramulator micro study sensitivity strengthen figures docs clean clean-work
 all: $(TOOLS)
 	$(MAKE) -C sprint1 all
 bin:
@@ -51,3 +51,6 @@ docs: figures
 clean:
 	$(RM) -r bin
 	$(MAKE) -C sprint1 clean
+# Only repository-local, regenerable scratch files; retain data and evidence.
+clean-work:
+	$(RM) -r work traces .ruff_cache

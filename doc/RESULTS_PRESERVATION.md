@@ -16,6 +16,7 @@ corresponding checkpoint file trees are byte-identical.
 | Validated documents before scheduling sensitivity and the training-selected path | [10 November checkpoint](../archive/2026-11-10-validated/README.md) | All 57 document files copied byte for byte from `94d3f1d`, including the 51-page thesis and seven-page paper. |
 | Scheduling sensitivity and training calibration | [results/scheduling](../results/scheduling/) and [results/calibration](../results/calibration/) | Separate additions: 360 held-out sensitivity replays and 420 calibration replays. Earlier evidence stays in its original paths. |
 | Earlier material superseded by correctness repairs | [pre-review archive](../archive/pre-review/README.md) | Historical record; do not mix these numbers into validated comparisons. |
+| Historical overview, review dispositions and early implementation notes | [Review notes](../archive/review-notes/) | Relocated from the main documentation during cleanup; current commands and claims are in the README and reproduction guide. |
 | Complete source history of the validated checkpoint | Git commit `71ce10b` | Reconstructs the source and all tracked evidence at that point. |
 
 The current PDFs give the developing argument; they need not carry every raw
@@ -28,3 +29,8 @@ existing artifact policy. Follow-up raw phase timings are retained losslessly as
 `.queries.csv.gz`, together with phase-to-query maps and trace hashes. Compression
 does not remove measurements. Do not use `make clean` or a new study to remove
 tracked results or any archive.
+
+Repository cleanup removes only regenerable local intermediates and redundant
+download/installer copies. It keeps all raw replay evidence and both validated
+document snapshots. The obsolete `deep_experiments.sh` wrapper was removed;
+its maintained equivalent is `python3 scripts/experiments.py micro`.

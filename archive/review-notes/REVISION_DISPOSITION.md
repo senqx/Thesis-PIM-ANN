@@ -23,8 +23,8 @@ or measured end-to-end PIM acceleration.
 | Make every experiment reproducible | The full source-to-result workflow, pinned inputs, claim-to-data map, uncached spot-check command and full-tree comparison are documented in `REPRODUCIBILITY.md`. Fresh outputs are compared at every query/phase interval, not just headline means. Three uncached reconstruction/replay checks retain their raw evidence under `reproduction/`. |
 | Preserve previous work | All 1,289 prior replays stay in place. All 57 documents at `94d3f1d` are archived byte for byte, alongside the earlier `71ce10b` archive. |
 
-The [validation record](VALIDATION.md) states which checks were actually run.
-The [research-position note](RESEARCH_POSITION.md) explains the remaining limits:
+The [validation record](../../doc/VALIDATION.md) states which checks were actually run.
+The [research-position note](../../doc/RESEARCH_POSITION.md) explains the remaining limits:
 one real corpus prefix, a fixed search operating point, selected graph variation,
 an exploratory selector evaluation and no integrated PIM execution. These limit
 the claims; they are not silently treated as completed accelerator experiments.

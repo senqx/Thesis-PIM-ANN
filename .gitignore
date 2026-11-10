@@ -11,6 +11,7 @@ sprint1/run_study
 *.d
 __pycache__/
 .pytest_cache/
+.ruff_cache/
 core
 core.*
 # Simulator cache stamps are regenerable; raw JSON and CSV results are tracked.
