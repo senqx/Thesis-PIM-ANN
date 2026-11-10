@@ -15,8 +15,8 @@ set. The detailed defence answers later in this guide support questions.
 
 | Slide | Speaking purpose |
 | --- | --- |
-| 1 — Question | Start with the apparent contradiction: putting related data together can reduce row operations yet delay completion. State immediately that timings are simulated DRAM service. |
-| 2 — RQs and contribution | Name the added evidence: placement failure cases, explained scheduling reversals and implementation cost thresholds. Gorder/Porder are measured placements; PIM systems are literature comparisons. The general techniques are established. |
+| 1 — Domain and question | Explain the memory wall as waiting for data, and PIM as moving computation towards memory to reduce some transfers. Introduce graph search and its dependent reads. Timings here are simulated DRAM service. |
+| 2 — Prior work and RQs | Start with established graph ordering and PIM systems, then pose the three RQs. Name the added evidence: placement failure cases, explained scheduling reversals and implementation cost thresholds. Gorder/Porder are measured placements; PIM systems are literature comparisons. The general techniques are established. |
 | 3 — Fixed work | Explain node IDs versus storage addresses. The same search results and logical reads are preserved. A paired split compares matching queries; ten splits are not ten independent datasets. |
 | 4 — Availability | Walk through one neighbour list and its vectors. Flat replay knows future requests; phase replay withholds them until memory completion. Neither executes real search control or distances. |
 | 5 — Small placement effect | Distinguish a conditional interval excluding zero from a worthwhile implementation. About 97 cycles/query is a small allowance for extra work. |
@@ -45,31 +45,32 @@ actual graph-search traces, repeated experiments and command-level explanations.
 
 ## A path through the full thesis
 
-1. **Problem and research questions.** Understand what the study wants to learn
-   and what its timing represents. PIM is the motivation; the measured object is
-   a specified DRAM request stream.
-2. **Background and related work.** Follow the example of a graph expansion and
-   the explanation of banks, rows and outstanding requests. These are the concepts
-   needed to understand the later reversal.
-3. **Experimental model.** Follow the pipeline figure and node-to-slot example.
-   Ask what stays fixed when a layout changes: vectors visited, results, and
-   request count at one footprint. The addresses change.
-4. **Layouts and metrics.** Understand what information each layout uses. The
-   query-aware heuristic learns co-visitation; it does not directly optimise
-   simulated time. Published Porder is a separate trained baseline. Check the
-   denominator of each reported percentage.
-5. **Protocol.** Distinguish query-split repetition from graph-construction
-   variation. Paired comparisons use matching work; different kinds of repetition
-   answer different robustness questions.
-6. **Results.** Start with sequential versus permuted reads. Follow the command
-   accounting, then the SIFT layout comparison, repeated controller settings,
-   graph variations and vector/adjacency diagnostic streams. Then follow the
-   expansion-boundary diagram: first a list reveals candidates, then their vector
-   reads become available. The published-layout and scheduling comparisons test
-   whether the original result depended on the heuristic or on early future work.
-7. **Interpretation and conclusion.** Read the overhead-budget example and
-   decision path. These explain what an engineer can do with the findings and
-   what additional evidence an application-speedup claim would require.
+1. **Domain and motivation.** Start with the memory wall, latency versus
+   bandwidth, and what PIM changes. Then learn how vector search discovers
+   candidates and how DRAM banks serve their reads. No ANN or memory-controller
+   expertise is assumed.
+2. **Prior work and the remaining question.** Identify what Gorder/Porder and the
+   PIM-ANN systems already contribute. Distinguish their application results from
+   the controlled memory-service question this thesis will test.
+3. **Research questions and contribution.** Read the three RQs, the contribution
+   preview and the scope. Understand what would count as evidence for each
+   question before seeing the detailed methodology or results.
+4. **Study design and methodology.** Follow four parts: the pipeline overview;
+   recorded search and the memory model; placements, metrics and correctness;
+   and the experimental protocol. Ask what changes, what stays fixed, what is
+   measured and how it is checked. The existing diagrams explain addresses and
+   request availability; detailed parameters remain available for reproduction.
+5. **Results.** Follow the progression from controlled streams to fixed-work
+   HNSW placement, published baselines, bounded scheduling and sensitivity.
+   Read the named baseline, paired uncertainty and absolute service differences.
+   The profile is exploratory and selects among existing schedules.
+6. **What we learned and practical implications.** Connect the findings to the
+   original contribution and its value for a designer. Read the command
+   explanation, overhead thresholds and proposed PIM interface alongside their
+   limitations. This chapter explains the meaning of the results, rather than
+   presenting another experimental campaign.
+7. **Conclusion.** Check the explicit answer to each RQ, what was demonstrated
+   and what a real implementation would still need to measure.
 
 Use the terminology appendix as a reference, not as a list to memorise.
 

@@ -8,9 +8,9 @@ reproduction repeats are described below; they are not counted in that matrix.
 
 ## Current document set
 
-**The current thesis has 69 PDF pages, including the title page and front matter.**
-The contribution clarification adds one page to the 68-page version at
-`bdab0e6`. Historical checkpoints below retain the counts of their own PDFs.
+**The current thesis has 67 PDF pages, including the title page and front matter.**
+The narrative revision supersedes the 69-page contribution checkpoint `c673686`.
+Historical checkpoints below retain the counts of their own PDFs.
 
 Read these PDFs and this validation record from the **same Git revision**.
 The thesis is the full argument; the IEEE companion condenses it, and the defence
@@ -20,7 +20,7 @@ the numerical regeneration checks compare the evidence-derived content separatel
 
 | Document | Extent |
 | --- | --- |
-| [Full thesis](pim_ann_thesis.pdf) | 69 pages |
+| [Full thesis](pim_ann_thesis.pdf) | 67 pages |
 | [IEEE companion](pim_ann_ieee.pdf) | 8 pages |
 | [Defence presentation](pim_ann_defence.pdf) | 14 slides: 12 main and 2 backup |
 
@@ -29,7 +29,7 @@ These counts were confirmed by rebuilding the current sources and running
 
 ```bash
 TECTONIC_OFFLINE=1 bash scripts/build_docs.sh
-pdfinfo doc/pim_ann_thesis.pdf   # Pages: 69
+pdfinfo doc/pim_ann_thesis.pdf   # Pages: 67
 pdfinfo doc/pim_ann_ieee.pdf     # Pages: 8
 pdfinfo doc/pim_ann_defence.pdf  # Pages: 14
 ```
@@ -42,9 +42,9 @@ rebuild adds no experimental results.
 SHA-256 of the distributed PDFs (paths relative to the repository root):
 
 ```text
-e4b20517766772fb5fd9acdd358147b99ff581003b8d4b99394a006fef77202e  doc/pim_ann_thesis.pdf
-5b7dfeeedbbb32a9e14e0846693873591b2ac5395c4c422aee0e840e17e45cda  doc/pim_ann_ieee.pdf
-8fb16ff23e9d407df648a392358046d1f264b06cb03858d4ce676bb954b61607  doc/pim_ann_defence.pdf
+469d56693783eef90c30bf5e23a9d2e5dc081f4ae486346b8b98340559b891e7  doc/pim_ann_thesis.pdf
+019f42a87558f2609cef8753f8f0191c53199e2f2cdf934ae88ceb8044fb13fe  doc/pim_ann_ieee.pdf
+e960b2fda9c2b7a0260d84f04d12e900cd48a68cf57407eb614f0145825695ac  doc/pim_ann_defence.pdf
 ```
 
 Check with `sha256sum doc/pim_ann_{thesis,ieee,defence}.pdf` from the repository root.
@@ -56,7 +56,29 @@ original correctness repairs; see the
 Historical checkpoints below retain their original page counts and validation
 scope. They do not describe the current PDFs.
 
-## Contribution clarification
+## Narrative and structure check
+
+The thesis and IEEE companion now follow the requested sequence: domain and
+motivation; prior work; research questions; study design and methodology;
+results; what we learned and practical implications; conclusion. The thesis
+introduces the memory wall, latency, bandwidth and PIM before ANN and DRAM
+mechanisms. Three former method chapters form one chapter with four navigable
+sections. The contribution is previewed with the RQs and explained with evidence
+after the results. The reading guide, README and defence opening follow this order.
+
+All three PDFs were rebuilt offline, with resolved references and no significant
+overflow. The revised chapter transitions, contents, contribution discussion and
+companion layout were visually checked. Documentation links, current evidence
+counts and page counts pass `scripts/check_docs.py`. The main method text is unchanged apart from headings. The six included
+methodology/result fragments retain their experimental content: heading levels
+change, the companion's final table is declared earlier to keep it near its
+results, and two interpretation paragraphs move to the discussion. All **5,082
+protected tracked files** outside this structural edit match their pre-edit
+hashes. All 2,069 replay records, frozen protocols, numerical tables/figures and
+experimental/analysis code are preserved. No simulations or full numerical
+regeneration were needed. Current PDF hashes and source provenance are refreshed.
+
+## Contribution clarification (`c673686`)
 
 This editorial pass makes each contribution explicit in the thesis introduction,
 related-work section and conclusion, with corresponding updates to the README,

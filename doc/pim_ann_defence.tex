@@ -36,22 +36,16 @@
 \vspace{10pt}
 Artashes Atanesyan\hfill 10 November 2026
 
-\textbf{Question:} if graph search needs the same data, can changing its\newline placement and the order of available reads finish memory service sooner?
+\textbf{Memory wall:} computation waits for data. \textbf{PIM:} move computation\newline towards memory to reduce some transfers. Graph search exposes dependent reads.
+
+\textbf{Question:} can placement and available-read order finish memory sooner?
 
 \takeaway{Row reuse saves operations. Bank parallelism can hide waiting.}
 We follow this tension from controlled traces to HNSW graph search,\newline then to a proposed processing-in-memory (PIM) interface.
 \evidence{doc/pim_ann_thesis.pdf}{Full thesis; simulated DRAM service, not measured application/PIM speedup}
 \end{slide}
 
-\begin{slide}{1 / Research contribution}{Established methods; new evidence for their use}
-\begin{minipage}[t]{0.49\linewidth}
-\textbf{RQ1 --- Access order}\par
-How do order, runs and presorting interact with request concurrency?
-\par\textbf{RQ2 --- Graph-search choices}\par
-Which placements and available-read schedules help? Can training select one?
-\par\textbf{RQ3 --- Robustness}\par
-Which conclusions survive the selected footprint, boundary, controller and graph changes?
-\end{minipage}\hfill
+\begin{slide}{1 / Prior work and research questions}{Established methods; new evidence for their use}
 \begin{minipage}[t]{0.47\linewidth}
 \textbf{Established prior work}\par
 Gorder/Porder: measured placements.\newline
@@ -62,7 +56,16 @@ C1: placement failure cases.\newline
 C2: scheduling reversals, explained.\newline
 C3: implementation cost thresholds.\par
 \textbf{Use:} test a fetch order's assumptions and cost before integration.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\linewidth}
+\textbf{RQ1 --- Access order}\par
+How do order, runs and presorting interact with request concurrency?
+\par\textbf{RQ2 --- Graph-search choices}\par
+Which placements and available-read schedules help? Can training select one?
+\par\textbf{RQ3 --- Robustness}\par
+Which conclusions survive the selected footprint, boundary, controller and graph changes?
 \end{minipage}
+
 \evidence{doc/RESEARCH_POSITION.md}{Research position and cited prior work; selected references on slide 14}
 \end{slide}
 

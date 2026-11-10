@@ -1,5 +1,5 @@
-\section{Stronger baselines and available requests}
-\subsection{Follow-up design}
+\subsection{Stronger baselines and available requests}
+\subsubsection{Follow-up design}
 The initial heuristic alone cannot establish whether profile-guided placement is useful. We therefore add the published RCM, Gorder and Porder routines of Coleman et al.~\cite{coleman}. RCM reverses a degree-ordered Cuthill--McKee traversal \cite{cuthill}. Gorder \cite{gorder} scores graph relationships to a recent placement window; Porder weights them using query traversal frequencies. Both use the supplied five-node window. Porder assigns one plus the training traversal count to each base-layer edge. The local query-aware method instead weights co-visited pairs and uses footprint-specific block grouping.
 
 The adapter applies the supplied permutations to the separate vector array and preserves the source's window-expiration condition. An ordered-set helper replaces the weighted linked-list queue with matching score and tie semantics. All three methods match the untouched reference on 30 weighted graphs, and sanitizer runs preserve the normal mappings on the full graph. This evaluates their placement routines under a different memory representation; it does not reproduce the authors' cache-aware application benchmark.
@@ -15,7 +15,7 @@ Address sorting and transaction round-robin use only a phase's available reads. 
 
 The fixed matrix adds 494 replays on all 19 graph/split pairs and both widths: three new flat placements, six bounded placements, and two schedules on BFS and query-aware placement. Four further command-recording repeats diagnose the pilot's scheduling contrast without changing its timings. All 791 earlier results remain available. These extensions reuse previously evaluated queries and remain exploratory.
 
-\subsection{What placement and ordering change}
+\subsubsection{What placement and ordering change}
 Table~\ref{tab:published} compares published layouts against BFS with matching expansion boundaries. The full thesis retains all six placements against identity and BFS, under both flat and bounded replay. This prevents a result from the local heuristic from standing in for the whole class of trained layouts.
 
 \begin{table}[htbp]\centering\small

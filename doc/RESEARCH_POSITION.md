@@ -29,7 +29,7 @@ explanation and the resulting design guidance. The general locality–parallelis
 trade-off, graph reordering, PIM-based ANN, locality optimisation and fine-grained
 scheduling are established ideas.
 
-The three contributions in the thesis introduction have the following evidence
+The three contributions in the research-questions chapter have the following evidence
 and intended use. All percentages below are mean paired changes across ten query
 splits in **simulated completed DRAM service cycles**; negative means fewer cycles.
 Both footprints retain the same float32 search; 128 bytes is hypothetical repacking.
@@ -112,7 +112,10 @@ unmeasured costs. This is architectural guidance, not measured PIM acceleration.
 3. **Robustness:** do those conclusions survive selected changes in available
    requests, footprint, controller settings and graph construction?
 
-These questions belong to one argument. The microbenchmarks explain a mechanism;
+The thesis introduces the domain and prior work before posing these questions.
+Study design and methodology then lead to results, interpretation and explicit
+RQ answers in the conclusion. These questions belong to one argument: the
+microbenchmarks explain a mechanism;
 the real HNSW traces test whether it matters; the follow-up tests established
 baselines and ordering within an available expansion. Controller and graph
 variations support interpretation. They are not separate proposed theses.

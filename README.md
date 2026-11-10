@@ -31,7 +31,7 @@ Page counts include all PDF pages, including the title page and front matter.
 | Purpose | Document |
 | --- | --- |
 | Read the argument | [IEEE companion, 8 pages](doc/pim_ann_ieee.pdf) |
-| Study the methods and results | [Full thesis, 69 pages](doc/pim_ann_thesis.pdf) |
+| Study the methods and results | [Full thesis, 67 pages](doc/pim_ann_thesis.pdf) |
 | Follow the ideas without ANN/DRAM specialisation | [Reading guide](doc/READING_GUIDE.md) |
 | Understand the research questions and prior work | [Research position](doc/RESEARCH_POSITION.md) |
 | Check or reproduce a claim | [Reproducibility guide](doc/REPRODUCIBILITY.md) |
@@ -45,6 +45,12 @@ uses that same baseline and remains part of the current evidence. Only the
 repairs; it is excluded from current comparisons. See the
 [baseline history](doc/REPRODUCIBILITY.md#corrected-baseline-and-historical-evidence)
 before reproducing an older result. This README is the maintained project overview.
+
+The thesis follows seven stages: **domain and motivation → prior work → research
+questions → study design and methodology → results → what we learned → conclusion**.
+It introduces the memory wall, PIM, graph search and DRAM before the research
+questions. The [chapter-by-chapter reading path](doc/READING_GUIDE.md#a-path-through-the-full-thesis)
+explains what to take from each stage.
 
 ## What the study shows
 

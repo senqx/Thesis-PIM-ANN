@@ -15,18 +15,15 @@ Storing co-accessed vectors together is a natural optimisation for graph search,
 \end{abstract}
 \begin{IEEEkeywords}approximate nearest neighbours, graph search, memory layout, DRAM simulation, processing-in-memory\end{IEEEkeywords}
 
-\section{The engineering question}
+\section{Domain and motivation}
+The \emph{memory wall} describes a mismatch between the processor's ability to compute and the memory system's ability to supply data~\cite{primer}. Latency is the delay before a read completes; bandwidth is the amount transferred per unit time. Pointer-following may expose too little independent work to use peak bandwidth. Processing-in-memory (PIM) moves computation in or near memory to reduce some transfers, but still faces data dependencies, DRAM timing and implementation costs.
+
+\subsection{Graph-based vector search}
 A vector-search system stores an array of numbers for each item and retrieves items close to a query array under a distance function. Image retrieval and embedding search are examples. An exact scan compares the query with every stored vector. Approximate nearest-neighbour (ANN) methods reduce that work by examining promising candidates, accepting that some exact neighbours may be missed.
 
 Hierarchical Navigable Small World (HNSW) search represents vectors as nodes in a proximity graph \cite{hnsw}. To expand a node, it reads an adjacency list of neighbour IDs, fetches candidate vectors, and evaluates their distances. Those distances guide the next expansion. For example, expanding node 17 might reveal candidates 4 and 29. Their addresses become useful through the earlier graph work; the complete future request sequence is not initially known to a real execution.
 
-A layout can store related nodes close together. This may improve memory service, but ``close'' is only an address property. The memory controller decides which commands can issue and which requests must wait. We ask three connected questions: how request order affects that service; which tested placements and available-request schedules improve service; and whether the answer persists when memory assumptions or graph construction change.
-
-The study measures \emph{DRAM stream service}: controller cycles to complete an explicitly supplied read sequence. Computation, caches, scratch structures, mapping lookups and instruction-level control overhead are excluded. Flat replay offers a known trace; bounded replay adds memory boundaries between expansions. Processing-in-memory (PIM) motivates the study but is not implemented as an application platform.
-
-The core empirical contributions are measured limits of locality-oriented placement (C1) and conditional scheduling gains with command evidence for reversals (C2). They support an exploratory execution recommendation with cost thresholds (C3), using established selection and cost models. Designers can test a fetch order under the intended availability and mapping assumptions, then compare its saving with integration costs. Graph reordering, PIM-based ANN, locality optimisation and fine-grained scheduling are established; the original outputs are the evidence and its interpretation for this workload.
-
-\section{Why locality can help or hurt}
+\subsection{Locality and parallelism}
 A DRAM bank has a row buffer holding an open row. An activate command (ACT) opens a row, a read command (RD) transfers data from it, and a precharge command (PRE) closes it before another row can open. A request to the already open row is a row hit. Avoiding repeated row changes can save commands and waiting time.
 
 Banks also provide parallel service opportunities. While one bank waits for a timing constraint, another may make progress. Consecutive requests concentrated in one bank can reduce these opportunities. A row hit therefore need not complete immediately: command spacing, shared resources and other requests still matter.
@@ -35,12 +32,25 @@ The controller's choices depend on concurrency. With one outstanding read---a re
 
 A CPU cache adds another layer: a cache hit can avoid a DRAM request entirely. A DRAM row hit still requires memory service. Keeping that distinction clear is essential when comparing this study with cache-oriented graph reordering.
 
+\section{Prior work and the remaining question}
+Gorder's structural graph ordering~\cite{gorder} and the profile-guided Porder in Coleman et al.'s NeurIPS 2022 paper~\cite{coleman} are measured placement baselines here. The latter's cache-aware query-time improvements, up to 40\% in its evaluation, address a different execution layer. This study adds their relative DRAM-service effects with search work fixed and availability explicit; it does not reproduce their application result. DiskANN further illustrates complete storage-system design~\cite{diskann}.
+
+PIM research combines placement with computation and communication~\cite{primer}. DRIM-ANN includes arithmetic lookup tables, load balancing and I/O optimisation on computationally enhanced PIM~\cite{drim}. UpANNS evaluates commercial-PIM resource management and ANN co-design~\cite{upanns}; PIMANN studies persistent kernels and fine-grained scheduling~\cite{pimann}. PIMCQG, whose public revision states acceptance at SC26, directly addresses graph ANN on PIM with a compact index and asynchronous execution~\cite{pimcqg}. These are literature comparisons, not benchmarked implementations in this artifact. It supplies isolated candidate-fetch comparisons and cost constraints within that broader design problem. Their service percentages cannot rank this study against those systems' application speedups. This targeted comparison makes no exhaustive priority claim for the general locality--parallelism interaction.
+
+\section{Research questions and contribution}
+A layout can store related nodes close together. This may improve memory service, but ``close'' is only an address property. The memory controller decides which commands can issue and which requests must wait. We ask three connected questions. RQ1: how does request order interact with concurrency? RQ2: which tested placements and available-request schedules improve service at fixed search work, and can training select an order? RQ3: which conclusions survive the selected footprint, availability, controller and graph changes?
+
+The study measures \emph{DRAM stream service}: controller cycles to complete an explicitly supplied read sequence. Computation, caches, scratch structures, mapping lookups and instruction-level control overhead are excluded. Flat replay offers a known trace; bounded replay adds memory boundaries between expansions. Processing-in-memory (PIM) motivates the study but is not implemented as an application platform.
+
+The core empirical contributions are measured limits of locality-oriented placement (C1) and conditional scheduling gains with command evidence for reversals (C2). They support an exploratory execution recommendation with cost thresholds (C3), using established selection and cost models. Designers can test a fetch order under the intended availability and mapping assumptions, then compare its saving with integration costs. Graph reordering, PIM-based ANN, locality optimisation and fine-grained scheduling are established; the original outputs are the evidence and its interpretation for this workload.
+
+\section{Study design and methodology}
 \begin{figure*}[t]\centering
 \includegraphics[width=0.90\textwidth]{generated/study_pipeline.pdf}
 \caption{A logical search determines which data are needed. A layout determines their addresses. The emitter turns payloads into native requests, and the controller determines service time. The node and slot numbers illustrate the transformation.}\label{fig:pipeline}
 \end{figure*}
 
-\section{From search to a controlled experiment}
+
 \subsection{What stays fixed and what changes}
 Figure~\ref{fig:pipeline} shows the experiment chain. Observer hooks in stock hnswlib record each required vector read and each expanded adjacency list, including upper graph layers and the entry vector. Search decisions and result ordering remain in stock code. The driver verifies every observed result against unobserved search, and tests compare 800 results with independently built indexes, including ties, narrow search settings and shuffled insertion.
 
@@ -121,7 +131,7 @@ Training-size, history-length and grouping-size ablations expose the heuristic's
 \input{followup_paper.tex}
 \input{scheduling_paper.tex}
 
-\section{What an engineer should take from the results}
+\section{What we learned and practical implications}
 Statistical, practical and architectural significance answer different questions. The flat-replay query-aware/BFS interval at 512 bytes excludes zero, but its saving is only about \SavedCyclesPerQuery{} simulated cycles per query. That is weak standalone justification for a trained layout. Default bounded BFS round-robin saves \RoundRobinBFSSavedFloat{} cycles per query at 512 bytes, while at 128 bytes its saved-cycle count is \RoundRobinBFSSavedCompact{}, a regression. The larger contrast motivates testing an implementation; the reversals explain why row hits or footprint alone cannot select its schedule.
 
 In a simplified additive model, a fractional service reduction $r$ reduces total time by $fr-h$, where $f$ is the baseline fraction spent in that service and $h$ is extra overhead as a fraction of baseline time. Neither quantity is measured here, and overlapping compute with memory can invalidate this model. No application benefit is predicted. Profiling, buffering, mapping, dispatch and host/PIM transfers must be charged on a common target; CPU seconds cannot be divided by simulated controller cycles to infer deployment amortisation.
@@ -132,11 +142,11 @@ The two stored 64-bit mapping directions require \MappingMiB{} MiB for 100,000 n
 
 The practical evaluation sequence is: hold answer quality and logical work fixed; measure completed time as well as locality; check the mapper and realistic concurrency; and compare the gain with the costs of integrating the layout. Simple graph placement is a useful baseline. The best measured layout under one controller is a candidate for further evaluation, not a universal recommendation.
 
-\section{Position relative to prior work and limits}
-Gorder's structural graph ordering~\cite{gorder} and the profile-guided Porder in Coleman et al.'s NeurIPS 2022 paper~\cite{coleman} are measured placement baselines here. The latter's cache-aware query-time improvements, up to 40\% in its evaluation, address a different execution layer. C1 adds their relative DRAM-service effects with search work fixed and availability explicit; it does not reproduce their application result. DiskANN further illustrates complete storage-system design~\cite{diskann}.
+A fixed order already chosen correctly for a configuration gives the same replay benefit without repeating calibration. Profiling therefore helps choose a schedule; it does not outperform that correctly chosen fixed schedule. Its target cost must be recovered before configuration or workload changes invalidate the choice. No reprofiling interval is established. A deployment should monitor mean and tail behaviour, compare against its validated fixed baseline after relevant changes, and abandon a choice that regresses after overhead. These safeguards are proposed, not evaluated components of the selector.
 
-PIM research combines placement with computation and communication~\cite{primer}. DRIM-ANN includes arithmetic lookup tables, load balancing and I/O optimisation on computationally enhanced PIM~\cite{drim}. UpANNS evaluates commercial-PIM resource management and ANN co-design~\cite{upanns}; PIMANN studies persistent kernels and fine-grained scheduling~\cite{pimann}. PIMCQG, whose public revision states acceptance at SC26, directly addresses graph ANN on PIM with a compact index and asynchronous execution~\cite{pimcqg}. These are literature comparisons, not benchmarked implementations in this artifact. C2 and C3 supply isolated candidate-fetch comparisons and cost constraints within that broader design problem. Their service percentages cannot rank this study against those systems' application speedups. This targeted comparison makes no exhaustive priority claim for the general locality--parallelism interaction.
+A concrete PIM integration would keep traversal, visited state and queues on the host, while an engine gathers resident vectors and computes distances. The host sends the query once and supplies batches of resolved addresses and order tags after reading neighbour lists. The engine returns tagged distances; ordered state updates preserve traversal, provided numerical results and tie rules also agree. Gathering alone would still transfer full vectors to host arithmetic. Local distance evaluation could avoid that payload, while query, descriptor, list and result transfers remain. The target needs local storage, suitable arithmetic, completion tracking and control over the modelled 32-byte request order. Whole-vector DMA or bank-local interfaces may not expose this cross-bank scheduling choice. This is a design to test, not an assumed commercial-PIM interface or a new HNSW algorithm.
 
+\subsection{Limits of the evidence}
 HNSW and public SIFT data permit stock-search tracing and exact subset checks at tractable simulation cost. They do not represent all ANN workloads. The evidence covers one corpus prefix and operating point: construction seeds do not test new datasets, dimensions, connectivity settings or recall targets. Those changes can alter both graph paths and the available candidate work. The smaller footprint tests transfer size while retaining float32 search; it does not implement quantisation. Ten paired splits estimate conditional query-selection variability, with no prospective power or universal sufficiency claim.
 
 Flat replay knows future accesses early; bounded replay adds memory phases but approximates available overlap. Concurrent queries, caches, computation, scratch state, host/PIM transfers, energy, workload drift and actual mapping costs remain outside the evaluation. The simulator preset itself is not validated against a physical HBM2 device here.
@@ -145,7 +155,6 @@ Flat replay knows future accesses early; bounded replay adds memory phases but a
 The original contribution is a reproducible set of placement failure cases (C1), explained scheduling reversals (C2), and an execution proposal with cost thresholds (C3). The default 512-byte round-robin gain becomes a regression under the alternate mapper; its roughly \RoundRobinBFSSavedFloat{} saved cycles per query also leave a finite allowance for extra cost. Designers can use these comparisons to test a gather-and-distance interface and reject unsupported scheduling assumptions. Exploratory profiling recovers useful fixed orders in this matrix. Application or PIM speedup still requires actual dependencies, computation, buffering, scheduling and communication to be measured.
 
 \begingroup\raggedright
-\IEEEtriggeratref{9}
 \input{references.tex}
 \endgroup
 \end{document}
