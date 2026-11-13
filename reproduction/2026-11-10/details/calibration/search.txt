@@ -1,2 +1,0 @@
-index built: 100000 vectors, 39.0631 seconds
-study complete: /home/artashes/proj/Thesis-PIM-ANN/work/fresh-calibration-reproduction/study, Recall@10=0.9935

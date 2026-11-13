@@ -1,36 +1,13 @@
-# Build, downloads and large reproducible intermediates
-bin/
-work/
-data/
-ramulator2/
+# Reproducible dependencies and local experiment output
+.deps/
 .downloads/
-.toolchain/
-sprint1/build/
-sprint1/run_study
-*.o
-*.d
+build/
+data/
+runs/
+.venv/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
-core
-core.*
-# Simulator cache stamps are regenerable; raw JSON and CSV results are tracked.
-results/**/*.cache.json
-# Editors
-.vscode/
-.idea/
-*.swp
+.codex/
 .DS_Store
-# TeX intermediates
-*.aux
-*.log
-*.toc
-*.out
-*.bbl
-*.blg
-*.xdv
-*.synctex.gz
-
-.venv/
-
-traces/
+*.swp

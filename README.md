@@ -1,156 +1,72 @@
-# DRAM locality in graph-based ANN
+# Adaptive data movement for irregular workloads on UPMEM
 
-[![Artifact checks](https://github.com/senqx/Thesis-PIM-ANN/actions/workflows/ci.yml/badge.svg)](https://github.com/senqx/Thesis-PIM-ANN/actions/workflows/ci.yml)
+Master's research by **Artashes Atanesyan**. The repository name is historical.
 
-**When a graph search needs the same data, can changing its placement and request
-order make memory finish sooner?**
+**Status: research reset and feasibility review, 13 November 2026.** There are
+no experimental results for the new hypothesis yet. The previous DRAM-service
+study is preserved in Git; it is not evidence for this new project.
 
-This repository contains Artashes Atanesyan's Master's thesis and its reproducible
-experiment artifact. It studies HNSW approximate nearest-neighbour search on
-SIFT100k using a pinned HBM2 DRAM simulator, motivated by processing-in-memory (PIM).
-The measurements describe **simulated memory service**; application and PIM
-speedup require a complete implementation with computation and communication costs.
+## The problem
 
-```mermaid
-flowchart LR
-    A[HNSW search] --> B[Fixed logical reads]
-    B --> C[Placement and request order]
-    C --> D[HBM2 simulation]
-    D --> E[Paired service comparisons]
-```
+Many programs spend substantial time waiting for data. Graph traversal, sparse
+matrix operations and indexed lookups are especially difficult: the address of
+the next item often depends on an item just read. Moving computation close to
+memory can reduce some transfers, but it does not remove this dependency or
+make communication free.
 
-## Start here
+This project asks whether a small adaptive policy can decide **what to fetch,
+how much to fetch, and when to fetch it**, while respecting traffic and memory
+budgets. Fetching early is useful only if the data is needed and the transfer
+cost can be hidden or reduced. Doing nothing must remain a valid decision.
 
-**Current evidence: 2,069 replay records** = the previous validated checkpoint
-of **1,289**, plus **360 scheduling sensitivity** and **420 training calibration**
-runs. These are retained records, not 2,069 independent statistical experiments.
-The PDFs below and their [validation record](doc/VALIDATION.md#current-document-set)
-belong to the same Git revision; the record gives their page counts and SHA-256 hashes.
-Page counts include all PDF pages, including the title page and front matter.
+## Objective and hypothesis
 
-| Purpose | Document |
+**Objective:** design and evaluate adaptive data movement and prefetching for
+irregular workloads on a heterogeneous host–DPU system, starting with UPMEM.
+Evaluate execution time together with communication volume, buffer use and
+implementation overhead. Assess energy only with a justified model or hardware
+measurements.
+
+**Hypothesis to test:** information about workload structure and recent access
+behaviour can improve execution time over tuned static and conventional
+feedback policies **under the same traffic and memory limits**. The experiments
+may reject this hypothesis.
+
+The initial target has a CPU host and identical DRAM Processing Units (DPUs).
+Different DPU capabilities are an optional later extension. There is currently
+no hardware or installed UPMEM SDK. A pinned copy of **uPIMulator** has been
+obtained; [platform status and setup](docs/PLATFORM.md) distinguish the working
+build checks from the unresolved compiler dependency.
+
+## Read in this order
+
+| Document | Purpose |
 | --- | --- |
-| Read the argument | [IEEE companion, 8 pages](doc/pim_ann_ieee.pdf) |
-| Study the methods and results | [Full thesis, 67 pages](doc/pim_ann_thesis.pdf) |
-| Follow the ideas without ANN/DRAM specialisation | [Reading guide](doc/READING_GUIDE.md) |
-| Understand the research questions and prior work | [Research position](doc/RESEARCH_POSITION.md) |
-| Check or reproduce a claim | [Reproducibility guide](doc/REPRODUCIBILITY.md) |
-| See which checks were performed | [Validation record](doc/VALIDATION.md) |
-| Prepare the defence | [Presentation, 14 slides](doc/pim_ann_defence.pdf) and [speaking guide](doc/READING_GUIDE.md#defence-presentation) |
+| [Literature and possible contribution](docs/LITERATURE.md) | Domain foundations, established work, candidate gaps and limits of this review |
+| [Research plan](docs/RESEARCH_PLAN.md) | The five RQs, falsifiable hypothesis, baselines, resource budgets and scope decisions |
+| [Platform status](docs/PLATFORM.md) | Pinned simulator, reproducible acquisition and what it can currently support |
+| [Previous results](docs/PREVIOUS_RESULTS.md) | Concise historical findings and recovery instructions |
 
-All current results use the corrected, pinned **Ramulator 2.1 implementation**
-(`7bead6cb7c4b…`) with native **32-byte transactions**. The 1,289-record checkpoint
-uses that same baseline and remains part of the current evidence. Only the
-[pre-review material](archive/pre-review/README.md) was superseded by correctness
-repairs; it is excluded from current comparisons. See the
-[baseline history](doc/REPRODUCIBILITY.md#corrected-baseline-and-historical-evidence)
-before reproducing an older result. This README is the maintained project overview.
+## Scope
 
-The thesis follows seven stages: **domain and motivation → prior work → research
-questions → study design and methodology → results → what we learned → conclusion**.
-It introduces the memory wall, PIM, graph search and DRAM before the research
-questions. The [chapter-by-chapter reading path](doc/READING_GUIDE.md#a-path-through-the-full-thesis)
-explains what to take from each stage.
+Start by testing a reusable mechanism for **irregular accesses whose upcoming
+addresses become available through an index array or worklist**. Use controlled
+access patterns, sparse operations and graph traversal to discover where it
+works. Narrow to graphs or one traversal phase only if the evidence requires
+it. Broad usefulness must be demonstrated across workloads.
 
-## What the study shows
+The first task is a functioning, understood execution platform. The second is
+to establish whether there is enough opportunity beyond strong fixed policies.
+A new predictor or framework comes after those checks.
 
-**Original contribution:** measured failure cases and conditional alternatives
-for placing and fetching HNSW vectors, explained through DRAM command evidence
-and translated into implementation cost thresholds. The study fixes logical
-search work so that a timing change can be attributed to the tested memory choices.
+## Historical artifact
 
-Gorder/Porder already establish graph reordering; DRIM-ANN, UpANNS, PIMANN and
-PIMCQG establish ANN/PIM system techniques, including fine-grained scheduling.
-This thesis evaluates supplied placement routines and isolates memory-service
-choices; the PIM systems are literature comparisons, not benchmarked accelerators.
-The [contribution and prior-work comparison](doc/RESEARCH_POSITION.md#the-original-contribution)
-ties each original output to evidence and an engineering decision.
-
-The practical value is a reproducible way to check a proposed fetch path before
-integration: test its locality and parallelism assumptions, retain regressions,
-and compare the available saving with implementation cost. Row reuse and bank
-parallelism can favour different layouts or request orders.
-The main HNSW comparisons cover **512-byte float32 vectors** and a **hypothetical
-128-byte footprint**. Both use the same recorded float32 search; the smaller
-footprint is not an implemented quantised index.
-
-For example, round-robin vector fetching versus original-order BFS gives:
-
-| Memory configuration | 512 bytes | 128 bytes |
-| --- | ---: | ---: |
-| Default, 64 outstanding reads | −14.58% | +3.43% |
-| 16 outstanding reads | −33.08% | −10.61% |
-| Alternative address mapping | +112.71% | +42.59% |
-
-Values are mean paired changes in completed service cycles over ten query splits;
-negative means fewer cycles. [Full results and 95% intervals](results/scheduling_summary.csv)
-include all seven configurations, sorting and both footprints.
-
-A small training profile chooses among original, sorted and round-robin fetch
-orders, then freezes the choice for held-out queries. It matches the best fixed
-held-out order among those three in all 140 cases: seven settings × two footprints
-× ten splits on one workload. This is an exploratory matrix result, not a general
-success probability. Individual-query regressions remain, and the selected path does not
-beat every published placement. The thesis compares it with RCM, Gorder and
-Porder and reports profiling costs and model limitations.
-
-For PIM, the thesis develops a concrete [host/near-memory execution sketch](doc/READING_GUIDE.md#the-final-step-choose-the-execution-order-from-training):
-host control supplies discovered candidates, and a proposed engine gathers resident
-vectors and returns distances. The scheduling evidence guides that interface;
-the engine and its communication costs still need implementation and measurement.
-For example, the default 512-byte round-robin gain leaves about **5,802 service
-cycles/query** for incremental costs in a simplified serial model. Reaching that
-cost erases the saving; this is an implementation test criterion, not a prediction
-of end-to-end PIM performance.
-
-## Quick start
-
-Use Linux with a C++20 compiler, Make, Python 3.12+ and curl. From the repository
-root, install the pinned Python packages and run the code checks:
-
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-python3 -m pip install -r requirements.txt
-python3 scripts/setup_published.py
-make -j2 test
-```
-
-These tests need no SIFT download or simulator. For a small synthetic HNSW run:
-
-```bash
-sprint1/run_study --max-base 8000 --train 300 --test 150 --output work/synthetic
-```
-
-The [reproducibility guide](doc/REPRODUCIBILITY.md) contains the complete simulator
-setup, dataset download, experiment commands, fresh-result comparison and PDF
-build instructions. It distinguishes validating stored records from rerunning
-simulations. The SIFT download path is `.downloads/sift-128-euclidean.hdf5`.
-GitHub Actions builds and tests the tools, validates the retained
-matrix and checks numerical table regeneration.
-
-## Repository layout
-
-| Path | Contents |
-| --- | --- |
-| [`doc/`](doc/) | Thesis and paper sources/PDFs, reader guides, protocols and generated figures |
-| [`sprint1/`](sprint1/) | HNSW tracing, vector placement and search correctness tests |
-| [`src/`](src/), [`simulator/`](simulator/) | Controlled trace tools and the simulator frontend |
-| [`scripts/`](scripts/), [`tests/`](tests/) | Setup, experiments, analysis, reproduction and checks |
-| [`results/`](results/) | Raw evidence and derived summaries for 2,069 replay records |
-| [`reproduction/`](reproduction/) | Three separately retained uncached reproduction checks |
-| [`archive/`](archive/) | Earlier validated documents, superseded material and review history |
-
-The tracked artifact is about **397 MiB**, mostly losslessly compressed timing
-records needed to check individual queries and phases.
-[The campaign inventory](doc/REPRODUCIBILITY.md#record-counts-and-frozen-protocols)
-explains the counts retained in historical protocols.
-Large local intermediates go in ignored `work/`; `make clean-work` removes those
-files without removing committed results, datasets, tools or document archives.
-See [storage and cleanup](doc/REPRODUCIBILITY.md#storage-and-cleanup) for details.
+The completed earlier thesis, code and retained evidence remain at
+[`archive/dram-service-2026-11-13`](https://github.com/senqx/Thesis-PIM-ANN/tree/fcab5d2be844dd1097f7f0ae13bbe500a12f8caf).
+Its active sources, PDFs, results, workflows and build caches have been removed
+from this branch. Git history remains recoverable. Simulator dependencies live
+in ignored `.deps/`; they are not vendored into the research repository.
 
 ## License
 
-The project is [MIT licensed](LICENCE). Third-party code and data retain their
-respective notices; see [HNSW provenance](sprint1/third_party/README.md) and the
-pinned source setup in the reproduction guide.
+[MIT](LICENCE). Third-party dependencies retain their own licenses.

@@ -1,2 +1,0 @@
-base_count,dimension,query_pool,train,test,k,ef,M,ef_construction,seed,index_seed,window,block_bytes,index_seconds,training_seconds,model_seconds,recall,train_nodes,test_nodes,test_access_coverage,vector_reads,adjacency_reads,upper_records
-8000,128,2000,300,150,10,64,16,200,1,100,16,1024,0.961361042,0.011272926,0.796224195,0.999333333333,7999,7545,1,38083,10615,9870

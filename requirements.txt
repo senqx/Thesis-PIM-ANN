@@ -1,6 +1,0 @@
-# Tested analysis/data environment; simulator itself needs PyYAML and Python headers.
-numpy==2.2.3
-scipy==1.15.1
-matplotlib==3.10.5
-PyYAML==6.0.2
-h5py==3.15.1

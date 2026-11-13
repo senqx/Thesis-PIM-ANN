@@ -1,6 +1,0 @@
-# Synthetic clustered (20k base, dim128 float32), ef64. Cycle-accurate Ramulator HBM2.
-layout,cycles,row_hit_pct,avg_read_latency
-random,1740647,85.81,75.261055
-bfs,1703571,87.09,73.847748
-community,1799276,86.20,77.119698
-query_aware,1678384,88.29,72.839119

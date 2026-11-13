@@ -1,7 +1,0 @@
-inflight,component,delta_bfs_pct,delta_cycles,delta_activate,delta_commands,delta_no_command
-64,mixed,0.1863599928020987,2848,-12516,-25125,27973
-64,vectors,0.2681878343658628,3858,-12401,-24873,28731
-64,adjacency,0.0,0,0,0,0
-1,mixed,-1.362899830282427,-278960,-12771,-17009,-261951
-1,vectors,-1.379629441773711,-265883,-12582,-16435,-249448
-1,adjacency,0.0,0,0,0,0
