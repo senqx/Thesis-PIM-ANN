@@ -7,6 +7,12 @@ have not been independently reproduced. Discovery used Crossref, authors'
 publication lists and official repositories. General search and some publisher
 full texts were inaccessible, so coverage of recent work is incomplete.
 
+**Focused follow-up, 18 November 2026:** [MRAM–WRAM residency and cluster
+placement](WRAM_PLACEMENT.md) examines DRIM-ANN, UpANNS, PimPam, PID-Join,
+ATiM and the uPIMulator cache study. In particular, DRIM-ANN already selects
+hot data for WRAM using estimated accesses per bit; any new residency policy
+must account for that precedent.
+
 ## 1. Start with the movement, not the label
 
 The **memory wall** is the mismatch between how quickly processors can compute

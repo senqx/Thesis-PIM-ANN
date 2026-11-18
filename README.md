@@ -43,6 +43,7 @@ build checks from the unresolved compiler dependency.
 | Document | Purpose |
 | --- | --- |
 | [Literature and possible contribution](docs/LITERATURE.md) | Domain foundations, established work, candidate gaps and limits of this review |
+| [Clusters and MRAM–WRAM residency](docs/WRAM_PLACEMENT.md) | Closest papers on hot-data selection, phase reuse, graph buffers and local-memory tiles |
 | [Research plan](docs/RESEARCH_PLAN.md) | The five RQs, falsifiable hypothesis, baselines, resource budgets and scope decisions |
 | [Platform status](docs/PLATFORM.md) | Pinned simulator, reproducible acquisition and what it can currently support |
 | [Previous results](docs/PREVIOUS_RESULTS.md) | Concise historical findings and recovery instructions |
