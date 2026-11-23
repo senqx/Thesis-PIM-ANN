@@ -1,0 +1,34 @@
+{
+  "hardware_validation": false,
+  "new_simulations": 72,
+  "preparation_samples": 1320,
+  "records": 180,
+  "retained_simulations": 108,
+  "sha256": {
+    "experiments/access-plan-fivepoint/PROTOCOL.md": "2c53362c9555d1663867d8c7e04f6137075eaaae5ce63c9531a6bbadbc4cfd83",
+    "experiments/access-plan-fivepoint/README.md": "2b44f2b6ed7466a0063e6a6529e5a701d15e9b4f6fbf9f004930e743eef03585",
+    "experiments/access-plan-fivepoint/amortization.csv": "d6f4a5578b236334f532c52c338395d3e9e9352a61c51c9a4f4b0a3cee54faad",
+    "experiments/access-plan-fivepoint/comparisons.md": "25ce728ddfde9e97f430480895ba3cf144d8ae04c926c6d2c4157ef421fa670d",
+    "experiments/access-plan-fivepoint/controls.csv": "251ec3f9c965d8704f3a8858bd4165a934bf816545f34a48f495c4c92a0ed0f7",
+    "experiments/access-plan-fivepoint/host.json": "92cd7bdd808590743ee25b487278dbaba57c2aacf1b3844e2e286b75964628c8",
+    "experiments/access-plan-fivepoint/paired.csv": "118bf5a404813bcdcdc6d229ad00e0cbd4797ac6edf840f9ee21f4b7b9675483",
+    "experiments/access-plan-fivepoint/preparation.csv": "672c5cc118fcf18659bcbea264464900869d51aeaab61c194b42adb72efd27b5",
+    "experiments/access-plan-fivepoint/replay.zip": "e34d831d332a3db81e300e1386855ca41f7ba8c8a55fdc55db4f6d7a2a0851b0",
+    "experiments/access-plan-fivepoint/results.csv": "fc8b86add0433bba6bb58e20220958c0387bb358912960c2cbe02c6167baa024",
+    "experiments/access-plan-scaling/manifest.json": "89a59a253607c63f630c15624c6220c58fc23831aa404340518ad7108153e671",
+    "experiments/access-plan/manifest.json": "5171131af36c3d94fc6bdbc207397dfa5322d6a757fc353fbb9260138d2d5e0f",
+    "experiments/wram/THIRD_PARTY_NOTICES.txt": "5d75391393a13cae122c6f0b12b3d76cdee76f6718f53c178997f28091802c56",
+    "scripts/access_plan.py": "f63bcb9c71fb26e429cbea315fd96201abd57c2b8ec24a24af52c40562b83cb6",
+    "scripts/access_plan_artifact.py": "4fd39d42c14dcbf892cddde33ab7fe0652310db00fcc58985b34a74f352a3af0",
+    "scripts/access_plan_fivepoint.py": "a3fd7c34bd44511127763b4a158275994b3e8834a16599286e393e615d86ed32",
+    "scripts/access_plan_scaling.py": "7a97d78de898a115f73a166537de6d04eacb79dc66933e850c92480a6a15380b",
+    "scripts/wram_platform.py": "4a90e48294f11c64ece391920a322a317421c297cdf104039cd82c0905e3f519"
+  },
+  "sizes": [
+    192,
+    384,
+    768,
+    1536,
+    3072
+  ]
+}

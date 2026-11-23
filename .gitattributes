@@ -1,0 +1,14 @@
+# Frozen evidence must retain its original bytes on every checkout.
+*.csv -text whitespace=cr-at-eol
+*.zip binary
+*.pdf binary
+*.png binary
+
+# Markdown's two trailing spaces are intentional hard line breaks.
+*.md text eol=lf whitespace=-blank-at-eol
+*.py text eol=lf
+*.c text eol=lf
+*.json text eol=lf
+
+# Preserve the hashed upstream license notices, including their final blank line.
+experiments/wram/THIRD_PARTY_NOTICES.txt -text whitespace=-blank-at-eof

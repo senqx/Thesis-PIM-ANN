@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-23",
+  "hardware_validation": false,
+  "sha256": {
+    "experiments/access-plan/PROTOCOL.md": "dac6f535b829a549f1396330f2bce56361a01500ec6f621e1a3f52662b7bc0dc",
+    "experiments/access-plan/README.md": "2916b7e974c34054a83264ed052e30c899c2786f3a4f26da84f005d6ff34536f",
+    "experiments/access-plan/batch-screen.csv": "d006ec30b06d88b2c9734ccc17f1fff84a5a427ed146370a27240dda89589520",
+    "experiments/access-plan/comparisons.md": "5a5ec37470bcb6390fe7a5523e291352cef8aab00488c61f212565757489798e",
+    "experiments/access-plan/footprint-sources.zip": "6c1e22895e23c4c569f0de1095bddb0bc386f9aba920ff62370f041bff25d350",
+    "experiments/access-plan/footprints.csv": "4c0aa832522bde96c9eb124a83efb49e3cce06dab87cecc602579ab4e65a5353",
+    "experiments/access-plan/memory-probe.csv": "0787f5d9053de9f030b888a8a9a77da19a9c711df340a50c3c47d6faeb3e39d4",
+    "experiments/access-plan/memory_probe.c": "945efabc8a6e3d3cfc16de51c67caad2d2ed6b1088324daa97a942411941a4bc",
+    "experiments/access-plan/replay.zip": "b4d807efddd87ad526ced236d3a65bf3ab206210a7c6c41392dc940c44358adf",
+    "experiments/access-plan/screen-sources.zip": "0a10bc0394f62de3577672d07efdf16790e31854647bcadfcf4b1c7c5c3afbf6",
+    "experiments/access-plan/screen.csv": "d81b8bd9d7074a3f5589bfcc7c4e0445259f4a1d620e20f595178ebf89b36d8f",
+    "experiments/access-plan/task.c": "d034086ddfc0156fdfde494b27a04ae978a6c5bcb1099da505847ed9f8f9f904",
+    "experiments/access-plan/validation.csv": "c783faafe506a95e77295bd297bd76dc3cccacbe23e5c9aca3dde27b6d9bc92a",
+    "experiments/access-plan/value-check.csv": "80d2a7bb9de739c8141371ea5ad4cfe4df95221bac29e79efb1602ced1f8fa91",
+    "experiments/wram/THIRD_PARTY_NOTICES.txt": "5d75391393a13cae122c6f0b12b3d76cdee76f6718f53c178997f28091802c56",
+    "scripts/access_plan.py": "f63bcb9c71fb26e429cbea315fd96201abd57c2b8ec24a24af52c40562b83cb6",
+    "scripts/access_plan_artifact.py": "4fd39d42c14dcbf892cddde33ab7fe0652310db00fcc58985b34a74f352a3af0",
+    "scripts/dpu_memory_probe.py": "e48984b8e27ab62f3a51e984aafd36e616bf8c2c9a2c7c4ba4ae60325babb8f3",
+    "scripts/wram_platform.py": "4a90e48294f11c64ece391920a322a317421c297cdf104039cd82c0905e3f519"
+  },
+  "simulator_commit": "870d916334e9ff0b190f555f951a9ec3c4257781",
+  "stage_records": {
+    "batch-screen": 3,
+    "footprints": 63,
+    "memory-probe": 3,
+    "screen": 18,
+    "validation": 48,
+    "value-check": 2
+  }
+}

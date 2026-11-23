@@ -13,6 +13,21 @@ ATiM and the uPIMulator cache study. In particular, DRIM-ANN already selects
 hot data for WRAM using estimated accesses per bit; any new residency policy
 must account for that precedent.
 
+**Focused follow-up, 23 November 2026:** [prepared access plans](DPU_ACCESS_PLANS.md)
+reviews relevant sections of SparseP, PyGim, ATiM, ALPHA-PIM, UPMEM Unleashed
+and PRISM. It distinguishes established offline planning and compression from
+the narrower candidate tested here. The initial small kernels lose to
+streaming; the [size/preparation follow-up](../experiments/access-plan-scaling/README.md)
+finds a conditional benefit for larger, repeatedly used worklists. This is
+mechanism evidence, not a novelty or hardware claim. [PIM–GPU feasibility](PIM_GPU.md)
+covers the separate CPU-mediated application boundary.
+
+**Contribution review, 23 November 2026:** the [proposed continuation](CONTRIBUTION_PLAN.md)
+adds explicit comparisons with PIM-CACHE's ordered-offset representation,
+VIPER's PIM cost modelling, and recent sparse schedule-lifetime research.
+It records which sections or abstracts were inspected, remaining novelty
+checks, and baseline controls required before claiming a distinct contribution.
+
 ## 1. Start with the movement, not the label
 
 The **memory wall** is the mismatch between how quickly processors can compute
@@ -86,10 +101,16 @@ inspection level below deliberately limits what this review concludes:
 | [Prefetching Techniques for Near-memory Throughput Processors, ICS 2016](https://doi.org/10.1145/2925426.2926282); [PIMCH, ASP-DAC 2018](https://doi.org/10.1109/ASPDAC.2018.8297307) | Exact titles and publication records. | Full papers to check near-memory prefetch coordination overlap. |
 | [Prodigy, HPCA 2021](https://doi.org/10.1109/HPCA51647.2021.00061) | Record for *Improving the Memory Latency of Data-Indirect Irregular Workloads Using Hardware-Software Co-Design*. | Dependency representation, control and applicability to a software-only DPU. |
 | [Tyche, 2024](https://doi.org/10.1145/3641853); [Magellan, ISCA 2025](https://doi.org/10.1145/3695053.3731054) | Tyche's publisher abstract describes dependency-chain recognition; Magellan's title/record identifies loop-guided indirect-access prefetching. | Full algorithms and a refreshed 2025–2026 citation search. Do not claim general indirect prediction is unsolved. |
-| [TriPIM, 2025](https://doi.org/10.1145/3767110.3767137) | Publication record and [official implementation README](https://github.com/UVA-LavaLab/TriPIM). | Full paper/kernel inspection if triangle counting becomes a target. |
-| [ALPHA-PIM, IISWC 2025](https://www.computer.org/csdl/proceedings-article/iiswc/2025/491700a257/2bNw9poZRuM) | Listed in the [authors' publications](https://people.inf.ethz.ch/omutlu/projects.htm) as graph/linear-algebra characterization on real PIM. Full text was not retrieved. | Close overlap check before committing to a graph-characterization contribution. |
+| [TriPIM, 2025](https://doi.org/10.1145/3767110.3767137) | Follow-up inspected the [full paper](https://memsys.io/wp-content/uploads/ninja-forms/5/TriPIM_Baradaran_MemSys25-1.pdf) and [pinned implementation](https://github.com/UVA-LavaLab/TriPIM/tree/ffde2b4f8068913d0447f649d66cf8f0a6db8584). | Combines graph partitioning and triangle-counting techniques; its aligned scalar-read helper is not an adaptive WRAM cache. Kernel timing excludes host setup/loading/gathering (§4.6). Beating that helper alone would not establish a residency contribution. |
+| [ALPHA-PIM, IISWC 2025](https://doi.org/10.1109/IISWC66894.2025.00030) | Follow-up inspected the [full paper](https://arxiv.org/pdf/2602.09174), including sparsity-based SpMV/SpMSpV selection and instruction/scratchpad costs. | Adaptive workload selection and broad graph/linear-algebra characterization on UPMEM are already covered. See the [mechanism comparison](DPU_ACCESS_PLANS.md). |
 
-## 3. The plausible contribution
+## 3. Initial candidate and the narrowed direction
+
+The broad look-ahead candidate below belongs to the initial review. The
+subsequent execution studies narrow the active direction to prepared reuse
+for working sets larger than available WRAM. See the [contribution plan](CONTRIBUTION_PLAN.md)
+for the current RQs and the [baseline controls](../experiments/baseline-gates/README.md)
+for why ordinary shared residency must be considered first.
 
 **Candidate, not established novelty:** characterize and implement a low-cost
 policy that chooses transfer granularity and limited look-ahead for exposed

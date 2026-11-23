@@ -1,9 +1,18 @@
-# Research plan: test the opportunity before designing the solution
+# Original broader proposal — preserved for context
 
-**Status:** proposed protocol, 13 November 2026. No new performance results.
-Freeze the workload split, baselines, budgets and decision rules after platform
-feasibility and before inspecting final evaluation outcomes. Pilot observations
-remain exploratory. [Literature positioning](LITERATURE.md) is provisional.
+This document preserves the initial adaptive-data-movement proposal from
+13 November 2026, with its subsequent methodological notes. Its five questions
+are labelled **P1–P5** to distinguish them from the three active research
+questions in the [contribution plan](CONTRIBUTION_PLAN.md).
+
+The [short thesis](../thesis/short-thesis.md) now integrates the five-size study
+and the shared-residency/compact-dictionary controls. Those results narrow the
+next step to working sets larger than available WRAM. Prediction, selective
+preparation, multi-DPU placement, movement/computation overlap and energy have
+not been established by the completed experiments.
+
+The broader stages and thresholds below are preserved proposals, not a list
+of completed checks or commitments for the current bounded study.
 
 ## Objective and scope
 
@@ -12,9 +21,9 @@ system, initially using identical UPMEM DPUs. Start with exposed indexed
 accesses and worklists, then establish whether the mechanism transfers across
 sparse operations and graph traversal. HNSW is not a required starting point.
 
-The available path is **simulation with uPIMulator**, subject to its compiler
-dependency and model audit. No UPMEM hardware or working SDK installation is
-currently available; an archived SDK is a candidate installation route.
+The available path is **simulation with uPIMulator**. An archived SDK now works
+inside an isolated compiler container, and reference-checked DPU programs run.
+No UPMEM hardware is available; the timing-model audit remains incomplete.
 Consequently, simulated execution time and traffic are the initial outcomes.
 Physical end-to-end performance and energy remain unvalidated. Keep energy as
 an explicit evaluation requirement conditional on obtaining justified model
@@ -22,17 +31,22 @@ parameters or hardware access, rather than inventing an energy score.
 
 ## Research questions
 
+The current small study narrows the first step to graph signals versus history,
+whole groups versus selected blocks, and retention versus streaming allocation.
+It does not introduce a new DPU partitioner or GPU pipeline. See
+[PIM–GPU feasibility](PIM_GPU.md) for the related application boundary.
+
 | ID | Question | Evidence needed |
 | --- | --- | --- |
-| RQ1 | Which graph/workload characteristics help predict future accesses? | Compare cheap structural features (degree/segment length, active worklist size) and runtime features (index proximity, block reuse, recent useful-byte fraction). Measure out-of-sample value beyond runtime feedback alone. Include metadata and feature-extraction costs. |
-| RQ2 | How can decisions adapt to graph structures and traversal phases? | Compare demand-only, fixed look-ahead, fixed transfer sizes, workload-selected fixed policies and phase adaptation. A fixed winner throughout execution is evidence against needing phase adaptation. |
-| RQ3 | How should data be distributed across the host and DPUs? | Begin with standard contiguous and work-balanced partitions. Measure cuts, replicated state, imbalance and host traffic. A new partitioner is warranted only if these baselines expose an unresolved bottleneck. Differently capable DPUs are optional, explicitly modelled later. |
-| RQ4 | How can movement and computation be coordinated to reduce idle time? | Measure demand/DMA waits, runnable tasklets, synchronization and phase completion. Test overlap through supported interfaces; charge any producer tasklet and queue storage to the policy. Include host coordination separately. |
-| RQ5 | Can adaptation improve performance without excessive bandwidth and memory use? | Evaluate complete simulated execution under equal memory and traffic budgets, including policy costs; report failures and Pareto trade-offs. This is the acceptance condition for the whole project. |
+| P1 | Which graph/workload characteristics help predict future accesses? | Compare cheap structural features (degree/segment length, active worklist size) and runtime features (index proximity, block reuse, recent useful-byte fraction). Measure out-of-sample value beyond runtime feedback alone. Include metadata and feature-extraction costs. |
+| P2 | How can decisions adapt to graph structures and traversal phases? | Compare demand-only, fixed look-ahead, fixed transfer sizes, workload-selected fixed policies and phase adaptation. A fixed winner throughout execution is evidence against needing phase adaptation. |
+| P3 | How should data be distributed across the host and DPUs? | Begin with standard contiguous and work-balanced partitions. Measure cuts, replicated state, imbalance and host traffic. A new partitioner is warranted only if these baselines expose an unresolved bottleneck. Differently capable DPUs are optional, explicitly modelled later. |
+| P4 | How can movement and computation be coordinated to reduce idle time? | Measure demand/DMA waits, runnable tasklets, synchronization and phase completion. Test overlap through supported interfaces; charge any producer tasklet and queue storage to the policy. Include host coordination separately. |
+| P5 | Can adaptation improve performance without excessive bandwidth and memory use? | Evaluate complete simulated execution under equal memory and traffic budgets, including policy costs; report failures and Pareto trade-offs. This is the acceptance condition for the whole project. |
 
 These are connected questions around one mechanism, not five independent
-systems to invent. RQ1 supplies information, RQ2 chooses an action, RQ3 fixes
-where data resides, RQ4 determines whether early movement helps, and RQ5 judges
+systems to invent. P1 supplies information, P2 chooses an action, P3 fixes
+where data resides, P4 determines whether early movement helps, and P5 judges
 whether the result is worthwhile.
 
 ## A falsifiable hypothesis
@@ -71,7 +85,7 @@ alone cannot establish a physical 5% benefit given model uncertainty.
 
 **Traffic volume and bandwidth are different.** Transferring the same bytes in
 half the time doubles the achieved transfer rate without doubling traffic.
-RQ5 concerns unnecessary bytes, resource contention and capacity, alongside
+P5 concerns unnecessary bytes, resource contention and capacity, alongside
 rate limits. Do not add local and host bytes into a single reassuring total
 that hides growth at the expensive boundary.
 

@@ -1,0 +1,19 @@
+{
+  "hardware_validation": false,
+  "new_records": 14,
+  "retained_records": 24,
+  "sha256": {
+    "experiments/access-plan-fivepoint/manifest.json": "bcb3d1b0196e94587438280449fa441c7a513d5a26de1e123c44fc2836840a9e",
+    "experiments/baseline-gates/PROTOCOL.md": "5da4d2ed0e9a65a9be4c049918c8b6b3c8f7aaa5b843f48421a413a42ce6324c",
+    "experiments/baseline-gates/README.md": "69339f88e67351a989481e709f4f907799cf9954158dca168539467da75792bb",
+    "experiments/baseline-gates/comparisons.csv": "c4e0f9f888c036a25bbc49c90fcac8da809f7c8d1598b198c03af6d3c0bfe849",
+    "experiments/baseline-gates/comparisons.md": "10835be2fcc4d0fa97ea810261c0c27e8b3af55d34fbff9b03acc2aa9a986c77",
+    "experiments/baseline-gates/replay.zip": "53996539d7cd1d2c3a0bd87730ab6b5731355dddbbc69ef6549a3485c26a6f7b",
+    "experiments/baseline-gates/results.csv": "c5b84d839519d98bcb9a4bb5c9e8e4f7d889f5b3e8ab7374980b7e686166bd43",
+    "experiments/baseline-gates/task.c": "e964c74b33c8082438ccd688c12a308f87cdd35bb7ac8894d9ba8966ba12fdd6",
+    "scripts/access_plan.py": "f63bcb9c71fb26e429cbea315fd96201abd57c2b8ec24a24af52c40562b83cb6",
+    "scripts/access_plan_artifact.py": "4fd39d42c14dcbf892cddde33ab7fe0652310db00fcc58985b34a74f352a3af0",
+    "scripts/access_plan_gates.py": "c5a66f0f1935094655daea5cbca34a6aada9074ec5bb63ecce1abc3b3cdea225",
+    "scripts/wram_platform.py": "4a90e48294f11c64ece391920a322a317421c297cdf104039cd82c0905e3f519"
+  }
+}

@@ -1,73 +1,112 @@
-# Adaptive data movement for irregular workloads on UPMEM
+# Data reuse for graph aggregation on UPMEM
 
-Master's research by **Artashes Atanesyan**. The repository name is historical.
+Master's research by **Artashes Atanesyan**.
 
-**Status: research reset and feasibility review, 13 November 2026.** There are
-no experimental results for the new hypothesis yet. The previous DRAM-service
-study is preserved in Git; it is not evidence for this new project.
+**[Read the short thesis (PDF)](thesis/short-thesis.pdf)** ·
+[Markdown version](thesis/short-thesis.md) ·
+[Research questions](docs/CONTRIBUTION_PLAN.md) ·
+[Validation record](docs/VALIDATION.md)
 
-## The problem
+When does keeping graph data in a DPU's small working memory save more time
+than it costs to manage? This project investigates that question using
+compiled UPMEM programs, reproducible simulations and explicit accounting
+for preparation, memory capacity and data movement.
 
-Many programs spend substantial time waiting for data. Graph traversal, sparse
-matrix operations and indexed lookups are especially difficult: the address of
-the next item often depends on an item just read. Moving computation close to
-memory can reduce some transfers, but it does not remove this dependency or
-make communication free.
+**Status — 23 November 2026:** the exploratory experiments and baseline
+controls are complete. A predictive model and selective preparation policy
+remain proposed work. The thesis explains both the results and the unresolved
+research questions. Hardware speedup, energy savings and end-to-end application
+acceleration have not been demonstrated.
 
-This project asks whether a small adaptive policy can decide **what to fetch,
-how much to fetch, and when to fetch it**, while respecting traffic and memory
-budgets. Fetching early is useful only if the data is needed and the transfer
-cost can be hidden or reduced. Doing nothing must remain a valid decision.
+## What the experiments show
 
-## Objective and hypothesis
+UPMEM is a near-memory form of processing-in-memory. Each DPU has a large
+local DRAM bank (**MRAM**) and a small, software-managed working memory
+(**WRAM**). Its hardware threads, called tasklets, share that WRAM.
 
-**Objective:** design and evaluate adaptive data movement and prefetching for
-irregular workloads on a heterogeneous host–DPU system, starting with UPMEM.
-Evaluate execution time together with communication volume, buffer use and
-implementation overhead. Assess energy only with a justified model or hardware
-measurements.
+Our kernel sums the values associated with each graph vertex's neighbors.
+It compares ordinary streaming, prepared batches that reuse source values,
+and preloading the entire feature table when it fits.
 
-**Hypothesis to test:** information about workload structure and recent access
-behaviour can improve execution time over tuned static and conventional
-feedback policies **under the same traffic and memory limits**. The experiments
-may reject this hypothesis.
+| Finding | Evidence and interpretation |
+| --- | --- |
+| Fewer reads do not guarantee faster execution. | Early retention policies save traffic but lose to tuned streaming after bookkeeping costs. |
+| Prepared batches can beat streaming. | Across five work sizes, the original format reaches about 5% fewer simulated cycles on the larger reusable inputs. Uniform accesses lose. |
+| Preparation can consume the kernel saving. | The original Python planner needs roughly one hundred valid uses in the largest positive cases. This is a conditional estimate, not a hardware result. |
+| A stronger baseline changes the recommendation. | At 3,072 destinations, shared preloading is 29–30% faster than streaming on the synthetic inputs whose entire 4 KiB feature table fits in WRAM. |
+| The strict storage constraint is still unresolved. | Compact dictionaries improve batching, but one sampled real-graph input still exceeds the installation budget. |
 
-The initial target has a CPU host and identical DRAM Processing Units (DPUs).
-Different DPU capabilities are an optional later extension. There is currently
-no hardware or installed UPMEM SDK. A pinned copy of **uPIMulator** has been
-obtained; [platform status and setup](docs/PLATFORM.md) distinguish the working
-build checks from the unresolved compiler dependency.
+The next useful question concerns **working sets larger than available WRAM**:
+can selective reuse beat compact streaming and applicable partial residency,
+stay within the resource budgets, and repay its preparation? The
+[contribution plan](docs/CONTRIBUTION_PLAN.md) defines the three RQs, closest
+prior work and evidence still required. Novelty has not been established for
+the proposed selector.
 
 ## Read in this order
 
-| Document | Purpose |
+| Document | What it gives you |
 | --- | --- |
-| [Literature and possible contribution](docs/LITERATURE.md) | Domain foundations, established work, candidate gaps and limits of this review |
-| [Clusters and MRAM–WRAM residency](docs/WRAM_PLACEMENT.md) | Closest papers on hot-data selection, phase reuse, graph buffers and local-memory tiles |
-| [Research plan](docs/RESEARCH_PLAN.md) | The five RQs, falsifiable hypothesis, baselines, resource budgets and scope decisions |
-| [Platform status](docs/PLATFORM.md) | Pinned simulator, reproducible acquisition and what it can currently support |
-| [Previous results](docs/PREVIOUS_RESULTS.md) | Concise historical findings and recovery instructions |
+| [Short thesis](thesis/short-thesis.pdf) | The domain, prior work, RQs, method, results, costs and remaining research direction |
+| [Contribution plan](docs/CONTRIBUTION_PLAN.md) | The precise proposed contribution and how to test it |
+| [Five-size experiment](experiments/access-plan-fivepoint/README.md) | Original batching curves, CPU preparation timings and replay instructions |
+| [Baseline controls](experiments/baseline-gates/README.md) | Compact dictionaries, shared residency and the updated recommendation |
+| [Literature review](docs/LITERATURE.md) | Reading links, established techniques and limits of the novelty assessment |
+| [Platform setup](docs/PLATFORM.md) | Pinned compiler/simulator, setup commands and timing-model limitations |
 
-## Scope
+Supporting material preserves the [first residency pilot](experiments/wram/README.md),
+[prepared-access experiments](experiments/access-plan/README.md),
+[three-size checkpoint](experiments/access-plan-scaling/README.md),
+[WRAM placement literature](docs/WRAM_PLACEMENT.md), and
+[CPU-mediated PIM–GPU feasibility](docs/PIM_GPU.md).
+The [original broader proposal](docs/RESEARCH_PLAN.md) is retained for context.
 
-Start by testing a reusable mechanism for **irregular accesses whose upcoming
-addresses become available through an index array or worklist**. Use controlled
-access patterns, sparse operations and graph traversal to discover where it
-works. Narrow to graphs or one traversal phase only if the evidence requires
-it. Broad usefulness must be demonstrated across workloads.
+## Check and reproduce the evidence
 
-The first task is a functioning, understood execution platform. The second is
-to establish whether there is enough opportunity beyond strong fixed policies.
-A new predictor or framework comes after those checks.
+Run the retained-record audits with Python 3, from the repository root:
 
-## Historical artifact
+```sh
+python3 scripts/access_plan_fivepoint.py verify
+python3 scripts/access_plan_gates.py verify
+```
 
-The completed earlier thesis, code and retained evidence remain at
-[`archive/dram-service-2026-11-13`](https://github.com/senqx/Thesis-PIM-ANN/tree/fcab5d2be844dd1097f7f0ae13bbe500a12f8caf).
-Its active sources, PDFs, results, workflows and build caches have been removed
-from this branch. Git history remains recoverable. Simulator dependencies live
-in ignored `.deps/`; they are not vendored into the research repository.
+These commands check hashes, counters, matched work and output records.
+After setting up the [pinned Go uPIMulator](docs/PLATFORM.md), freshly execute
+representative archived programs:
+
+```sh
+python3 scripts/access_plan_fivepoint.py replay
+python3 scripts/access_plan_gates.py replay
+```
+
+Frozen replay needs neither the compiler SDK nor a graph download. Use a fresh
+destination for each replay; the artifact READMEs give complete commands.
+[Document build instructions](thesis/README.md) describe how to regenerate
+the figures and PDF. The [build record](thesis/build.json) contains the actual
+page count and the corresponding source, figure and PDF hashes.
+
+The five-size artifact contains **180 configuration records** and **1,320 CPU
+timing samples**. The baseline artifact contains **14 new executions plus 24
+reused comparators**: 194 distinct configurations across these two artifacts.
+The earlier 108-record size checkpoint is included in the 180, not additional
+evidence. Record and timing counts are not counts of independent statistical
+experiments. Earlier pilot artifacts remain separately identified.
+
+## Scope and provenance
+
+The main study uses one simulated DPU, twelve tasklets, 8-byte integer records,
+two seeds per input family and one sampled real graph. It is an aggregation
+kernel, not complete GNN training. The Go simulator's timing for these kernels
+has not been validated against hardware. GPU integration and energy evaluation
+remain outside the completed work.
+
+The repository name is historical. The earlier HNSW/DRAM-service thesis and
+its evidence remain in the
+[archived revision](https://github.com/senqx/Thesis-PIM-ANN/tree/fcab5d2be844dd1097f7f0ae13bbe500a12f8caf).
+[Previous results](docs/PREVIOUS_RESULTS.md) gives a concise summary and recovery
+instructions. Dependencies and regenerable runs live in ignored directories.
 
 ## License
 
-[MIT](LICENCE). Third-party dependencies retain their own licenses.
+[MIT](LICENCE). Third-party software and datasets retain their own terms;
+the experiment artifacts include attribution and runtime notices.

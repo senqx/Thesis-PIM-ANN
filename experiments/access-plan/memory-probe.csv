@@ -1,0 +1,4 @@
+transfer_bytes,tasklets,transfers_per_tasklet,cycles,read_bytes,write_bytes,read_MB_per_second,instructions,output_check,traffic_check
+8,12,32,3706,3072,96,290.12412304371287,2213,passed,passed
+64,12,32,19186,24576,768,448.3269050349213,2213,passed,passed
+1024,12,32,283938,393216,12288,484.7029985419352,2213,passed,passed

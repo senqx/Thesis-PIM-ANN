@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-23",
+  "hardware_validation": false,
+  "records": 160,
+  "sdk_mirror_commit": "84a0dcd3f57ded98ea049f2be5d45c71eda96ace",
+  "sdk_version": "2023.1.0",
+  "sha256": {
+    "experiments/wram/Compiler.Dockerfile": "2902c84a7ecee5227e78ab9455a242ab76b95a144765437aac36ac1c753aa6cd",
+    "experiments/wram/PROTOCOL.md": "05b095068e220a85123ef2add008fbe453420d62693f7bc419d9233ab1ec8b34",
+    "experiments/wram/README.md": "508f8ce677bf6ceb54519bfac2e13273f599e72c68e998eabfa0c6c2a37d8d96",
+    "experiments/wram/THIRD_PARTY_NOTICES.txt": "5d75391393a13cae122c6f0b12b3d76cdee76f6718f53c178997f28091802c56",
+    "experiments/wram/comparisons.md": "4ff22cc015edd5e41f62e6efa15902c3e9b1f3d23786bac8689a1c8eaf766ca6",
+    "experiments/wram/linked-images.zip": "2c73d34ba42158a3c1996b022eb8f75b1f7fe34cd01dcb1af5bc274aa7c36760",
+    "experiments/wram/results.csv": "c262460e527b0dee59349eb7f1e6b33c5b6730a3133ba62dee4ec5196a674dd3",
+    "experiments/wram/simulator-records.json": "676a7f3bc171908950c95a9691220af30c556c25dd33fc54409ef1161a031087",
+    "experiments/wram/smoke-checks.json": "cb93720faef0753861bea8777549813470a8242734397d4f3450db27b2dd367e",
+    "experiments/wram/task.c": "85a37da9b6aa1a99bda6ca7e2e6ee4d1bd3de469ab90bf75c35d5e9893f22f37",
+    "experiments/wram/traffic-versus-cycles.png": "e27c79d7d36c524cd13315c2c9e185163540d6240f0076e37eacc2c8e77e3009",
+    "scripts/wram_experiment.py": "1041736d958d5217632c3a3b535c970e6b1c9313f326020221b60132d39071ac",
+    "scripts/wram_platform.py": "4a90e48294f11c64ece391920a322a317421c297cdf104039cd82c0905e3f519",
+    "scripts/wram_record.py": "ce996d40d62fb2392b657b2554477423a1d4757720cc04c712da78ce3b634e9a",
+    "scripts/wram_verify.py": "e011f59e694bf760485e4a1d1799bd8c4b9adfbed198fe38235055b6b855e25b"
+  },
+  "simulator_commit": "870d916334e9ff0b190f555f951a9ec3c4257781",
+  "unique_graphs": 8,
+  "workload_order_conditions": 10
+}

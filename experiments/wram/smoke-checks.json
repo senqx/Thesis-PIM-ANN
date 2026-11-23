@@ -1,0 +1,63 @@
+{
+  "1": {
+    "result": {
+      "benchmark": "upstream VA",
+      "driver_sha256": "0e4727b470d6710032d1af4f1c343df584b5eead4408ce77a0807d8bfb95966b",
+      "elements": 256,
+      "output_check": "passed",
+      "simulator_wall_seconds": 1.0227112625725567,
+      "tasklets": 1
+    },
+    "statistics": {
+      "CycleRule[0_0_0]_cycle_rule": "27",
+      "Logic[0_0_0]_active_tasklets_0": "2224",
+      "Logic[0_0_0]_active_tasklets_1": "21130",
+      "Logic[0_0_0]_logic_cycle": "23354",
+      "Logic[0_0_0]_num_instructions": "1924",
+      "MemoryController[0_0_0]_memory_cycle": "140124",
+      "MemoryScheduler[0_0_0]_num_fcfs": "362",
+      "MemoryScheduler[0_0_0]_num_fr": "18",
+      "RowBuffer[0_0_0]_num_activations": "4",
+      "RowBuffer[0_0_0]_num_precharges": "3",
+      "RowBuffer[0_0_0]_num_reads": "256",
+      "RowBuffer[0_0_0]_num_writes": "128",
+      "RowBuffer[0_0_0]_read_bytes": "2048",
+      "RowBuffer[0_0_0]_write_bytes": "1024",
+      "ThreadScheduler[0_0_0]_breakdown_dma": "2176",
+      "ThreadScheduler[0_0_0]_breakdown_etc": "19254",
+      "ThreadScheduler[0_0_0]_breakdown_run": "1924"
+    }
+  },
+  "4": {
+    "result": {
+      "benchmark": "upstream VA",
+      "driver_sha256": "0e4727b470d6710032d1af4f1c343df584b5eead4408ce77a0807d8bfb95966b",
+      "elements": 1024,
+      "output_check": "passed",
+      "simulator_wall_seconds": 1.2751580369658768,
+      "tasklets": 4
+    },
+    "statistics": {
+      "CycleRule[0_0_0]_cycle_rule": "124",
+      "Logic[0_0_0]_active_tasklets_0": "3794",
+      "Logic[0_0_0]_active_tasklets_1": "2086",
+      "Logic[0_0_0]_active_tasklets_2": "1754",
+      "Logic[0_0_0]_active_tasklets_3": "1896",
+      "Logic[0_0_0]_active_tasklets_4": "18770",
+      "Logic[0_0_0]_backpressure": "50",
+      "Logic[0_0_0]_logic_cycle": "28300",
+      "Logic[0_0_0]_num_instructions": "7885",
+      "MemoryController[0_0_0]_memory_cycle": "169800",
+      "MemoryScheduler[0_0_0]_num_fcfs": "1519",
+      "RowBuffer[0_0_0]_num_activations": "17",
+      "RowBuffer[0_0_0]_num_precharges": "16",
+      "RowBuffer[0_0_0]_num_reads": "1024",
+      "RowBuffer[0_0_0]_num_writes": "512",
+      "RowBuffer[0_0_0]_read_bytes": "8192",
+      "RowBuffer[0_0_0]_write_bytes": "4096",
+      "ThreadScheduler[0_0_0]_breakdown_dma": "7753",
+      "ThreadScheduler[0_0_0]_breakdown_etc": "12612",
+      "ThreadScheduler[0_0_0]_breakdown_run": "7885"
+    }
+  }
+}

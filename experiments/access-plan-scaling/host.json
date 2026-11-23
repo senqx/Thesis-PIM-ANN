@@ -1,0 +1,23 @@
+{
+  "python": "3.13.0 (main, Oct 10 2024, 09:46:30) [GCC 14.2.0]",
+  "platform": "Linux-4.18.0-553.125.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "cpu": "AMD EPYC 7302 16-Core Processor",
+  "allowed_cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "timer": "perf_counter_ns",
+  "trials": 11,
+  "exclusive_host": false,
+  "concurrent_simulation_during_preparation": false
+}

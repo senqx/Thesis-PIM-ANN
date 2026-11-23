@@ -192,3 +192,17 @@ Prism, also appeared in discovery and need full mechanism checks before a
 novelty claim. The supported conclusion is narrower: hot-data residency,
 phase reuse, explicit graph buffering and automatic tiling already have close
 UPMEM precedents.
+
+## Follow-up: executable feasibility check
+
+The [23 November execution pilot](../experiments/wram/README.md) now tests three
+bounded questions: degree hints versus access history, whole clusters versus
+selected rows, and retention versus streaming allocation. It executes actual
+DPU instructions, checks all output values and MRAM bytes, and accounts for
+WRAM reservations. The tested policies do not beat streaming in this small
+synthetic matrix. This is scoped negative evidence, not a rejection of all
+graph-aware residency or a new general caching result.
+
+For ML context, [the PIM–GPU assessment](PIM_GPU.md) explains GNN aggregation,
+embedding reduction, and why local DPU improvements still need to pay for
+host-mediated communication.

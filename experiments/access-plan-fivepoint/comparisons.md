@@ -1,0 +1,100 @@
+# Descriptive size and window comparisons
+
+Means of two paired seeds. Negative percentages mean fewer cycles/bytes.
+Preparation is the mean of the two per-input medians, excluding validation.
+
+Each cycle comparison uses the fastest tested streaming buffer for that input.
+The 256/1,024-byte controls reuse identical stream16 host-encoding samples.
+
+| Input | Destinations | Policy | Preparation (µs) | Cycle change | Read change |
+| --- | ---: | --- | ---: | ---: | ---: |
+| community | 192 | stream16 | 23.4 | +1.19% | +0.00% |
+| community | 192 | batch16 | 918.6 | +38.80% | -1.15% |
+| community | 192 | batch32 | 610.0 | +18.69% | -25.42% |
+| community | 192 | batch64 | 447.0 | +1.44% | -48.41% |
+| community | 192 | stream16_256 | 23.4 | +0.01% | +0.00% |
+| community | 192 | stream16_1024 | 23.4 | +0.22% | +0.00% |
+| community | 384 | stream16 | 48.9 | +0.39% | +0.00% |
+| community | 384 | batch16 | 1,757.4 | +35.98% | -0.30% |
+| community | 384 | batch32 | 1,201.5 | +18.20% | -25.21% |
+| community | 384 | batch64 | 868.4 | +1.09% | -48.33% |
+| community | 384 | stream16_256 | 48.9 | +0.00% | +0.00% |
+| community | 384 | stream16_1024 | 48.9 | +0.22% | +0.00% |
+| community | 768 | stream16 | 94.5 | +0.54% | +0.00% |
+| community | 768 | batch16 | 3,633.4 | +30.36% | -0.03% |
+| community | 768 | batch32 | 2,475.8 | +12.02% | -25.13% |
+| community | 768 | batch64 | 1,841.5 | -3.04% | -48.00% |
+| community | 768 | stream16_256 | 94.5 | +0.02% | +0.00% |
+| community | 768 | stream16_1024 | 94.5 | +0.37% | +0.00% |
+| community | 1,536 | stream16 | 194.6 | +1.27% | +0.00% |
+| community | 1,536 | batch16 | 7,957.8 | +28.44% | +0.39% |
+| community | 1,536 | batch32 | 5,424.1 | +11.07% | -24.73% |
+| community | 1,536 | batch64 | 4,004.0 | -4.74% | -47.80% |
+| community | 1,536 | stream16_256 | 194.6 | +0.64% | +0.00% |
+| community | 1,536 | stream16_1024 | 194.6 | +0.00% | +0.00% |
+| community | 3,072 | stream16 | 364.0 | +0.80% | +0.00% |
+| community | 3,072 | batch16 | 15,007.7 | +29.92% | +0.43% |
+| community | 3,072 | batch32 | 10,089.0 | +10.68% | -24.82% |
+| community | 3,072 | batch64 | 7,424.7 | -5.35% | -47.80% |
+| community | 3,072 | stream16_256 | 364.0 | +0.33% | +0.00% |
+| community | 3,072 | stream16_1024 | 364.0 | +0.00% | +0.00% |
+| uniform | 192 | stream16 | 53.7 | +0.68% | +0.00% |
+| uniform | 192 | batch16 | 1,106.1 | +62.45% | +34.01% |
+| uniform | 192 | batch32 | 844.3 | +56.61% | +30.21% |
+| uniform | 192 | batch64 | 716.2 | +53.82% | +25.73% |
+| uniform | 192 | stream16_256 | 53.7 | +0.17% | +0.00% |
+| uniform | 192 | stream16_1024 | 53.7 | +0.00% | +0.00% |
+| uniform | 384 | stream16 | 114.7 | +0.74% | +0.00% |
+| uniform | 384 | batch16 | 2,382.5 | +62.64% | +33.91% |
+| uniform | 384 | batch32 | 1,865.6 | +56.82% | +29.96% |
+| uniform | 384 | batch64 | 1,510.7 | +51.21% | +25.26% |
+| uniform | 384 | stream16_256 | 114.7 | +0.30% | +0.00% |
+| uniform | 384 | stream16_1024 | 114.7 | +0.00% | +0.00% |
+| uniform | 768 | stream16 | 237.4 | +0.88% | +0.00% |
+| uniform | 768 | batch16 | 4,610.1 | +61.72% | +33.79% |
+| uniform | 768 | batch32 | 3,553.4 | +55.59% | +29.71% |
+| uniform | 768 | batch64 | 3,203.1 | +50.71% | +24.77% |
+| uniform | 768 | stream16_256 | 237.4 | +0.41% | +0.00% |
+| uniform | 768 | stream16_1024 | 237.4 | +0.00% | +0.00% |
+| uniform | 1,536 | stream16 | 430.2 | +0.76% | +0.00% |
+| uniform | 1,536 | batch16 | 8,315.9 | +58.63% | +33.84% |
+| uniform | 1,536 | batch32 | 6,395.7 | +53.52% | +29.62% |
+| uniform | 1,536 | batch64 | 5,280.5 | +49.22% | +24.61% |
+| uniform | 1,536 | stream16_256 | 430.2 | +0.36% | +0.00% |
+| uniform | 1,536 | stream16_1024 | 430.2 | +0.00% | +0.00% |
+| uniform | 3,072 | stream16 | 867.5 | +0.82% | +0.00% |
+| uniform | 3,072 | batch16 | 17,259.5 | +57.99% | +33.82% |
+| uniform | 3,072 | batch32 | 12,660.6 | +51.79% | +29.56% |
+| uniform | 3,072 | batch64 | 10,265.1 | +49.26% | +24.60% |
+| uniform | 3,072 | stream16_256 | 867.5 | +0.27% | +0.00% |
+| uniform | 3,072 | stream16_1024 | 867.5 | +0.00% | +0.00% |
+| grqc | 192 | stream16 | 26.2 | +0.45% | +0.00% |
+| grqc | 192 | batch16 | 778.2 | +7.58% | -37.08% |
+| grqc | 192 | batch32 | 560.6 | +3.91% | -40.10% |
+| grqc | 192 | batch64 | 425.6 | +5.38% | -41.64% |
+| grqc | 192 | stream16_256 | 26.2 | +0.04% | +0.00% |
+| grqc | 192 | stream16_1024 | 26.2 | +0.00% | +0.00% |
+| grqc | 384 | stream16 | 49.5 | +0.58% | +0.00% |
+| grqc | 384 | batch16 | 1,648.9 | +5.53% | -36.08% |
+| grqc | 384 | batch32 | 1,216.7 | +1.81% | -39.18% |
+| grqc | 384 | batch64 | 925.7 | +1.97% | -40.72% |
+| grqc | 384 | stream16_256 | 49.5 | +0.29% | +0.00% |
+| grqc | 384 | stream16_1024 | 49.5 | +0.16% | +0.00% |
+| grqc | 768 | stream16 | 96.6 | +1.27% | +0.00% |
+| grqc | 768 | batch16 | 3,137.9 | +4.24% | -35.67% |
+| grqc | 768 | batch32 | 2,201.2 | -0.24% | -38.79% |
+| grqc | 768 | batch64 | 1,767.2 | -0.60% | -40.38% |
+| grqc | 768 | stream16_256 | 96.6 | +0.85% | +0.00% |
+| grqc | 768 | stream16_1024 | 96.6 | +0.00% | +0.00% |
+| grqc | 1,536 | stream16 | 182.7 | +0.79% | +0.00% |
+| grqc | 1,536 | batch16 | 6,111.9 | +2.25% | -35.62% |
+| grqc | 1,536 | batch32 | 4,303.7 | -2.32% | -38.73% |
+| grqc | 1,536 | batch64 | 3,408.3 | -4.07% | -40.41% |
+| grqc | 1,536 | stream16_256 | 182.7 | +0.36% | +0.00% |
+| grqc | 1,536 | stream16_1024 | 182.7 | +0.00% | +0.00% |
+| grqc | 3,072 | stream16 | 387.9 | +0.70% | +0.00% |
+| grqc | 3,072 | batch16 | 12,413.3 | +0.97% | -35.94% |
+| grqc | 3,072 | batch32 | 9,595.5 | -3.82% | -39.07% |
+| grqc | 3,072 | batch64 | 6,884.8 | -5.05% | -40.77% |
+| grqc | 3,072 | stream16_256 | 387.9 | +0.39% | +0.00% |
+| grqc | 3,072 | stream16_1024 | 387.9 | +0.00% | +0.00% |
