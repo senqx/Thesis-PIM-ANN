@@ -28,16 +28,25 @@ Matrix load(const std::string& name){
     for(U i=0;i<a.z;i++)a.w.push_back(read());return a;
 }
 Plan prepare(const Matrix&a,const std::string&mode,U bytes){
-    Plan q;q.permutation.resize(a.m);std::iota(q.permutation.begin(),q.permutation.end(),0);
+    Plan q;
     if(mode=="hot"){
         q.reordered=true;
+        q.permutation.resize(a.m);
+        std::iota(q.permutation.begin(),q.permutation.end(),0);
         std::vector<U> counts(a.m);for(U c:a.c)counts[c]++;
         std::sort(q.permutation.begin(),q.permutation.end(),[&](U x,U y){return counts[x]!=counts[y]?counts[x]>counts[y]:x<y;});
     }
     if(mode=="stream128"||mode=="stream512"||mode=="hot"||mode=="full"){
-        std::vector<U> inv(a.m);for(U i=0;i<a.m;i++)inv[q.permutation[i]]=i;
+        std::vector<U> inv;
+        if(q.reordered){
+            inv.resize(a.m);
+            for(U i=0;i<a.m;i++)inv[q.permutation[i]]=i;
+        }
         for(U p:a.p)word(q.meta,p);pad(q.meta,32);
-        for(U i=0;i<a.z;i++){word(q.meta,inv[a.c[i]]);word(q.meta,a.w[i]);}
+        for(U i=0;i<a.z;i++){
+            word(q.meta,q.reordered?inv[a.c[i]]:a.c[i]);
+            word(q.meta,a.w[i]);
+        }
     }else if(mode=="batch"){
         U groups=a.n/4;q.meta.resize(((groups+1)*4+15)/16*16);
         for(U g=0;g<groups;g++){
@@ -75,11 +84,12 @@ Bytes source_values(const Matrix&a,U words,U bytes,U epoch){
     Bytes b;b.reserve(a.m*bytes);
     for(U id=0;id<a.m;id++){for(U f=0;f<words;f++)word(b,(id*17+f*13+3+epoch*7)%19+1);while(b.size()%bytes)word(b,0);}return b;
 }
-Bytes refresh(const Plan&q,const Bytes&values,U bytes){
-    if(!q.reordered)return values;
-    Bytes b(values.size());
-    for(U i=0;i<q.permutation.size();i++)std::memcpy(b.data()+i*bytes,values.data()+q.permutation[i]*bytes,bytes);
-    return b;
+void refresh(const Plan&q,const Bytes&values,U bytes,Bytes&out){
+    out.clear();
+    if(!q.reordered)return;
+    out.resize(values.size());
+    for(U i=0;i<q.permutation.size();i++)
+        std::memcpy(out.data()+i*bytes,values.data()+q.permutation[i]*bytes,bytes);
 }
 void save(const std::string&n,const Bytes&b){std::ofstream f(n,std::ios::binary);f.write((const char*)b.data(),b.size());if(!f)throw std::runtime_error("write");}
 std::array<uint64_t,5> inspect(const Matrix&a,const Plan&q,const std::string&mode,U words,U bytes,U t){
@@ -122,7 +132,8 @@ int main(int argc,char**argv){
     U words=std::stoul(argv[3]),bytes=std::stoul(argv[4]),epoch=std::stoul(argv[5]),samples=std::stoul(argv[7]);
     U tasklets=std::stoul(argv[8]);
     auto values=source_values(a,words,bytes,epoch);
-    auto q=prepare(a,mode,bytes);auto x=refresh(q,values,bytes);
+    auto q=prepare(a,mode,bytes);Bytes reordered_values;refresh(q,values,bytes,reordered_values);
+    const Bytes& x=q.reordered?reordered_values:values;
     save(prefix+".meta",q.meta);save(prefix+".features",x);
     auto features=inspect(a,q,mode,words,bytes,tasklets);
     std::ofstream metrics(prefix+".metrics.json");metrics<<"[";for(U k=0;k<5;k++)metrics<<(k?",":"")<<features[k];metrics<<"]\n";
@@ -131,8 +142,8 @@ int main(int argc,char**argv){
     for(U s=0;s<samples+3;s++){
         auto t0=std::chrono::steady_clock::now();auto p=prepare(a,mode,bytes);
         auto t1=std::chrono::steady_clock::now();auto f=inspect(a,p,mode,words,bytes,tasklets);
-        auto t2=std::chrono::steady_clock::now();auto y=refresh(p,values,bytes);
-        auto t3=std::chrono::steady_clock::now();consume+=p.meta.size()+y.size()+f[2];
+        auto t2=std::chrono::steady_clock::now();Bytes y;refresh(p,values,bytes,y);
+        auto t3=std::chrono::steady_clock::now();consume+=p.meta.size()+(p.reordered?y.size():values.size())+f[2];
         if(s>=3)out<<s-3<<","<<std::chrono::duration_cast<std::chrono::nanoseconds>(t1-t0).count()<<","<<std::chrono::duration_cast<std::chrono::nanoseconds>(t2-t1).count()<<","<<std::chrono::duration_cast<std::chrono::nanoseconds>(t3-t2).count()<<"\n";
     }
     struct rusage usage;getrusage(RUSAGE_SELF,&usage);

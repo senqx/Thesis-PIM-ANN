@@ -10,6 +10,13 @@ measure hardware, energy, multi-DPU execution or a complete ML application.
 fails its declared practical-success criterion. Static retention still has useful
 regimes; the results distinguish those two findings.
 
+> **Post-freeze implementation correction (review branch):** the original native preparation
+> timed unnecessary identity permutations/copies for non-reordering policies, and the
+> original fixed-rule scenario charged an inspection pass it did not consume. The source
+> corrections are separate from the retained measurements. Existing tables below still
+> describe the original implementation; regenerate native samples and derived reports
+> before presenting them as results of the corrected implementation. See [CHANGELOG](CHANGELOG.md).
+
 ## Evidence inventory
 
 The [manifest](manifest.json) identifies **485 distinct simulation records and

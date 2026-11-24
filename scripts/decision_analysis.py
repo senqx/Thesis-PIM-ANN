@@ -45,6 +45,34 @@ def choose(rs,model,k,bw,launch,constrained=True):
     return dict(model=(pmodel,inspection),fixed=(fixed,fixed_setup),
                 capacity=(capacity,allrows[capacity]['prepare_ns']),reuse=(reuse,reuse_setup)),prediction
 
+def choose_corrected(rs,model,k,bw,launch,constrained=True):
+    """Corrected deployment accounting; fixed dispatch pays no unused inspection."""
+    s=next(r for r in rs if r['policy']=='stream512')
+    eligible={r['policy']:r for r in rs if not constrained or feasible(r,s)}
+    allrows={r['policy']:r for r in rs}
+    prediction={p:sum(c*f for c,f in zip(model['models'][p]['coefficients'],r['model_features'])) for p,r in eligible.items()}
+    pmodel=min(eligible,key=lambda p:total(eligible[p],k,bw,launch,cycles=prediction[p],setup=0))
+    fixed=model['fixed'] if model['fixed'] in eligible else 'stream512'
+    capacity='full' if 'full' in eligible else 'stream512'
+    hot=allrows['hot']
+    stream_metadata_reads=s['expected_reads']-s['nnz']*s['feature_bytes']
+    misses=(hot['expected_reads']-stream_metadata_reads-hot['hot_entries']*hot['feature_bytes'])/hot['feature_bytes']
+    fraction=1-misses/s['nnz'] if s['nnz'] else 0
+    batch=allrows['batch']
+    reuse=('full' if 'full' in eligible else 'hot' if fraction>=.5 and 'hot' in eligible
+           else 'batch' if batch['expected_reads']<=.5*s['expected_reads'] and 'batch' in eligible else 'stream512')
+    # The model evaluates every candidate; charge all candidate preparation/inspection.
+    model_setup=sum(r['prepare_ns']+r['inspect_ns'] for r in rs)
+    # The fixed and capacity rules do not inspect candidates at deployment.
+    fixed_setup=allrows[fixed]['prepare_ns']
+    capacity_setup=allrows[capacity]['prepare_ns']
+    # The reuse rule consumes structural counters for hot, batch and stream512.
+    reuse_setup=(allrows['full']['prepare_ns'] if reuse=='full' else
+                 sum(allrows[p]['prepare_ns']+allrows[p]['inspect_ns'] for p in ('hot','batch','stream512')))
+    return dict(model=(pmodel,model_setup),fixed=(fixed,fixed_setup),
+                capacity=(capacity,capacity_setup),reuse=(reuse,reuse_setup)),prediction
+
+
 def evaluate():
     model=json.loads((OUT/'frozen-model.json').read_text())
     rows=json.loads((OUT/'heldout-t8.json').read_text())
@@ -63,7 +91,7 @@ def evaluate():
                 for k in model['valid_uses']:
                     for bw in model['bandwidth_mb_s']:
                         # Launch is common across methods: scenarios change ratios, not choices.
-                        decisions,pred=choose(rs,model,k,bw,0,constraint)
+                        decisions,pred=choose_corrected(rs,model,k,bw,0,constraint)
                         start=time.perf_counter_ns()
                         for _ in range(31):
                             # Time arithmetic prediction/selection; structural inspection is native and charged separately.
