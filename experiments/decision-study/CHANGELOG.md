@@ -19,11 +19,11 @@ The hot policy's permutation and feature reorder remain measured.
 
 ### Decision accounting
 
-- The fixed rule is charged for preparing its selected policy, not for an inspection pass
-  whose counters it does not consume.
-- The capacity rule is charged for preparing its selected policy only.
-- The reuse rule continues to pay preparation and inspection for hot, batch and streaming
-  candidates because its decision consumes their structural counters.
+- Each rule is charged for the candidates it must prepare and inspect to make its
+  decision, including the streaming reference used for per-input feasibility checks.
+- The fixed rule pays for its selected policy and stream512 reference.
+- The capacity rule pays for full and stream512 feasibility candidates.
+- The reuse rule pays for full, hot, batch and stream512 structural candidates.
 - The model continues to pay preparation and inspection for every candidate, including
   rejected candidates, plus prediction overhead.
 

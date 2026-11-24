@@ -154,6 +154,8 @@ def verify():
         'experiments/decision-study/prepare.cpp':'experiments/decision-study/archive/pre-change/prepare.cpp',
         'scripts/decision_analysis.py':'scripts/archive/pre-change/decision_analysis.py',
         'scripts/decision_artifact.py':'scripts/archive/pre-change/decision_artifact.py',
+        'experiments/decision-study/README.md':'experiments/decision-study/archive/pre-change/README.md',
+        'experiments/decision-study/results.md':'experiments/decision-study/archive/pre-change/results.md',
     }
     for name,digest in manifest['sha256'].items():
         archived=historical_sources.get(name,name)

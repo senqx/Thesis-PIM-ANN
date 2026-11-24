@@ -61,14 +61,16 @@ def choose_corrected(rs,model,k,bw,launch,constrained=True):
     batch=allrows['batch']
     reuse=('full' if 'full' in eligible else 'hot' if fraction>=.5 and 'hot' in eligible
            else 'batch' if batch['expected_reads']<=.5*s['expected_reads'] and 'batch' in eligible else 'stream512')
-    # The model evaluates every candidate; charge all candidate preparation/inspection.
-    model_setup=sum(r['prepare_ns']+r['inspect_ns'] for r in rs)
-    # The fixed and capacity rules do not inspect candidates at deployment.
-    fixed_setup=allrows[fixed]['prepare_ns']
-    capacity_setup=allrows[capacity]['prepare_ns']
-    # The reuse rule consumes structural counters for hot, batch and stream512.
-    reuse_setup=(allrows['full']['prepare_ns'] if reuse=='full' else
-                 sum(allrows[p]['prepare_ns']+allrows[p]['inspect_ns'] for p in ('hot','batch','stream512')))
+    # Each rule pays for exactly the candidate representations it must construct
+    # and inspect to make its decision, including the streaming reference used by
+    # the per-input feasibility test.
+    def candidate_cost(policies):
+        return sum(allrows[p]['prepare_ns']+allrows[p]['inspect_ns']
+                   for p in dict.fromkeys(policies))
+    model_setup=candidate_cost([r['policy'] for r in rs])
+    fixed_setup=candidate_cost((fixed,'stream512'))
+    capacity_setup=candidate_cost(('full','stream512'))
+    reuse_setup=candidate_cost(('full','hot','batch','stream512'))
     return dict(model=(pmodel,model_setup),fixed=(fixed,fixed_setup),
                 capacity=(capacity,capacity_setup),reuse=(reuse,reuse_setup)),prediction
 
