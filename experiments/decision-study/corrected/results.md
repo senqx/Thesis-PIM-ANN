@@ -45,19 +45,30 @@ The 24 conditions come from four matrices and six scalar/vector shapes, not 24 i
 
 | Valid uses | Model regret | Fixed-rule regret | Capacity-rule regret | Reuse-rule regret |
 | ---: | ---: | ---: | ---: | ---: |
-| 1 | 89.71% | 11.46% | 7.46% | 12.62% |
-| 16 | 12.76% | 2.54% | 3.19% | 2.53% |
-| 1,024 | 5.22% | 1.71% | 2.75% | 1.58% |
+| 1 | 89.71% | 1.90% | 1.97% | 3.78% |
+| 16 | 12.76% | 1.67% | 2.65% | 1.70% |
+| 1,024 | 5.22% | 1.69% | 2.74% | 1.57% |
 
 Regret is excess accounted time relative to the best feasible method for that condition.
 These are arithmetic means of paired percentages at 80 MB/s and zero extra launch cost.
-The totals include rejected-candidate construction and inspection, prediction, native refresh,
+Fixed and capacity rules use direct header feasibility checks and prepare only the selected
+representation. Reuse checks full from the header, then inspects hot/batch only as needed;
+its streaming reference is computed analytically. The model constructs and inspects all
+available candidates. Visited rejected candidates are charged; skipped ones are not.
+All policies use the same measured encoder/refresh costs, transfer equation and byte budgets.
+Simple dispatch and teardown are excluded throughout. Model prediction arithmetic is charged.
+Per-input refresh estimates used to select a policy are granted free of collection cost:
+**an optimistic information assumption**, not offline calibration or runtime profiling.
+The totals include native refresh,
 metadata installation, feature upload and output retrieval. Program loading and application
 integration remain outside this interval. One-time calibration is separate.
 
 ![Setup and prediction errors affect different plan lifetimes.](decision-cost.png)
 
 The model passes the frozen practical-success criterion at 0/8 tested lifetimes.
+Against these same corrected baselines, granting the model zero selection overhead still passes at 0/8 lifetimes.
+That diagnostic pays only for its selected encoder, execution, refresh and transfers;
+it preserves the chosen policy. Both criteria are recomputed from the current alternatives.
 **The tested adaptive selector is not justified by this evaluation.** This rejects this
 implementation under these conditions; it does not prove that every possible selector fails.
 Long reuse can amortize construction, but it cannot repair repeated poor choices.

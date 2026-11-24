@@ -8,14 +8,29 @@ The [parent study](../README.md) explains the workloads, policies and budgets.
 The original implementation unnecessarily allocated identity permutations and
 copied already ordered source values. Those operations are removed. Only `hot`
 still performs and pays for its frequency ordering and feature permutation.
-Decision costs now follow the candidate preparation and inspection needed by
-each rule, including rejected candidates and streaming feasibility references.
+Fixed hot and capacity-first now use direct header feasibility tests and
+construct only the selected representation. Reuse applies the same full-retention
+shortcut, then constructs/inspects hot and batch only as needed. A header bound
+also skips hot inspection when even evenly spread references guarantee the
+frozen 50% reuse threshold. Streaming
+reference bytes come from header arithmetic. Visited rejected candidates are
+charged; header-rejected candidates are skipped.
+
+The cycle model is calibrated offline. Its per-input refresh-time estimates are
+**granted free of collection cost**, an optimistic information assumption. No
+runtime profiling or calibrated refresh estimator is claimed. Every policy still
+pays its actual refresh work on every use. Setting the selection estimates to
+zero changes none of the 1,920 model decisions. The
+[independent audit](accounting-audit.json) checks this and the header formulas.
 
 This is an implementation/accounting correction using already observed inputs.
 It is not fresh confirmation, a new learned model or a new workload campaign.
 The original cycle coefficients, selection thresholds and practical-success
 criterion remain fixed. The [historical results](../results.md), raw samples,
-manifest and exact source snapshots remain available.
+manifest and exact source snapshots remain available. The immediately preceding
+accounting, source and PDF checkpoint is in [pre-direct.zip](../archive/pre-direct.zip);
+its unchanged native measurements are shared and verified against its original
+manifest. See the [archive index](../archive/README.md) for reconstruction.
 
 ## What was measured and reused
 
@@ -25,7 +40,8 @@ manifest and exact source snapshots remain available.
 | 511 archived DPU invocations | Every regenerated input, argument block and expected output matches byte for byte |
 | 485 distinct simulation records | Original cycles reused after that equivalence check; not 485 new runs |
 | Four representative replay records | Six fresh invocations; all counters, output checks and non-path options match |
-| 23,040 cost scenarios | Recomputed with corrected native costs and rule accounting; calculations, not independent experiments |
+| 23,040 cost scenarios | Recomputed using unchanged corrected native costs and retained prediction timings; calculations, not independent experiments |
+| Direct-rule accounting revision | No new native timing, simulator execution or fitting; provenance in [accounting-provenance.json](accounting-provenance.json) |
 | Cycle model and fit time | Original calibration-only coefficients and original fitting-time measurement; no refit |
 
 The 342 calibration/held-out/controlled phase rows combine new native timings
@@ -48,7 +64,10 @@ current sources. Host timing variation remains a measurement limitation.
 
 The kernel-only result is unchanged: 8/24 equally optimal feasible selections,
 6.44% mean kernel regret and 18.27% worst regret. Corrected setup-inclusive
-totals still fail the practical-success criterion at all eight lifetimes.
+totals still fail the practical-success criterion at all eight lifetimes against
+the current fixed, capacity and reuse rules. Granting the model zero selection
+overhead also fails at all eight. Both tests are computed from the corrected
+alternatives, not copied from the earlier review.
 Their exact values are in [summary.json](summary.json) and
 [success-criteria.csv](success-criteria.csv).
 
@@ -72,9 +91,17 @@ From the repository root:
 python3 scripts/decision_artifact.py verify
 python3 scripts/test_decision_correction.py
 python3 scripts/decision_correction.py verify
+python3 scripts/review_decision_costs.py --current
 MPLCONFIGDIR=build/matplotlib python3 scripts/decision_correction.py render
 python3 scripts/build_short_thesis.py
 ```
+
+To recompute derived accounting using the same retained timings, run
+`MPLCONFIGDIR=build/matplotlib python3 scripts/decision_correction.py reaccount`
+before rendering. This uses the archived prediction intervals; it does not retime
+the selector. `python3 scripts/review_decision_costs.py` reproduces the historical
+review separately. The current audit records hashes of its inputs without hashing
+the manifest that includes the audit itself.
 
 Rendering does not remeasure native costs or prediction arithmetic. The two
 verifiers separately check the historical and corrected artifacts. The native

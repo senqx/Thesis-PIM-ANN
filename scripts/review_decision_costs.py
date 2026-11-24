@@ -5,6 +5,7 @@ Derive simple decisions from kernel work rather than candidate_work(). Do not
 change retained measurements, model coefficients, decisions or thesis tables.
 All alternative totals below are accounting scenarios, not new timings.
 """
+import argparse
 import csv
 import gzip
 import hashlib
@@ -12,20 +13,49 @@ import itertools
 import json
 from pathlib import Path
 import statistics
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 STUDY = ROOT / 'experiments/decision-study'
 DATA = STUDY / 'corrected'
 OUTPUT = ROOT / 'docs/DECISION_COST_REVIEW.json'
 REVIEWED_COMMIT = '67bb4beed2bfefb55b58fd32e84558ad10fbfb09'
+CHECKPOINT = STUDY / 'archive/pre-direct.zip'
+CURRENT = False
+
+
+def checkpoint_bytes(path):
+    """Prior derived files are archived; unchanged measurements stay shared."""
+    name = str(path.relative_to(ROOT))
+    with zipfile.ZipFile(CHECKPOINT) as archive:
+        if name in archive.namelist():
+            return archive.read(name)
+    return path.read_bytes()
+
+
+def contents(path):
+    return path.read_bytes() if CURRENT else checkpoint_bytes(path)
 
 
 def read(path):
-    return json.loads(path.read_text())
+    return json.loads(contents(path))
 
 
 def digest(path):
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return hashlib.sha256(contents(path)).hexdigest()
+
+
+def verify_checkpoint():
+    manifest = json.loads(checkpoint_bytes(DATA / 'manifest.json'))
+    for name, expected in manifest['sha256'].items():
+        assert hashlib.sha256(checkpoint_bytes(ROOT / name)).hexdigest() == expected, name
+    review = json.loads(checkpoint_bytes(ROOT / 'docs/DECISION_COST_REVIEW.json'))
+    for name, expected in review['input_sha256'].items():
+        assert hashlib.sha256(checkpoint_bytes(ROOT / name)).hexdigest() == expected, name
+    build = json.loads(checkpoint_bytes(ROOT / 'thesis/build.json'))
+    for name, expected in build['sha256'].items():
+        assert hashlib.sha256(checkpoint_bytes(ROOT / name)).hexdigest() == expected, name
+
 
 
 def direct_time(row, uses, bandwidth, cycles=None, refresh=None):
@@ -46,9 +76,7 @@ def capacity_entries(row):
 
 
 def run():
-    manifest = read(DATA / 'manifest.json')
-    for name, expected in manifest['sha256'].items():
-        assert digest(ROOT / name) == expected, name
+    verify_checkpoint()
     phases = ('calibration-t8', 'heldout-t8', 'controlled-t8')
     allrows = [r for phase in phases for r in read(DATA / f'{phase}.json')]
     held = read(DATA / 'heldout-t8.json')
@@ -58,8 +86,7 @@ def run():
     for row in held:
         groups.setdefault((row['input'], row['words']), {})[row['policy']] = row
     assert len(groups) == 24
-    with gzip.open(DATA / 'scenarios.csv.gz', 'rt') as source:
-        scenarios = list(csv.DictReader(source))
+    scenarios = list(csv.DictReader(gzip.decompress(contents(DATA / 'scenarios.csv.gz')).decode().splitlines()))
 
     checked = {'streaming_and_full_rows': 0, 'hot_rows': 0}
     for row in allrows:
@@ -93,6 +120,12 @@ def run():
             for h in range(columns + 1):
                 hits = sum(sorted(counts, reverse=True)[:h])
                 assert (h + z - hits <= z) == (h <= z)
+                # Balanced frequencies minimize the top-H sum; this lower bound
+                # can prove the reuse threshold without a structural inspector.
+                bound = h * (z // columns) + min(h, z % columns)
+                assert hits >= bound
+                if 2 * bound >= z:
+                    assert 2 * hits >= z
                 frequency_cases += 1
 
     capacity_excess = []
@@ -153,6 +186,8 @@ def run():
             for rule, value in case.items():
                 totals[rule].append(value)
             for rule in baseline_regrets:
+                if CURRENT:
+                    assert abs(case[rule] - float(d[rule]['total_seconds'])) < 1e-12
                 baseline_regrets[rule]['reported'].append(float(d[rule]['regret_pct']))
                 baseline_regrets[rule]['one_encoder'].append(100 * (case[rule] / float(d[rule]['oracle_seconds']) - 1))
             slowdowns.append(100 * (case['model'] / min(case[r] for r in ('fixed', 'capacity', 'reuse')) - 1))
@@ -165,8 +200,14 @@ def run():
             for name, values in variants.items()} for rule, variants in baseline_regrets.items()}))
 
     sources = [ROOT / 'scripts/decision_analysis.py', STUDY / 'prepare.cpp', STUDY / 'task.c',
-               DATA / 'manifest.json', ROOT / 'scripts/review_decision_costs.py']
-    result = dict(reviewed_commit=REVIEWED_COMMIT,accounting_scenarios_not_new_timings=True,
+               ROOT / 'scripts/review_decision_costs.py']
+    if CURRENT:
+        sources += [DATA / name for name in ('heldout-t8.json', 'calibration-t8.json',
+            'controlled-t8.json', 'scenarios.csv.gz', 'frozen-model.json')]
+        sources += sorted((STUDY / 'inputs').glob('*.json'))
+    else:
+        sources.append(DATA / 'manifest.json')
+    result = dict(reviewed_commit='current-sources-pinned-below' if CURRENT else REVIEWED_COMMIT,accounting_scenarios_not_new_timings=True,
         diagnostic_scenario=dict(constrained=True, bandwidth_mb_s=80, launch_us=0,
             simple_dispatch_timing_included=False),
         input_sha256={str(p.relative_to(ROOT)): digest(p) for p in sources},
@@ -183,4 +224,10 @@ def run():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--current', action='store_true', help='Audit regenerated current accounting, preserving the historical review.')
+    args = parser.parse_args()
+    CURRENT = args.current
+    if CURRENT:
+        OUTPUT = DATA / 'accounting-audit.json'
     run()

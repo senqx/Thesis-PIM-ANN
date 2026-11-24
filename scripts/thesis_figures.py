@@ -68,11 +68,11 @@ def explanatory_figures():
     fig,ax=plt.subplots(figsize=(6.6,3.4));ax.set_axis_off()
     ax.set(xlim=(0,1),ylim=(0,1))
     box(ax,.02,.59,.43,.32,'1. Observe the work',
-        'Size, reuse, width, lifetime\nCharge inspection cost',blue)
+        'Use header facts first\nInspect structure only when needed',blue)
     box(ax,.55,.59,.43,.32,'2. Check feasible choices',
         'WRAM, installed bytes, traffic\nKeep streaming as a candidate',blue)
     box(ax,.55,.08,.43,.32,'3. Compare accounted costs',
-        'Setup + installation + valid uses\nAccount for refresh and uncertainty',green)
+        'Setup + transfers + repeated work\nState timing-information assumptions',green)
     box(ax,.02,.08,.43,.32,'4. Test the recommendation',
         'Freeze model; use held-out inputs\nReport wrong choices and their cost',green)
     arrow(ax,(.47,.75),(.53,.75))

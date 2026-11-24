@@ -45,58 +45,114 @@ def choose(rs,model,k,bw,launch,constrained=True):
     return dict(model=(pmodel,inspection),fixed=(fixed,fixed_setup),
                 capacity=(capacity,allrows[capacity]['prepare_ns']),reuse=(reuse,reuse_setup)),prediction
 
+def input_header(row):
+    """Only CSR dimensions/counts and configured residency, known before encoding."""
+    return {k: row[k] for k in ('rows', 'columns', 'nnz', 'feature_bytes', 'resident_capacity')}
+
+
+def stream_reference(header):
+    r, z, f = (header[k] for k in ('rows', 'nnz', 'feature_bytes'))
+    return dict(stored_metadata_bytes=((4 * (r + 1) + 31) // 32) * 32 + 8 * z,
+                expected_reads=8 * r + 8 * z + z * f, expected_writes=r * f)
+
+
+def header_feasible(policy, header, constrained=True):
+    """Exact traffic/metadata tests for the frozen stream/full/hot encoders."""
+    m, z, f, c = (header[k] for k in ('columns', 'nnz', 'feature_bytes', 'resident_capacity'))
+    if policy in ('stream128', 'stream512'):
+        return True
+    if policy == 'full':
+        return m * f <= c and (not constrained or m <= z)
+    if policy == 'hot':
+        # The top H frequency counts sum to at least H iff Z >= H.
+        return not constrained or z >= min(m, c // f)
+    raise ValueError(f'No header-only feasibility proof for {policy}')
+
+
+def simple_policy(rule, header, fixed, prepare, inspect, constrained=True):
+    """Lazy decision path; callbacks construct/inspect only visited encoders.
+
+    The accounting adapter supplies retained encoder costs. A caller may instead
+    supply encoder operations. No measured cycles or refresh timings are read.
+    Header checks and simple dispatch remain outside the timed interval.
+    """
+    if rule == 'fixed':
+        p = fixed if header_feasible(fixed, header, constrained) else 'stream512'
+        return p, prepare(p)
+    if rule in ('capacity', 'reuse') and header_feasible('full', header, constrained):
+        return 'full', prepare('full')
+    if rule == 'capacity':
+        return 'stream512', prepare('stream512')
+    if rule != 'reuse':
+        raise ValueError(rule)
+    reference = stream_reference(header)
+    z, f = header['nnz'], header['feature_bytes']
+    h = min(header['columns'], header['resident_capacity'] // f)
+    if z and h and header_feasible('hot', header, constrained):
+        plan = prepare('hot')
+        # The smallest possible top-H sum occurs with frequencies balanced over
+        # M records. If even that sum reaches 50%, the header proves acceptance.
+        q, remainder = divmod(z, header['columns'])
+        if 2 * (h * q + min(h, remainder)) >= z:
+            return 'hot', plan
+        counters = inspect('hot', plan)
+        misses = (counters['expected_reads'] - 8 * header['rows'] - 8 * z - h * f) / f
+        if 1 - misses / z >= .5:
+            return 'hot', plan
+    plan = prepare('batch')
+    counters = inspect('batch', plan)
+    if (counters['expected_reads'] <= .5 * reference['expected_reads']
+            and (not constrained or feasible(counters, reference))):
+        return 'batch', plan
+    return 'stream512', prepare('stream512')
+
+
+def simple_accounting(rs, model, constrained=True):
+    by = {r['policy']: r for r in rs}
+    header = input_header(by['stream512'])
+    decisions, work = {}, {}
+    for rule in ('fixed', 'capacity', 'reuse'):
+        steps = dict(prepare=[], inspect=[])
+        def prepare(p):
+            assert p not in steps['prepare'], 'An encoder must not be built twice.'
+            steps['prepare'].append(p)
+            return by[p]
+        def inspect(p, plan):
+            steps['inspect'].append(p)
+            return plan
+        p, _ = simple_policy(rule, header, model['fixed'], prepare, inspect, constrained)
+        setup = (sum(by[q]['prepare_ns'] for q in steps['prepare'])
+                 + sum(by[q]['inspect_ns'] for q in steps['inspect']))
+        decisions[rule] = (p, setup)
+        work[rule] = steps
+    return decisions, work
+
+
 def choose_corrected(rs,model,k,bw,launch,constrained=True):
-    """Frozen choices with corrected, short-circuit candidate accounting."""
+    """Frozen model with direct simple baselines and explicit cost accounting.
+
+    Model scoring receives per-input refresh estimates at no acquisition cost:
+    an optimistic assumption, not a measured runtime profiling mechanism.
+    """
     s=next(r for r in rs if r['policy']=='stream512')
     eligible={r['policy']:r for r in rs if not constrained or feasible(r,s)}
-    allrows={r['policy']:r for r in rs}
     prediction={p:sum(c*f for c,f in zip(model['models'][p]['coefficients'],r['model_features'])) for p,r in eligible.items()}
     pmodel=min(eligible,key=lambda p:total(eligible[p],k,bw,launch,cycles=prediction[p],setup=0))
-    fixed=model['fixed'] if model['fixed'] in eligible else 'stream512'
-    capacity='full' if 'full' in eligible else 'stream512'
-    hot=allrows['hot']
-    stream_metadata_reads=s['expected_reads']-s['nnz']*s['feature_bytes']
-    misses=(hot['expected_reads']-stream_metadata_reads-hot['hot_entries']*hot['feature_bytes'])/hot['feature_bytes']
-    fraction=1-misses/s['nnz'] if s['nnz'] else 0
-    batch=allrows['batch']
-    reuse=('full' if 'full' in eligible else 'hot' if fraction>=.5 and 'hot' in eligible
-           else 'batch' if batch['expected_reads']<=.5*s['expected_reads'] and 'batch' in eligible else 'stream512')
-    # Each rule pays for exactly the candidate representations it must construct
-    # and inspect to make its decision, including the streaming reference used by
-    # the per-input feasibility test.
-    work=candidate_work(rs,model,reuse,constrained)
-    setup={rule:sum(allrows[p]['prepare_ns'] for p in steps['prepare'])+
-                sum(allrows[p]['inspect_ns'] for p in steps['inspect'])
-           for rule,steps in work.items()}
-    return {rule:(p,setup[rule]) for rule,p in
-            dict(model=pmodel,fixed=fixed,capacity=capacity,reuse=reuse).items()},prediction
-
-def candidate_work(rs,model,reuse,constrained=True):
-    """Representations prepared and inspected along the actual decision path.
-
-    Absence of full residency is known from dimensions and configured capacity;
-    no impossible representation is constructed. Direct dispatch needs only
-    preparation; structural or byte-budget decisions also need inspection.
-    Dimension checks and rule dispatch remain outside the timed interval.
-    """
-    present={r['policy'] for r in rs}
-    def unique(ps):return list(dict.fromkeys(p for p in ps if p in present))
-    def direct(p):return dict(prepare=[p],inspect=[])
-    def inspected(ps):
-        path=unique(ps);return dict(prepare=path,inspect=path)
-    fixed=model['fixed'] if model['fixed'] in present else 'stream512'
-    fixed_work=inspected(('stream512',fixed)) if constrained and fixed!='stream512' else direct(fixed)
-    capacity=(inspected(('stream512','full')) if constrained else direct('full')) if 'full' in present else direct('stream512')
-    path=unique(('stream512','full')) if constrained else ['stream512']
-    if reuse!='full':
-        path.append('hot')
-        if reuse!='hot':path.append('batch')
-    reuse_work=capacity if reuse=='full' else inspected(path)
-    return dict(model=inspected([r['policy'] for r in rs]),
-                fixed=fixed_work,capacity=capacity,reuse=reuse_work)
+    decisions,_=simple_accounting(rs,model,constrained)
+    return dict(model=(pmodel,sum(r['prepare_ns']+r['inspect_ns'] for r in rs)),
+                **decisions),prediction
 
 
-def evaluate():
+def candidate_work(rs,model,reuse=None,constrained=True):
+    """Audit ledger captured from the same lazy paths used by simple policies."""
+    decisions,work=simple_accounting(rs,model,constrained)
+    if reuse is not None:
+        assert reuse==decisions['reuse'][0]
+    work['model']=dict(prepare=[r['policy'] for r in rs],inspect=[r['policy'] for r in rs])
+    return work
+
+
+def evaluate(prediction_costs=None):
     if OUT.name!='corrected':
         raise RuntimeError('Preserve historical results: use decision_correction.py analyze.')
     model=json.loads((OUT/'frozen-model.json').read_text())
@@ -117,13 +173,18 @@ def evaluate():
                     for bw in model['bandwidth_mb_s']:
                         # Launch is common across methods: scenarios change ratios, not choices.
                         decisions,pred=choose_corrected(rs,model,k,bw,0,constraint)
-                        start=time.perf_counter_ns()
-                        for _ in range(31):
-                            # Time arithmetic prediction/selection; structural inspection is native and charged separately.
-                            prediction={r['policy']:sum(c*f for c,f in zip(model['models'][r['policy']]['coefficients'],r['model_features'])) for r in eligible}
-                            chosen=min(eligible,key=lambda r:total(r,k,bw,0,cycles=prediction[r['policy']],setup=0))
-                        predict_ns=(time.perf_counter_ns()-start)/31
-                        assert chosen['policy']==decisions['model'][0]
+                        if prediction_costs is None:
+                            start=time.perf_counter_ns()
+                            for _ in range(31):
+                                # Time arithmetic prediction/selection; structural inspection is native and charged separately.
+                                prediction={r['policy']:sum(c*f for c,f in zip(model['models'][r['policy']]['coefficients'],r['model_features'])) for r in eligible}
+                                chosen=min(eligible,key=lambda r:total(r,k,bw,0,cycles=prediction[r['policy']],setup=0))
+                            predict_ns=(time.perf_counter_ns()-start)/31
+                            assert chosen['policy']==decisions['model'][0]
+                        else:
+                            # The predictor arithmetic is unchanged; reuse its exact retained
+                            # measurement so this accounting revision introduces no new timing.
+                            predict_ns=prediction_costs[(n,w,constraint,k,bw)]
                         for launch in model['launch_us']:
                             oracle=min(eligible,key=lambda r:total(r,k,bw,launch));best=total(oracle,k,bw,launch)
                             for rule,(p,setup) in decisions.items():

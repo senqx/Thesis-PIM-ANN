@@ -87,7 +87,30 @@ def prepare():
 def analyze():
     assert read(OUT/'freeze.json')==freeze(),'Correction inputs changed after timing freeze.'
     analysis.OUT=OUT;report.OUT=OUT
+    study.dump(OUT/'accounting-provenance.json',dict(prediction_timing='new-measurement',note='Fresh reproduction; native and prediction timings may vary.'))
     analysis.evaluate();render()
+
+def reaccount():
+    """Recompute accounting from retained costs; no timing or simulator work."""
+    from review_decision_costs import checkpoint_bytes, verify_checkpoint
+    verify_checkpoint()
+    raw=checkpoint_bytes(HISTORY/'corrected/scenarios.csv.gz')
+    previous=list(csv.DictReader(io.StringIO(gzip.decompress(raw).decode())))
+    costs={}
+    for r in previous:
+        if r['rule']!='model':continue
+        key=(r['input'],int(r['words']),r['constrained']=='True',int(r['uses']),int(r['bandwidth_mb_s']))
+        value=float(r['decision_ns'])
+        if key in costs:assert costs[key]==value
+        costs[key]=value
+    assert len(costs)==1920
+    # This is a disclosed post-review accounting revision, not a timing freeze.
+    study.dump(OUT/'freeze.json',freeze())
+    analysis.OUT=OUT;report.OUT=OUT
+    study.dump(OUT/'accounting-provenance.json',dict(prediction_timing='retained',source_commit='898052a9acfc09ddcefcab73662feb62d76b2456',source_scenarios_sha256=study.sha(raw),prediction_intervals=1920,native_measurements_changed=False,simulation_records_changed=False,refresh_estimates='Per-input retained medians granted free of collection cost; optimistic information assumption.'))
+    analysis.evaluate(prediction_costs=costs)
+    render()
+
 
 def render():
     analysis.OUT=OUT;report.OUT=OUT
@@ -135,7 +158,7 @@ def record():
     paths=[p for p in OUT.iterdir() if p.is_file() and p.name!='manifest.json']
     paths += [ROOT/'scripts'/s for s in ('decision_correction.py','decision_analysis.py',
                'decision_report.py','test_decision_correction.py')]
-    paths += [HISTORY/'prepare.cpp']
+    paths += [HISTORY/'prepare.cpp',HISTORY/'archive/pre-direct.zip',ROOT/'scripts/review_decision_costs.py']
     study.dump(OUT/'manifest.json',dict(historical_manifest_sha256=study.sha((HISTORY/'manifest.json').read_bytes()),
         native_preparations=len(read(OUT/'native.json')),matched_invocations=len(read(OUT/'identity.json')),
         reused_simulation_records=485,scenarios=23040,
@@ -194,21 +217,27 @@ def verify():
             return setup*1e-9+r['stored_metadata_bytes']/bw+k*(r['cycles']/350e6+r['refresh_ns']*1e-9+(r['rows']+r['columns'])*r['feature_bytes']/bw+launch)
         rules,_=analysis.choose_corrected(list(rs.values()),model,k,bw/1e6,launch*1e6,constrained)
         chosen,reported_setup=rules[d['rule']];assert chosen==d['chosen']
-        path=['stream512'];inspection=True
-        if d['rule']=='model':path=list(rs)
-        elif d['rule']=='fixed':
-            candidate=model['fixed'] if model['fixed'] in rs else 'stream512'
-            if constrained and candidate!='stream512':path.append(candidate)
-            else:path=[candidate];inspection=False
-        elif d['rule']=='capacity' or chosen=='full':
-            if 'full' not in rs:inspection=False
-            elif constrained:path.append('full')
-            else:path=['full'];inspection=False
+        # Independent ledger: compute header rejections without invoking the lazy
+        # controller. Inspect hot/batch only when their reuse threshold is needed.
+        m,z,f,c=(stream[key] for key in ('columns','nnz','feature_bytes','resident_capacity'))
+        full_ok=m*f<=c and (not constrained or m<=z)
+        hot_ok=not constrained or z>=min(m,c//f)
+        if d['rule']=='model':
+            prepared=list(rs);inspected=list(rs)
+        elif d['rule'] in ('fixed','capacity') or (d['rule']=='reuse' and full_ok):
+            expected=(model['fixed'] if hot_ok else 'stream512') if d['rule']=='fixed' else ('full' if full_ok else 'stream512')
+            assert chosen==expected
+            prepared=[chosen];inspected=[]
         else:
-            if constrained and 'full' in rs:path.append('full')
-            path.append('hot')
-            if chosen!='hot':path.append('batch')
-        setup=sum(rs[p]['prepare_ns']+(rs[p]['inspect_ns'] if inspection else 0) for p in set(path))
+            h=min(m,c//f)
+            visit_hot=bool(z and h and hot_ok)
+            prepared=['hot'] if visit_hot else []
+            known_hot=visit_hot and 2*(h*(z//m)+min(h,z%m))>=z
+            inspected=['hot'] if visit_hot and not known_hot else []
+            if chosen!='hot':
+                prepared.append('batch');inspected.append('batch')
+            if chosen=='stream512':prepared.append('stream512')
+        setup=sum(rs[p]['prepare_ns'] for p in prepared)+sum(rs[p]['inspect_ns'] for p in inspected)
         assert setup==reported_setup==float(d['setup_ns'])
         if d['rule']!='model':assert float(d['decision_ns'])==0
         best=min(elapsed(r,r['prepare_ns']) for r in eligible.values())
@@ -261,7 +290,35 @@ def verify():
         worst=max(100*(float(r['total_seconds'])/min(float(s['total_seconds']) for s in group if s['rule']!='model' and (r['input'],r['words'])==(s['input'],s['words']))-1) for r in group if r['rule']=='model')
         passed=means['model']<min(means[p] for p in ('fixed','capacity','reuse')) and worst<=5
         assert str(passed)==c['passes']
+        assert abs(means['model']-float(c['model_mean_seconds']))<1e-12
+        assert abs(min(means[p] for p in ('fixed','capacity','reuse'))-float(c['best_simple_mean_seconds']))<1e-12
         assert abs(worst-float(c['worst_slowdown_vs_best_simple_pct']))<1e-9
+        zero_times=[];zero_slowdowns=[]
+        for r in group:
+            if r['rule']!='model':continue
+            selected=next(v for v in held if (v['input'],v['words'],v['policy'])==(r['input'],int(r['words']),r['chosen']))
+            ztime=(selected['prepare_ns']*1e-9+selected['stored_metadata_bytes']/80e6
+                +int(c['uses'])*(selected['cycles']/350e6+selected['refresh_ns']*1e-9
+                    +(selected['rows']+selected['columns'])*selected['feature_bytes']/80e6))
+            simple=min(float(v['total_seconds']) for v in group if v['rule']!='model'
+                       and (v['input'],v['words'])==(r['input'],r['words']))
+            zero_times.append(ztime);zero_slowdowns.append(100*(ztime/simple-1))
+        zmean=statistics.mean(zero_times);zworst=max(zero_slowdowns)
+        assert abs(zmean-float(c['zero_overhead_model_mean_seconds']))<1e-12
+        assert abs(zworst-float(c['zero_overhead_worst_slowdown_vs_best_simple_pct']))<1e-9
+        assert str(zmean<min(means[p] for p in ('fixed','capacity','reuse')) and zworst<=5)==c['zero_overhead_passes']
+    audit_path=OUT/'accounting-audit.json'
+    if audit_path.exists():
+        audit=read(audit_path)
+        for name,digest in audit['input_sha256'].items():
+            assert study.sha((ROOT/name).read_bytes())==digest,name
+        assert audit['avoidable_capacity_charge_us']==[0,0]
+        assert not audit['zero_refresh_changed_choices']
+        for criterion,diagnostic in zip(criteria,audit['zero_selection_overhead']):
+            assert int(criterion['uses'])==diagnostic['uses']
+            assert (criterion['zero_overhead_passes']=='True')==diagnostic['passes']
+            assert abs(float(criterion['best_simple_mean_seconds'])*1000-diagnostic['best_simple_mean_ms'])<1e-9
+            assert abs(float(criterion['zero_overhead_worst_slowdown_vs_best_simple_pct'])-diagnostic['worst_slowdown_pct'])<1e-9
     for series in read(OUT/'plotted-data.json'):
         assert series['x']==sorted(series['x'])
         if series['figure']=='decision-cost':
@@ -276,11 +333,23 @@ def verify():
     checks=read(OUT/'checks.json');assert len(checks['sanitizer_cases'])==28
     assert set(checks['replays'])==set(REPLAY_KEYS)
     for key,r in checks['replays'].items():assert r['counters']==records[key]['statistics']
-    print(f'PASS: {len(native)} new native preparations, 511 identical invocation inputs, unchanged kernel decisions, 23,040 corrected scenarios and hashes.')
+    from review_decision_costs import verify_checkpoint, checkpoint_bytes
+    verify_checkpoint()
+    previous=list(csv.DictReader(io.StringIO(gzip.decompress(checkpoint_bytes(HISTORY/'corrected/scenarios.csv.gz')).decode())))
+    def scenario_key(r):return tuple(r[k] for k in ('input','words','constrained','uses','bandwidth_mb_s','launch_us','rule'))
+    old={scenario_key(r):r for r in previous}
+    retained=read(OUT/'accounting-provenance.json')['prediction_timing']=='retained'
+    for r in rows:
+        prior=old[scenario_key(r)]
+        if retained or r['rule']!='model':assert r['chosen']==prior['chosen']
+        if retained:assert r['decision_ns']==prior['decision_ns']
+        if retained and r['rule']=='model':
+            assert r==prior, 'Model totals must remain exactly unchanged.'
+    print(f'PASS: {len(native)} retained corrected native preparations, 511 identical invocation inputs, unchanged kernel decisions, 23,040 corrected scenarios and hashes.')
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action',choices=('prepare','analyze','render','check','record','verify'))
+    parser.add_argument('action',choices=('prepare','analyze','reaccount','render','check','record','verify'))
     parser.add_argument('--output',type=Path,default=OUT)
     parser.add_argument('--run-directory',type=Path,default=RUN)
     a=parser.parse_args();OUT=a.output.resolve();RUN=a.run_directory.resolve()

@@ -13,6 +13,23 @@ calculations using existing native measurements and simulator cycles; no new
 native timing, DPU execution, model fitting or experimental claim is added.
 The thesis tables and corrected artifact remain unchanged during this review.
 
+## Resolution in the current draft
+
+The findings below describe the preserved `67bb4be` checkpoint. The current
+[corrected artifact](../experiments/decision-study/corrected/README.md) implements
+direct header checks for fixed/capacity and the full-retention branch of reuse.
+It explicitly grants per-input refresh-time estimates free of collection cost.
+All retained native, prediction and simulator measurements remain unchanged.
+The [current audit](../experiments/decision-study/corrected/accounting-audit.json)
+and [success criteria](../experiments/decision-study/corrected/success-criteria.csv)
+recompute both charged and zero-selection-overhead results against the corrected
+simple alternatives: both fail at all eight reference lifetimes. PR #1 remains
+draft pending review of this resolution and regenerated documents.
+
+The [archived checkpoint](../experiments/decision-study/archive/README.md) keeps
+the original review reproducible. Run the audit without flags for the historical
+report, or with `--current` for the regenerated accounting.
+
 ## 1. Simple rules still pay for avoidable work
 
 **High priority for accounting accuracy.** In

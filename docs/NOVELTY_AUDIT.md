@@ -15,7 +15,10 @@ preserves the assessment and obligations that motivated that experiment.
 The [post-freeze correction](../experiments/decision-study/corrected/README.md)
 updates native costs and decision accounting without changing the cycle model,
 workloads or this scoped contribution claim. Corrected host-cost results are
-not a new untouched confirmation.
+not a new untouched confirmation. Direct header checks improve the simple
+baselines; both charged and zero-selection-overhead model choices still fail
+at all eight reference lifetimes. Free per-input refresh-time knowledge is an
+explicit optimistic assumption, not an additional deployable contribution.
 
 ## What the completed follow-up adds
 
@@ -23,7 +26,7 @@ not a new untouched confirmation.
 | --- | --- | --- |
 | SparseP's blocked source reuse | Matched scalar/vector comparisons of 2x2/4x4 blocked formats, streaming and retention, including padding, native conversion and per-input byte limits | A new sparse format or a speedup over the complete SparseP system |
 | DRIM-ANN's hot-data placement | A measured boundary: frequency retention helps at 16-byte records on four held-out sparse structures but loses at 128 bytes on the primary configuration | Inventing hot placement or proving a universal footprint threshold |
-| PyGim/ATiM's cost-based tuning | A frozen local-representation selector tested against simpler rules with rejected-candidate costs charged; the selector fails | Inventing autotuning or demonstrating a successful adaptive framework |
+| PyGim/ATiM's cost-based tuning | A frozen local-representation selector tested against direct simple rules with visited-candidate costs charged; the selector fails | Inventing autotuning or demonstrating a successful adaptive framework |
 | Existing preprocessing/payback analyses | Native preparation/refresh measurements, explicit transfer scenarios, remaining cost margins and observed timing sensitivity for these implementations | Inventing amortization or measuring whole-application performance |
 
 The useful result is a reproducible decision study with both favorable regimes

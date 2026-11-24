@@ -11,8 +11,10 @@ fails its declared practical-success criterion. Static retention still has usefu
 regimes; the results distinguish those two findings.
 
 **Current correction:** native preparation no longer creates identity permutations
-or copies unchanged source arrays. Decision costs follow each rule's required
-preparation/inspection path, including rejected candidates. Current timings,
+or copies unchanged source arrays. Fixed and capacity-first use header
+checks and prepare only the selected representation. Reuse charges visited
+candidates; the model inspects every available candidate. Its refresh-time
+estimates are granted free of collection cost as an optimistic assumption. Current timings,
 reports and validation are in the [corrected artifact](corrected/README.md).
 This is a disclosed post-freeze correction on already observed inputs. The
 original model, DPU cycles and historical samples remain unchanged.

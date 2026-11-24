@@ -1,11 +1,11 @@
 # Document and artifact validation
 
-**Subsequent review of revision `67bb4be`:** the
-[independent cost review](DECISION_COST_REVIEW.md) found avoidable simple-rule
-charges and a per-input timing-information assumption that require resolution
-before merging PR #1. Both retained-artifact verifiers still pass. The validation
-counts and document checks below describe that retained checkpoint; they establish
-reproduction and internal consistency, not that every charged operation is necessary.
+**Direct-rule accounting revision:** the [independent cost review](DECISION_COST_REVIEW.md)
+is resolved in the current draft through header feasibility checks, lazy candidate
+construction and explicit free refresh-time information. PR #1 remains draft pending
+review of these changes and regenerated documents. The prior corrected checkpoint
+is preserved in the [archive](../experiments/decision-study/archive/README.md).
+No native timing or simulator campaign was repeated for this accounting revision.
 
 **Current checkpoint: 24 November 2026.** The follow-up adds a completed
 standard sparse-operation study to the preserved 23 November graph pilot.
@@ -29,7 +29,8 @@ correction on already observed inputs; model coefficients, thresholds and DPU
 kernels were not changed. The original kernel test split remains valid, while
 the corrected host-cost analysis must not be described as fresh confirmation.
 
-Completed for this correction:
+Retained measurement checks from the native correction (not newly executed in
+the direct-rule revision):
 
 - **446 new native preparation cases**, each with 31 samples after three
   warmups (13,826 retained sample rows). GCC 15.1.0 and `-O3 -std=c++17` match
@@ -42,9 +43,6 @@ Completed for this correction:
 - **28 boundary/changed-structure native cases** pass AddressSanitizer,
   LeakSanitizer and UndefinedBehaviorSanitizer. The sandbox's ptrace environment
   prevented leak checking, so that check was rerun successfully outside it.
-- **Seven accounting regression tests** cover unavailable full residency,
-  rejected fixed candidates, early stopping, fallback, unconstrained direct
-  dispatch and preservation of the original selected policies.
 - Both artifact verifiers pass. The corrected verifier checks raw timing
   medians, decoded representations, all 23,040 unique scenarios, paired margins,
   payback thresholds, timing envelopes, success criteria and plotted data.
@@ -54,13 +52,38 @@ Completed for this correction:
 - Final Python prediction arithmetic was timed after replay completed. Simple-
   rule dispatch remains outside the measured interval, as disclosed in the paper.
 
-The corrected selector still fails at all eight lifetimes. At 1/16/1,024 uses,
+The direct-rule revision additionally passes **14 accounting regression tests**:
+header capacity/traffic boundaries, absent and rejected full retention, selected-
+encoder-only callbacks, guaranteed hot reuse, empty and zero-capacity inputs,
+rejected-candidate charging, analytical reference counts, and preservation of all
+1,920 model/rule decisions. The
+[check record](../experiments/decision-study/corrected/accounting-checks.json)
+distinguishes these tests from the seven tests retained in the earlier native
+check file.
+
+The [independent current audit](../experiments/decision-study/corrected/accounting-audit.json)
+checks 134 streaming/full and 52 hot counter rows, 7,736 small frequency cases,
+and all 1,920 model choices without calling the current decision ledger. It
+verifies that direct fixed/capacity totals contain only the selected encoder.
+The current verifier checks all 23,040 scenarios, preserved raw samples and
+archived hashes, and confirms that every model scenario retains identical field
+values, including prediction time. Simple-policy costs are recomputed.
+
+Both charged and zero-selection-overhead criteria are recalculated from the
+**current** fixed, capacity and reuse totals in
+[success-criteria.csv](../experiments/decision-study/corrected/success-criteria.csv).
+The independent zero-overhead calculation agrees with those results. Setting
+refresh estimates to zero changes none of the selections; obtaining the original
+estimates for free remains an explicit optimistic assumption.
+
+The corrected selector still fails at all eight lifetimes, with or without
+selection overhead. At 1/16/1,024 uses,
 its mean accounted regrets are 89.71%/12.76%/5.22%. Native payback remains one use
 for 15 of 16 narrow SpMM cases and two for one; only 9/16 retain a positive
 first-use margin across observed sample extremes. Current results replace old
 accounted values without deleting them. The
-[protocol](../experiments/decision-study/corrected/PROTOCOL.md) discloses the
-inspection-accounting amendment made after the first timing report.
+[protocol](../experiments/decision-study/corrected/PROTOCOL.md) discloses both
+post-review accounting amendments and the free-information assumption.
 
 ## Preserved decision-study simulator evidence
 
@@ -153,7 +176,7 @@ python3 scripts/decision_artifact.py verify
   invented; no additional university formatting requirement was supplied.
 - Every page was reviewed for layout, with separate inspection of the numerical
   plots, diagrams and bibliography. Captions stay with their figures/tables.
-- Text extracted from the final PDF contains all 225 source prose, heading,
+- Text extracted from the final PDF contains all checked source prose, heading,
   code and caption blocks checked after whitespace normalization and removal
   of page headers/footers. The numeric tables are checked through their retained
   data and generated source.
@@ -174,7 +197,7 @@ python3 scripts/decision_artifact.py verify
   It distinguishes performance-choice errors from incorrect output. The
   frozen cycle model and original retained evidence are unchanged. Current
   native source and cost accounting are separately versioned and validated.
-- All 254 checked live local Markdown links, Python syntax and Git whitespace
+- All checked live local Markdown links, Python syntax and Git whitespace
   checks passed. Immutable source snapshots retain original relative-link context
   and are excluded from the live-link audit. Links
   embedded in the standalone PDF resolve to repository URLs.

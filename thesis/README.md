@@ -7,7 +7,11 @@ It preserves the original graph-aggregation pilot and adds a completed
 The frozen selector failed its practical-success criterion; the text reports
 that negative result alongside useful static-retention regimes. Current accounted
 totals use the validated [preparation correction](../experiments/decision-study/corrected/README.md).
-The original model and DPU evidence remain unchanged. The PDF currently links
+Direct header checks now remove unnecessary simple-policy preparation. The
+selector receives refresh-time estimates at no collection cost, explicitly an
+optimistic assumption. Both its charged and zero-overhead versions fail against
+the corrected baselines at all eight reference lifetimes. The original model,
+native samples, prediction timings and DPU evidence remain unchanged. The PDF currently links
 to the review branch; its exact repository reference is in the build record.
 
 Start with [short-thesis.pdf](short-thesis.pdf), or read the same text in

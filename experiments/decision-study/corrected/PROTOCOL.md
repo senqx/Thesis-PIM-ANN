@@ -19,19 +19,35 @@ dispatch overhead. All native intervals still exclude teardown, file output,
 synthetic-value generation and application/SDK integration.
 
 Every model decision pays preparation and inspection of all physically
-available candidates. A simple rule pays the stream512 reference when it needs
-a traffic/metadata feasibility comparison or a reuse fraction. Fixed pays its
-calibration-selected candidate even if rejected. Capacity inspects full and
-stream512 when full is physically available; otherwise it directly prepares
-stream512 without inspection. Reuse visits full (if available), then hot, then
-batch, stopping at the first accepted candidate; rejected candidates count.
-No unavailable full representation is constructed. Duplicate candidates within
-a rule count once. In the unconstrained scenario, fixed/full direct dispatch
-needs preparation only; reuse still inspects hot/stream512 and possibly batch
-when full is unavailable. Dimensions/capacity checks and simple-rule dispatch
-are not separately timed. This is accounting for
-these implemented candidate representations, not a lower bound for an
-optimized analytical inspector that avoids constructing them.
+available candidates, plus the unchanged measured prediction arithmetic.
+Fixed hot and capacity-first use direct header tests and construct only the
+selected representation. A full-retention candidate must fit and, under the
+no-growth traffic budget, have no more source records than stored contributions.
+For hot retention with `H` frequency-ranked resident records, the equivalent
+traffic test is `nnz >= H`. The metadata sizes are identical to streaming.
+
+Reuse first tests full retention from the header. Otherwise it prepares and
+inspects hot only when its traffic test permits it and the input is nonempty;
+then batch if needed, then streaming if both are rejected. A nonempty hot
+candidate also skips inspection when its worst possible frequency distribution
+already proves at least 50% hits. For `M` records and `Z` contributions, the
+minimum top-`H` hit sum is `H*floor(Z/M) + min(H, Z mod M)`, achieved by distributing
+references as evenly as possible. Zero-capacity hot candidates cannot meet the
+reuse threshold and are skipped. The streaming byte
+reference is computed from header counts without constructing or inspecting it.
+Only visited rejected candidates are charged. The callbacks in `simple_policy()`
+implement these lazy paths; the accounting adapter uses retained measurements
+of exactly those encoder/inspector operations. Simple dispatch, header arithmetic
+and teardown remain unmeasured; no integrated-controller timing is claimed.
+
+The cycle predictor remains calibrated offline on the original training inputs.
+Its separate per-input **refresh-time estimates are granted free of collection
+cost**. They are retained native medians on each evaluation input, not estimates
+produced by an implemented offline calibration or runtime profiling mechanism.
+This is an explicitly optimistic information assumption. It does not make the
+selected policy's actual refresh work free: that work is charged on every use
+for every policy. An independent zero-estimate check preserves all 1,920 model
+choices. No policy choice, threshold or cycle-model coefficient is retuned.
 
 ## Execution and acceptance
 
@@ -73,3 +89,24 @@ the separate one-time calibration cost. The original fitting measurement is
 retained. Neither adjustment requires changing the already measured native or
 prediction intervals; final scenario prediction timings were collected without
 concurrent simulation.
+
+## Direct-rule revision after independent review
+
+Review of `67bb4be`, published in `898052a`, showed that even the amended simple
+rules paid for avoidable candidate/reference construction. The current revision
+implements the header tests above and applies them equally to the full-retention
+branch of reuse. It preserves all native samples, simulator records and prediction
+arithmetic timings. `reaccount` regenerates only derived costs, reports and figures.
+The previous derived checkpoint and exact source/document files are retained in
+`../archive/pre-direct.zip`; unchanged measurement files are shared and remain
+verified against the archived manifest. The original historical study is separate.
+
+Both the charged model and a zero-selection-overhead diagnostic are compared
+against the **current** fixed, capacity and reuse alternatives at every reference
+lifetime. The original success threshold remains unchanged. The diagnostic keeps
+the model's choices, charges its selected encoder and all per-use costs, and grants
+free inspection, rejected-candidate construction, prediction and timing knowledge.
+It is an accounting bound, not a newly implemented or timed selector. All policies
+share the same bandwidth, launch, lifetime, refresh, transfer and feasibility
+assumptions; simple dispatch and cleanup remain excluded. Negative outcomes are
+reported, not enforced by the report generator.

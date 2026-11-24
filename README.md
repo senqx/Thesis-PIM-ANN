@@ -8,10 +8,11 @@ Master's research by **Artashes Atanesyan**.
 [Validation record](docs/VALIDATION.md)
 
 **Review status:** [PR #1](https://github.com/senqx/Thesis-PIM-ANN/pull/1) remains
-a draft. The [independent cost review](docs/DECISION_COST_REVIEW.md) identifies
-avoidable charges for simple rules and an uncharged profiling assumption to
-resolve before merging. The retained results remain reproducible; their
-setup-inclusive accounting is under review.
+a draft pending review of the focused corrections. The
+[independent cost review](docs/DECISION_COST_REVIEW.md) led to direct feasibility
+checks for simple policies and an explicit optimistic timing-information assumption.
+Both the charged selector and the zero-selection-overhead diagnostic fail at all
+eight reference lifetimes against the corrected baselines.
 
 When does keeping indexed data in a DPU's small working memory save more time
 than it costs to manage? This project investigates that question using
@@ -30,9 +31,9 @@ criterion; the thesis reports that result alongside useful static-retention
 regimes. Hardware speedup, energy savings and complete application acceleration
 have not been demonstrated.
 
-**Preparation/accounting correction:** current totals use freshly measured native
-costs and decision paths that include rejected candidates while skipping
-unnecessary inspection. All 511 archived invocation inputs match the corrected
+**Preparation/accounting correction:** current totals reuse the corrected native
+measurements and original prediction timings. Fixed and capacity-first construct
+only the selected representation; reuse charges only visited candidates. All 511 archived invocation inputs match the corrected
 preparation byte for byte. The DPU cycles and frozen model are reused; the
 [correction record](experiments/decision-study/corrected/README.md) separates this
 post-freeze correction from the historical measurements.
