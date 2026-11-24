@@ -2,10 +2,16 @@
 
 **Direct-rule accounting revision:** the [independent cost review](DECISION_COST_REVIEW.md)
 is resolved in the current draft through header feasibility checks, lazy candidate
-construction and explicit free refresh-time information. PR #1 remains draft pending
-review of these changes and regenerated documents. The prior corrected checkpoint
+construction and explicit free refresh-time information. Subsequent review feedback
+found no remaining conceptual accounting blocker. The final presentation revision
+distinguishes the model's preparation path from the simple policies in Figure 5
+and explains the one-use accounted regret next to Table 6. The prior corrected checkpoint
 is preserved in the [archive](../experiments/decision-study/archive/README.md).
 No native timing or simulator campaign was repeated for this accounting revision.
+
+The supplied review assessed source and artifacts, without independently rendering
+the PDF or rerunning the commands. The executed checks recorded here are local
+validation. GitHub reports no attached CI checks; this is not a CI pass claim.
 
 **Current checkpoint: 24 November 2026.** The follow-up adds a completed
 standard sparse-operation study to the preserved 23 November graph pilot.

@@ -32,21 +32,21 @@
     "experiments/decision-study/corrected/widths.png": "82353193d4779f017d20fc69479e7792fd79b9ba1efba4db39cf6f2fa0c67372",
     "experiments/decision-study/manifest.json": "c5b95581c46c7679a2be4539218282467567422ff482acf299861a618f909fe2",
     "scripts/build_short_thesis.py": "13d9a065774007e1d5c70125c2041f66af281f3d3f1cb0ffaddbe0a6b4d61fbc",
-    "scripts/thesis_figures.py": "3b7769adc685d0ff298592df9d74415452b185d42fc52defb47843a724225829",
+    "scripts/thesis_figures.py": "c6fd4927f2899b30b07e42437078d90ee1fb9778198a21da39fee4cc8f5d84b7",
     "thesis/figures/architecture.pdf": "9207c297b9074e4e123596b5034000baf4b5c4a1a8b4b5d8e62ca08de1695904",
     "thesis/figures/architecture.png": "deceefbe4215ee4adcad9b57db29c6f94397610df825d1fa25f8ab61a86b9445",
     "thesis/figures/costs.pdf": "8a4898570c6d673cdc4577f82a7432a78bed0f6d5af0886f67ca4ae6e6b7617f",
     "thesis/figures/costs.png": "7153ebe489cebd91ca7dc36ebb70cb864f957824dbd5538a2d7f6679ef396594",
-    "thesis/figures/decision.pdf": "b5e7dd6253a36da443352d068cc5ca7c0acb554ee8fceabbbeba54f35e5f09ee",
-    "thesis/figures/decision.png": "3ea352df86fbe32028b9354c88a55d36a0c6f9b8fa8c8974026b7f9c36bde1f2",
+    "thesis/figures/decision.pdf": "8c7909b5bcd89a739ab89024d377ba06c12f0eefaab8ddebd900573c80fda5e8",
+    "thesis/figures/decision.png": "959e5e60407734ce86833868d879e7146e3ac4cda1e7abe9d4ddfa5ac0634cda",
     "thesis/figures/method.pdf": "fa73292682a005613d08f2d5a96f5407fc37cf1da6f24ec7e408996862985290",
     "thesis/figures/method.png": "0f2e227860a8c9bdd88a24f4a292fd1a1593637feed0f3dedbfc75037507915b",
     "thesis/figures/performance.pdf": "23d9a045deaedcc84e5e27263c74a7cce2cd6b79b29a20d8e5338da19da70deb",
     "thesis/figures/performance.png": "5ce4a44327dc7809593e047b97b0ad7e53654f99c57d1f43ef4c2c9465f06b83",
     "thesis/figures/plotted-data.json": "8807df3a801ecb12cec877a3ac457fc7fe9928b60c1f155283c81975ac533190",
     "thesis/requirements.txt": "6bf4b91057112e426ccd8386af465aef1d9aba210a6484d40ae1342de6c6e38f",
-    "thesis/short-thesis.md": "8554348c7b6e342445278589380c5752435cf16946ea218879fc26d3898479e2",
-    "thesis/short-thesis.pdf": "f9a9fbf37d65d7884d6327a6c7fa5b383bdccbf00727caf4c54799525725932f"
+    "thesis/short-thesis.md": "36e6dc07b8fd3726a8e3bf2f8aa77771b0960352bc9bf24fd0de4ac5bfe7cd7f",
+    "thesis/short-thesis.pdf": "b82442959a2315e85bdcc924af27a240a29b450216b83a5769ddf97e43c6504a"
   },
-  "source_words": 12340
+  "source_words": 12439
 }

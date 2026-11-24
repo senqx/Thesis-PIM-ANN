@@ -67,19 +67,17 @@ def explanatory_figures():
 
     fig,ax=plt.subplots(figsize=(6.6,3.4));ax.set_axis_off()
     ax.set(xlim=(0,1),ylim=(0,1))
-    box(ax,.02,.59,.43,.32,'1. Observe the work',
-        'Use header facts first\nInspect structure only when needed',blue)
-    box(ax,.55,.59,.43,.32,'2. Check feasible choices',
-        'WRAM, installed bytes, traffic\nKeep streaming as a candidate',blue)
-    box(ax,.55,.08,.43,.32,'3. Compare accounted costs',
-        'Setup + transfers + repeated work\nState timing-information assumptions',green)
-    box(ax,.02,.08,.43,.32,'4. Test the recommendation',
-        'Freeze model; use held-out inputs\nReport wrong choices and their cost',green)
-    arrow(ax,(.47,.75),(.53,.75))
-    arrow(ax,(.765,.56),(.765,.43))
-    arrow(ax,(.53,.24),(.47,.24))
-    ax.text(.22,.48,'Evaluated process',ha='center',va='center',
-            fontsize=9,color=grey,style='italic')
+    box(ax,.02,.59,.43,.32,'Tested model',
+        'Build + inspect all available candidates\nCheck budgets; predict and choose',blue)
+    box(ax,.55,.59,.43,.32,'Simple policies',
+        'Fixed/capacity: header, then chosen encoder\nReuse: construct/inspect as needed',blue)
+    box(ax,.02,.08,.43,.32,'Account for each path',
+        'Same budgets and transfer assumptions\nPay for performed work; include refresh',green)
+    box(ax,.55,.08,.43,.32,'Evaluate the recommendation',
+        'Frozen choices on held-out inputs\nCompare with feasible hindsight',green)
+    arrow(ax,(.235,.56),(.235,.43))
+    arrow(ax,(.765,.56),(.455,.415))
+    arrow(ax,(.47,.24),(.53,.24))
     fig.tight_layout(pad=.6);save_figure(fig,'decision');plt.close(fig)
 
 

@@ -772,9 +772,12 @@ A full-residency failure is not proof that batching will succeed.
 
 ![A recommendation requires feasibility, full-cost estimates and an independent test.](figures/decision.png)
 
-*Figure 5. Evaluated decision process. Observation and inspection costs count
-even when streaming is retained. A hindsight best choice assesses the recommendation
-afterward. Testing this process does not guarantee that its predictor succeeds.*
+*Figure 5. Evaluation process with distinct preparation paths. The model constructs
+and inspects all physically available candidates; fixed/capacity use header tests
+and build only the chosen encoder; reuse constructs and inspects as needed.
+Each method pays for work it performs, including visited rejected candidates.
+Hindsight comparison evaluates the recommendation; it does not guarantee a
+successful predictor.*
 
 ## 12. Testing the decision on standard sparse operations
 
@@ -888,10 +891,12 @@ The model is fitted only on the three calibration matrices. Model coefficients,
 feature definitions, rules, source hashes and held-out input hashes are frozen
 before the first held-out timing. Prediction errors do not trigger retuning.
 
-The selector first excludes infeasible choices, predicts their accounted costs
-for a declared plan lifetime, and selects the minimum. Its costs include native
-construction and inspection of all candidates, including rejected ones, plus
-prediction time. We compare it with a capacity-first rule, a reuse-only rule,
+The **tested model** constructs and inspects every physically available candidate
+to obtain its counters. It then excludes choices that violate the byte budgets,
+predicts accounted costs for a declared plan lifetime, and selects the minimum.
+It pays for candidate construction and inspection, including budget-rejected
+candidates, plus prediction time. The simple baselines use the distinct paths
+shown in Figure 5 and detailed below. We compare the model with a capacity-first rule, a reuse-only rule,
 and a fixed policy selected on calibration data, with a streaming fallback
 when that policy violates a budget. The best feasible choice found after
 measuring every alternative is a hindsight comparator, not a deployable rule.
@@ -1082,7 +1087,8 @@ or bounds on future host timings. At 128 bytes,
 retention has no positive repeated-use payback against streaming in these
 cases: repeating a per-use regression cannot repair it.
 
-The selector builds and inspects every candidate. Across the held-out shapes,
+The tested model builds and inspects every physically available candidate.
+Across the held-out shapes,
 those candidate metadata occupy approximately 72–388 kB in total on the host,
 compared with retaining only the selected representation. The primary byte
 budget constrains installed device metadata and local traffic; it does not
@@ -1111,6 +1117,11 @@ simple baselines follow the direct decision paths above. Table 6 reports
 arithmetic means of paired regrets at 80 MB/s and
 zero added launch cost. The fixed policy, selected before evaluation, is
 frequency-based retention with a streaming fallback if it violates a budget.
+
+The one-use **89.71%** is the average percentage by which the model's accounted
+time exceeds each condition's feasible hindsight comparator. These costs combine
+native CPU timings, simulated DPU cycles and assumed transfers. This is not a
+prediction-error percentage or a measured slowdown of an integrated controller.
 
 <!-- begin:regret-table -->
 | Valid uses | Model | Fixed rule | Capacity-first | Reuse-only |

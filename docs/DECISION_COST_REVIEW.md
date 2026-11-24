@@ -23,8 +23,10 @@ All retained native, prediction and simulator measurements remain unchanged.
 The [current audit](../experiments/decision-study/corrected/accounting-audit.json)
 and [success criteria](../experiments/decision-study/corrected/success-criteria.csv)
 recompute both charged and zero-selection-overhead results against the corrected
-simple alternatives: both fail at all eight reference lifetimes. PR #1 remains
-draft pending review of this resolution and regenerated documents.
+simple alternatives: both fail at all eight reference lifetimes. Subsequent
+review feedback found no remaining conceptual accounting blocker; PR #1 proceeds
+to final repository checks. The supplied review did not independently rerun
+validation or inspect the rendered PDF; those checks remain local evidence.
 
 The [archived checkpoint](../experiments/decision-study/archive/README.md) keeps
 the original review reproducible. Run the audit without flags for the historical
