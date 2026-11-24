@@ -17,22 +17,34 @@
     "/usr/share/fonts/liberation-serif/LiberationSerif-Italic.ttf": "c23ca5028f0cb4436099308a2a802b816206cf19186b193643230e021e86c324",
     "/usr/share/fonts/liberation-serif/LiberationSerif-Regular.ttf": "2285a75558b44324237d78660b272e24460892559dae8695f9b3728f88cab2cc"
   },
-  "pages": 8,
+  "pages": 23,
+  "research_date": "24 November 2026",
   "sha256": {
     "experiments/access-plan-fivepoint/manifest.json": "bcb3d1b0196e94587438280449fa441c7a513d5a26de1e123c44fc2836840a9e",
     "experiments/baseline-gates/manifest.json": "8b66cbb6ef3a3d57b3fef7ea318e6a0839d098f095aa5251e987f91dcc2083f9",
-    "scripts/build_short_thesis.py": "3bfde452f2864626de3a9846b852bed9a4e702af7e363266f2c11cd98e44a064",
-    "scripts/thesis_figures.py": "8a4f39c2d6a453feedd72b2d169bdba0e832d9a427aab12b667872b4443ddedb",
+    "experiments/decision-study/capacity.png": "fbcdf894d4d7458e1ee409a63d5296452258c5268e7b83534f3eba47b51161b0",
+    "experiments/decision-study/decision-cost.png": "98b1c987479254a350eb07fd67f2452b2c4faeed2f1f191ae08aaa519aa0a00a",
+    "experiments/decision-study/frozen-model.json": "5e0cfa6c29d0cbdeede8064990d07ecbad80fdb2780b11c8966f3b3bb879931c",
+    "experiments/decision-study/manifest.json": "c5b95581c46c7679a2be4539218282467567422ff482acf299861a618f909fe2",
+    "experiments/decision-study/plotted-data.json": "c0213488cd3b931c0662342b488943e9086adabfb10a5be57a2b1a343fce743b",
+    "experiments/decision-study/summary.json": "73ccd9a11a4e16a99716f5a315fe92348fb9866a82e4e808fc81b18686f4bb47",
+    "experiments/decision-study/widths.png": "82353193d4779f017d20fc69479e7792fd79b9ba1efba4db39cf6f2fa0c67372",
+    "scripts/build_short_thesis.py": "b25a3037e6eaeb2c56ea636b3e7658f13222aa080c34528dc39f73eb7f6412a7",
+    "scripts/thesis_figures.py": "e986f6f024605cf803a41148d9295b73b7c606186e40c4e3a1768b42d0c9c6bc",
+    "thesis/figures/architecture.pdf": "9207c297b9074e4e123596b5034000baf4b5c4a1a8b4b5d8e62ca08de1695904",
+    "thesis/figures/architecture.png": "deceefbe4215ee4adcad9b57db29c6f94397610df825d1fa25f8ab61a86b9445",
     "thesis/figures/costs.pdf": "8a4898570c6d673cdc4577f82a7432a78bed0f6d5af0886f67ca4ae6e6b7617f",
     "thesis/figures/costs.png": "7153ebe489cebd91ca7dc36ebb70cb864f957824dbd5538a2d7f6679ef396594",
+    "thesis/figures/decision.pdf": "196804680b4cb141dbde1e81d8e7093c8f5a112d1e7a0e5a92be9642287c25bb",
+    "thesis/figures/decision.png": "3fe83432eb81c1f03013d1918d2443d79e02990692f046ffea1412c17b60dc1f",
     "thesis/figures/method.pdf": "fa73292682a005613d08f2d5a96f5407fc37cf1da6f24ec7e408996862985290",
     "thesis/figures/method.png": "0f2e227860a8c9bdd88a24f4a292fd1a1593637feed0f3dedbfc75037507915b",
     "thesis/figures/performance.pdf": "23d9a045deaedcc84e5e27263c74a7cce2cd6b79b29a20d8e5338da19da70deb",
     "thesis/figures/performance.png": "5ce4a44327dc7809593e047b97b0ad7e53654f99c57d1f43ef4c2c9465f06b83",
     "thesis/figures/plotted-data.json": "8807df3a801ecb12cec877a3ac457fc7fe9928b60c1f155283c81975ac533190",
     "thesis/requirements.txt": "6bf4b91057112e426ccd8386af465aef1d9aba210a6484d40ae1342de6c6e38f",
-    "thesis/short-thesis.md": "c54013167fc86f93c380dc427bf6be453064c695ff8bdb7f47ab16d8d602bdad",
-    "thesis/short-thesis.pdf": "66daab53195699d518d83b1a5c9a728a4d3cc5e382e969282092ef9a5443fe68"
+    "thesis/short-thesis.md": "e74cf02eb8921d8112656b6e8cfe968c8443bd9cddbffce52288e41bfa252cf4",
+    "thesis/short-thesis.pdf": "f8eb21a109f90e2a2cf075c21bd2b37a8dd8867bd9c48af49b6cbef9e1244c33"
   },
-  "source_words": 3846
+  "source_words": 11279
 }

@@ -7,6 +7,14 @@ have not been independently reproduced. Discovery used Crossref, authors'
 publication lists and official repositories. General search and some publisher
 full texts were inaccessible, so coverage of recent work is incomplete.
 
+**Latest novelty audit, 24 November 2026:** [What does this thesis contribute?](NOVELTY_AUDIT.md)
+compares specific claims with primary papers and pinned SparseP, PyGim and
+ATiM source files. SparseP's blocked source reuse and PyGim's calibrated tuner
+are particularly close precedents. The subsequent
+[standard-workload study](../experiments/decision-study/README.md) provides
+matched empirical comparisons and a held-out negative result for the tested
+selector. It does not establish a new algorithm or a successful general rule.
+
 **Focused follow-up, 18 November 2026:** [MRAM–WRAM residency and cluster
 placement](WRAM_PLACEMENT.md) examines DRIM-ANN, UpANNS, PimPam, PID-Join,
 ATiM and the uPIMulator cache study. In particular, DRIM-ANN already selects
@@ -22,11 +30,17 @@ finds a conditional benefit for larger, repeatedly used worklists. This is
 mechanism evidence, not a novelty or hardware claim. [PIM–GPU feasibility](PIM_GPU.md)
 covers the separate CPU-mediated application boundary.
 
-**Contribution review, 23 November 2026:** the [proposed continuation](CONTRIBUTION_PLAN.md)
-adds explicit comparisons with PIM-CACHE's ordered-offset representation,
+**Contribution review, 23 November 2026:** the contribution assessment added
+explicit comparisons with PIM-CACHE's ordered-offset representation,
 VIPER's PIM cost modelling, and recent sparse schedule-lifetime research.
 It records which sections or abstracts were inspected, remaining novelty
 checks, and baseline controls required before claiming a distinct contribution.
+
+**Scope update, 24 November 2026:** the [current contribution plan](CONTRIBUTION_PLAN.md)
+focuses on when established MRAM–WRAM approaches are worth using on standard
+indexed-access kernels. It retains those prior-art checks. The proposed
+cross-workload decision model has not been implemented, and this scope update
+does not constitute a new literature search or a novelty finding.
 
 ## 1. Start with the movement, not the label
 
@@ -86,9 +100,9 @@ different platforms are not directly comparable with future thesis results.
 | Event-Triggered Programmable Prefetcher, ASPLOS 2018 [S4] | Uses programmable event-driven access generation across graph, database and HPC workloads. | General irregular-access prefetching is an active, established area, including multi-step dependencies. |
 | Tesseract, ISCA 2015 [S10] | Combines programmable near-memory graph processing, inter-partition communication and two graph-oriented hardware prefetchers. | Combining graph computation and prefetching near memory is already covered. Its custom hardware is not UPMEM software. |
 | PrIM characterization, 2021/2022 [S5] | Measures real UPMEM execution and memory behaviour, including DMA size, tasklet count, unused transferred bytes and costly host-mediated communication. | Merely rediscovering that large DMA blocks help sequential access but waste traffic on sparse access is insufficient. |
-| SparseP, SIGMETRICS/POMACS 2022 [S6] | Evaluates 25 SpMV kernels, four sparse formats, thread/core balance and 1D/2D partitions on real PIM hardware. Uses coarse matrix transfers and fine indirect vector accesses. | Strong baseline and an existing broad sparse-workload study. Partitioning, balance and transfer cost are not unstudied. |
+| SparseP, SIGMETRICS/POMACS 2022 [S6] | Evaluates 25 SpMV kernels, four sparse formats, thread/core balance and 1D/2D partitions on real PIM hardware. CSR/COO use fine indirect vector accesses; BCSR/BCOO reuse source blocks across rows. | Strong baseline and an existing broad sparse-workload study. Compare applicable blocked reuse, including conversion and padding costs. |
 | SimplePIM, PACT 2023 [S7] | Supplies high-level iteration and host/PIM communication primitives on UPMEM. | A wrapper API or a general data-movement framework alone is not sufficient novelty. Reuse existing infrastructure where appropriate. |
-| PyGim, SIGMETRICS 2025 [S8] | Combines CPU/PIM GNN execution with partitioning, load balance and tuning of parallelization to account for transfer costs. | “Workload-aware heterogeneous execution” is too broad a novelty claim. A GNN-only direction has particularly close competition. |
+| PyGim, SIGMETRICS 2025 [S8] | Combines CPU/PIM GNN execution with partitioning and load balance. Its calibrated analytical tuner selects parallelization using transfer, kernel and merge costs. | “Workload-aware heterogeneous execution” and cost-driven selection are established. Distinguish the particular local representation choice and validate its usefulness. |
 | uPIMulator / Pathfinding Future PIM Architectures, HPCA 2024 [S9] | Offers an execution-driven UPMEM-ISA simulator and public characterization/validation information. | More appropriate than flat DRAM replay for DPU software, but a simulator must still be audited and its model limits disclosed. |
 
 Additional close work must be resolved before a final novelty claim. The
@@ -107,9 +121,9 @@ inspection level below deliberately limits what this review concludes:
 ## 3. Initial candidate and the narrowed direction
 
 The broad look-ahead candidate below belongs to the initial review. The
-subsequent execution studies narrow the active direction to prepared reuse
-for working sets larger than available WRAM. See the [contribution plan](CONTRIBUTION_PLAN.md)
-for the current RQs and the [baseline controls](../experiments/baseline-gates/README.md)
+subsequent execution studies examined prepared reuse and then exposed the
+importance of comparing ordinary residency. See the [contribution plan](CONTRIBUTION_PLAN.md)
+for the current decision-focused RQs and the [baseline controls](../experiments/baseline-gates/README.md)
 for why ordinary shared residency must be considered first.
 
 **Candidate, not established novelty:** characterize and implement a low-cost

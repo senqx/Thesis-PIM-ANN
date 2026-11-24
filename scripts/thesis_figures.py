@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate short-thesis figures directly from the five-point evidence."""
+"""Generate thesis evidence plots and explanatory architecture/method diagrams."""
 import csv
 from datetime import datetime, timezone
 import json
@@ -17,6 +17,7 @@ os.environ.setdefault('MPLCONFIGDIR',str(ROOT/'build/thesis-matplotlib'))
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch
 from matplotlib.ticker import NullFormatter
 
 
@@ -28,6 +29,58 @@ def save_figure(fig,name):
     fig.savefig(OUT/f'{name}.png',dpi=220)
     stamp=datetime(2026,11,23,tzinfo=timezone.utc)
     fig.savefig(OUT/f'{name}.pdf',metadata={'CreationDate':stamp,'ModDate':stamp})
+
+
+def explanatory_figures():
+    """Schematics explain boundaries; their positions are not measured data."""
+    blue,green,grey='#e8f1f7','#e8f4ee','#536875'
+    def box(ax,x,y,w,h,title,body,face):
+        ax.add_patch(FancyBboxPatch((x,y),w,h,
+                     boxstyle='round,pad=0.012,rounding_size=0.025',
+                     facecolor=face,edgecolor='#8da9bb',linewidth=.9))
+        ax.text(x+w/2,y+h*.73,title,ha='center',va='center',
+                fontsize=9.5,weight='bold',color='#16374b')
+        ax.text(x+w/2,y+h*.34,body,ha='center',va='center',
+                fontsize=8.5,linespacing=1.4,color='#202b33')
+    def arrow(ax,start,end,both=False):
+        ax.annotate('',xy=end,xytext=start,arrowprops=dict(
+                    arrowstyle='<->' if both else '->',color=grey,lw=1.2))
+
+    fig,ax=plt.subplots(figsize=(6.6,3.5));ax.set_axis_off()
+    ax.set(xlim=(0,1),ylim=(0,1))
+    box(ax,.02,.42,.25,.37,'Host CPU','Prepare work\nInstall inputs\nRetrieve results',blue)
+    ax.add_patch(FancyBboxPatch((.40,.07),.57,.83,boxstyle='round,pad=.01',
+                 facecolor='#f7f9fa',edgecolor='#9cacb5',linestyle='--'))
+    ax.text(.685,.94,'One DPU and its local memory',ha='center',fontsize=10,
+            weight='bold',color='#16374b')
+    box(ax,.45,.49,.22,.31,'MRAM','64 MiB\nSource table + IDs',blue)
+    box(ax,.73,.49,.20,.31,'WRAM','64 KiB total\nData + other state',green)
+    box(ax,.61,.12,.32,.23,'DPU execution','Tasklets + registers',green)
+    arrow(ax,(.275,.62),(.438,.62),True)
+    ax.text(.35,.37,'Host–DPU\ntransfers',ha='center',fontsize=8,color=grey)
+    arrow(ax,(.68,.63),(.718,.63),True)
+    ax.text(.698,.44,'Local DMA',ha='center',fontsize=8,color=grey)
+    arrow(ax,(.83,.475),(.83,.365),True)
+    ax.text(.18,.18,'Separate boundaries:\nlocal savings need not\nreduce host traffic.',
+            ha='center',va='center',fontsize=8.5,color=grey)
+    fig.tight_layout(pad=.6);save_figure(fig,'architecture');plt.close(fig)
+
+    fig,ax=plt.subplots(figsize=(6.6,3.4));ax.set_axis_off()
+    ax.set(xlim=(0,1),ylim=(0,1))
+    box(ax,.02,.59,.43,.32,'1. Observe the work',
+        'Size, reuse, width, lifetime\nCharge inspection cost',blue)
+    box(ax,.55,.59,.43,.32,'2. Check feasible choices',
+        'WRAM, installed bytes, traffic\nKeep streaming as a candidate',blue)
+    box(ax,.55,.08,.43,.32,'3. Compare accounted costs',
+        'Setup + installation + valid uses\nAccount for refresh and uncertainty',green)
+    box(ax,.02,.08,.43,.32,'4. Test the recommendation',
+        'Freeze model; use held-out inputs\nReport wrong choices and their cost',green)
+    arrow(ax,(.47,.75),(.53,.75))
+    arrow(ax,(.765,.56),(.765,.43))
+    arrow(ax,(.53,.24),(.47,.24))
+    ax.text(.22,.48,'Evaluated process',ha='center',va='center',
+            fontsize=9,color=grey,style='italic')
+    fig.tight_layout(pad=.6);save_figure(fig,'decision');plt.close(fig)
 
 
 def build():
@@ -109,9 +162,10 @@ def build():
     for left,right in ((.30,.345),(.65,.70)):
         ax.annotate('',xy=(right,.40),xytext=(left,.40),arrowprops=dict(arrowstyle='->',color='#455a64'))
     fig.tight_layout(pad=.4);save_figure(fig,'method');plt.close(fig)
+    explanatory_figures()
     (OUT/'plotted-data.json').write_text(json.dumps(plotted,indent=2)+'\n')
     assert len(plotted)==12 and all(len(s['x'])==5 for s in plotted)
-    print('Generated two data figures: all 12 series contain five points; plus the method diagram.')
+    print('Generated two data figures: all 12 series contain five points; plus three explanatory diagrams.')
 
 
 if __name__=='__main__':build()

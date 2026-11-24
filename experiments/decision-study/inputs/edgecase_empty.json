@@ -1,0 +1,9 @@
+{
+  "columns": 8,
+  "entries": [],
+  "name": "edgecase_empty",
+  "original_columns": 7,
+  "original_rows": 9,
+  "rows": 12,
+  "split": "correctness"
+}

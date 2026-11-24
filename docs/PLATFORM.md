@@ -1,10 +1,11 @@
 # uPIMulator: acquisition and feasibility status
 
-Checked **23 November 2026**. No UPMEM hardware is available. The archived
+Updated **24 November 2026**. No UPMEM hardware is available. The archived
 SDK now compiles DPU programs inside an isolated container. The Go simulator
 has passed a deterministic upstream vector-addition check and is being used
 for the bounded [WRAM execution pilot](../experiments/wram/README.md) and
-[prepared-access study](../experiments/access-plan/README.md).
+[prepared-access study](../experiments/access-plan/README.md), followed by the
+[standard sparse-operation study](../experiments/decision-study/README.md).
 This establishes a working execution path, not hardware timing validation.
 
 ## Pinned source and completed checks
@@ -141,6 +142,13 @@ retains its command options and statistics. The pilot also checks complete
 aggregation outputs, traffic accounting and WRAM reservations. These are
 functional and internal-accounting checks; the timing model still needs
 independent hardware validation before deployment claims.
+
+The standard-operation follow-up also checks four/eight/twelve tasklets, changed
+source values across three invocations, structural rebuilds and five joint DRAM
+timing settings. These extend functional and sensitivity evidence; they do not
+calibrate this Go implementation against hardware. The linker reserves 49,152
+WRAM bytes for all 24 possible stacks even with fewer active tasklets. The study
+keeps that reservation and checks every linked allocation against 65,536 bytes.
 
 ## Transfer-throughput sanity check
 

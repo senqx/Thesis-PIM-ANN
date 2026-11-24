@@ -1,0 +1,65 @@
+[
+  {
+    "expanded_nonzero_coordinates": 400,
+    "name": "bcsstk01",
+    "original_header": "%%MatrixMarket matrix coordinate real symmetric",
+    "sha256": "567560f75b952d9c14c0d193ded5d80370d7ca26fe49f9e67deee55f22e55699",
+    "split": "calibration",
+    "stored_coordinates": 224,
+    "url": "https://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/bcsstruc1/bcsstk01.mtx.gz"
+  },
+  {
+    "expanded_nonzero_coordinates": 7860,
+    "name": "bcsstk06",
+    "original_header": "%%MatrixMarket matrix coordinate real symmetric",
+    "sha256": "a1cc30e594d4d20d89d7132b517741082d3f3b3501e7e4839142acf4dc1f24d1",
+    "split": "calibration",
+    "stored_coordinates": 4140,
+    "url": "https://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/bcsstruc1/bcsstk06.mtx.gz"
+  },
+  {
+    "expanded_nonzero_coordinates": 294,
+    "name": "west0067",
+    "original_header": "%%MatrixMarket matrix coordinate real general",
+    "sha256": "228c55ac4746e8be7bb7f7e03e590d7066cdfe9ba9c06616dd19c04104ff6adb",
+    "split": "calibration",
+    "stored_coordinates": 294,
+    "url": "https://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/chemwest/west0067.mtx.gz"
+  },
+  {
+    "expanded_nonzero_coordinates": 1666,
+    "name": "494_bus",
+    "original_header": "%%MatrixMarket matrix coordinate real symmetric",
+    "sha256": "55a2551e699253653e1b297467da1fdb7b647f850b05eb2c6647f8d66a1d8748",
+    "split": "heldout",
+    "stored_coordinates": 1080,
+    "url": "https://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/psadmit/494_bus.mtx.gz"
+  },
+  {
+    "expanded_nonzero_coordinates": 4054,
+    "name": "1138_bus",
+    "original_header": "%%MatrixMarket matrix coordinate real symmetric",
+    "sha256": "0544e52ed96893ae82c5a7f9051d662e04a1c27fe57768578de09932381fd963",
+    "split": "heldout",
+    "stored_coordinates": 2596,
+    "url": "https://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/psadmit/1138_bus.mtx.gz"
+  },
+  {
+    "expanded_nonzero_coordinates": 1296,
+    "name": "can__144",
+    "original_header": "%%MatrixMarket matrix coordinate pattern symmetric",
+    "sha256": "af5be11a3d4e774ba7e58f8bf056d047586891dbd06b8a763301b2438f1dcad2",
+    "split": "heldout",
+    "stored_coordinates": 720,
+    "url": "https://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/cannes/can__144.mtx.gz"
+  },
+  {
+    "expanded_nonzero_coordinates": 2916,
+    "name": "can__256",
+    "original_header": "%%MatrixMarket matrix coordinate pattern symmetric",
+    "sha256": "704fda9940744c3715d9264f87515e4872b70a136cbb6cf6f65349f6d8cc68c9",
+    "split": "heldout",
+    "stored_coordinates": 1586,
+    "url": "https://math.nist.gov/pub/MatrixMarket2/Harwell-Boeing/cannes/can__256.mtx.gz"
+  }
+]

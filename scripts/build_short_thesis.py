@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the short thesis from its readable Markdown source and retained data."""
+"""Build the thesis draft from its readable Markdown source and retained data."""
 import csv
 from html import escape
 import hashlib
@@ -22,12 +22,14 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (SimpleDocTemplate,Paragraph,Spacer,Table,TableStyle,
-                               Image,KeepTogether,Preformatted)
+                               Image,KeepTogether,Preformatted,PageBreak)
 
 THESIS=ROOT/'thesis'
 SOURCE=THESIS/'short-thesis.md'
 PDF=THESIS/'short-thesis.pdf'
 WIDTH=A4[0]-40*mm
+TITLE='When Is WRAM Reuse Worth It?'
+RESEARCH_DATE='24 November 2026'
 
 
 def register_fonts():
@@ -66,8 +68,8 @@ def refresh_table():
     assert count==1
     with (ROOT/'experiments/baseline-gates/comparisons.csv').open() as f:
         controls=list(csv.DictReader(f))
-    lines=['| Input | Control | Cycles | Local reads | Indices |',
-           '| --- | --- | ---: | ---: | ---: |']
+    lines=['| Input | Control | Saved cycles | Cycle change | Local reads | Indices |',
+           '| --- | --- | ---: | ---: | ---: | ---: |']
     for case,label,policies in (
             ('community','Community',('compact64','preload128')),
             ('grqc','Sampled ca-GrQc',('compact64',)),
@@ -78,11 +80,27 @@ def refresh_table():
             fields=('cycle_change_vs_stream_pct','read_change_vs_stream_pct',
                     'installed_metadata_change_vs_stream_pct')
             values=[f'{mean(float(r[k]) for r in paired):+.2f}%'.replace('-','−') for k in fields]
+            saved=f'{mean(float(r["saved_cycles_vs_stream"]) for r in paired):,.1f}'.replace('-','−')
             name='Compact batch' if policy=='compact64' else 'Shared preload'
-            lines.append(f'| {label} | {name} | '+' | '.join(values)+' |')
+            lines.append(f'| {label} | {name} | {saved} | '+' | '.join(values)+' |')
     text,count=re.subn(r'(?s)(<!-- begin:control-table -->\n).*?(<!-- end:control-table -->)',
                       lambda m:m[1]+'\n'.join(lines)+'\n'+m[2],text)
     assert count==1
+    decision=ROOT/'experiments/decision-study'
+    if (decision/'decision-table.md').exists():
+        new_table=(decision/'decision-table.md').read_text().rstrip()
+        text,count=re.subn(r'(?s)(<!-- begin:decision-table -->\n).*?(<!-- end:decision-table -->)',
+                          lambda m:m[1]+new_table+'\n'+m[2],text)
+        assert count==1
+        summary=json.loads((decision/'summary.json').read_text())
+        lines=['| Valid uses | Model | Fixed rule | Capacity-first | Reuse-only |',
+               '| ---: | ---: | ---: | ---: | ---: |']
+        for k in (1,16,1024):
+            lines.append(f'| {k:,} | '+' | '.join(f'{summary[p][str(k)]["mean_regret_pct"]:.2f}%'
+                         for p in ('model','fixed','capacity','reuse'))+' |')
+        text,count=re.subn(r'(?s)(<!-- begin:regret-table -->\n).*?(<!-- end:regret-table -->)',
+                          lambda m:m[1]+'\n'.join(lines)+'\n'+m[2],text)
+        assert count==1
     SOURCE.write_text(text)
 
 
@@ -117,11 +135,13 @@ class Document(SimpleDocTemplate):
         if hasattr(item,'outline_title'):
             key='heading-'+str(self.seq.nextf('heading'))
             self.canv.bookmarkPage(key)
-            self.canv.addOutlineEntry(item.outline_title,key,level=0)
+            self.canv.addOutlineEntry(item.outline_title,key,level=item.outline_level)
 
 
 def build():
     refresh_table()
+    assert SOURCE.read_text().splitlines()[0]=='# '+TITLE,'Source and PDF title differ'
+    assert RESEARCH_DATE in SOURCE.read_text().split('## Abstract')[0],'Source and PDF date differ'
     fontfiles=register_fonts()
     body=ParagraphStyle('body',fontName='Body',fontSize=10.5,leading=14,
                         textColor=colors.HexColor('#202b33'),spaceAfter=6,
@@ -130,6 +150,8 @@ def build():
                          leading=24,textColor=colors.HexColor('#16374b'),spaceAfter=11)
     heading=ParagraphStyle('heading',parent=body,fontName='Sans-Bold',fontSize=12.1,
                            leading=15.5,spaceBefore=12,spaceAfter=6,keepWithNext=True)
+    subheading=ParagraphStyle('subheading',parent=heading,fontSize=10.5,
+                              leading=13.5,spaceBefore=9,spaceAfter=5)
     caption=ParagraphStyle('caption',parent=body,fontSize=9,leading=11.5,
                            textColor=colors.HexColor('#45545e'),spaceAfter=10)
     cell=ParagraphStyle('cell',parent=body,fontSize=9,leading=11.5,spaceAfter=0)
@@ -147,8 +169,12 @@ def build():
             continue
         if kind=='heading':
             text=inline(node['children'])
-            p=Paragraph(text,title if node['attrs']['level']==1 else heading)
-            if node['attrs']['level']>1:p.outline_title=re.sub('<[^>]+>','',text)
+            if text=='References':story.append(PageBreak())
+            level=node['attrs']['level']
+            p=Paragraph(text,title if level==1 else heading if level==2 else subheading)
+            if level>1:
+                p.outline_title=re.sub('<[^>]+>','',text)
+                p.outline_level=level-2
             story.append(p)
         elif kind=='paragraph':
             children=node['children']
@@ -176,6 +202,7 @@ def build():
                                              else inline(c['children']),cell) for c in row['children']])
             columns=len(matrix[0])
             widths=([.28*WIDTH,.72*WIDTH] if columns==2 else
+                    [v*WIDTH for v in (.18,.19,.17,.14,.16,.16)] if columns==6 else
                     [v*WIDTH for v in (.20,.25,.18,.19,.18)] if columns==5 else
                     [WIDTH/columns]*columns)
             table=Table(matrix,colWidths=widths,repeatRows=1,hAlign='LEFT')
@@ -191,24 +218,30 @@ def build():
                 text=inline(ast[j]['children'])
                 if text.startswith('<i>Table '):
                     block.append(Paragraph(text,caption));i=j+1
+            if story and hasattr(story[-1],'outline_title'):
+                block.insert(0,story.pop())
             story.append(KeepTogether(block))
         elif kind=='list':
             for item in node['children']:
                 text=' '.join(inline(block.get('children',[])) for block in item['children'])
                 style=ParagraphStyle('bullet',parent=body,leftIndent=12,firstLineIndent=-8)
                 story.append(Paragraph('• '+text,style))
-        elif kind=='block_code':story.append(Preformatted(node['raw'].rstrip(),code))
+        elif kind=='block_code':
+            block=Preformatted(node['raw'].rstrip(),code)
+            if story and isinstance(story[-1],Paragraph) and story[-1].getPlainText().rstrip().endswith(':'):
+                story.append(KeepTogether([story.pop(),block]))
+            else:story.append(block)
         else:raise ValueError(f'Unsupported block Markdown: {kind}')
     def page(canvas,doc):
         canvas.saveState()
         canvas.setFont('Sans',8);canvas.setFillColor(colors.HexColor('#5c6e78'))
-        if doc.page>1:canvas.drawString(20*mm,A4[1]-13*mm,'Data Reuse for Graph Aggregation on UPMEM')
-        canvas.drawString(20*mm,12*mm,'Artashes Atanesyan · Short thesis · 23 November 2026')
+        if doc.page>1:canvas.drawString(20*mm,A4[1]-13*mm,TITLE)
+        canvas.drawString(20*mm,12*mm,'Artashes Atanesyan · Research thesis draft · '+RESEARCH_DATE)
         canvas.drawRightString(A4[0]-20*mm,12*mm,str(doc.page))
         canvas.restoreState()
     doc=Document(str(PDF),pagesize=A4,leftMargin=20*mm,rightMargin=20*mm,
-                 topMargin=20*mm,bottomMargin=20*mm,title='Data Reuse for Graph Aggregation on UPMEM',
-                 author='Artashes Atanesyan',subject='Graph aggregation: reuse costs, stronger baselines and open research questions',
+                 topMargin=20*mm,bottomMargin=20*mm,title=TITLE,
+                 author='Artashes Atanesyan',subject='UPMEM local reuse: resource boundaries, native costs and held-out decision evidence',
                  invariant=1)
     doc.build(story,onFirstPage=page,onLaterPages=page)
     info=subprocess.check_output(['pdfinfo',str(PDF)],text=True)
@@ -217,7 +250,11 @@ def build():
            ROOT/'experiments/access-plan-fivepoint/manifest.json',
            ROOT/'experiments/baseline-gates/manifest.json',THESIS/'requirements.txt']
     paths+=sorted((THESIS/'figures').glob('*'))
-    manifest=dict(pages=pages,source_words=len(SOURCE.read_text().split()),
+    decision=ROOT/'experiments/decision-study'
+    for name in ('manifest.json','frozen-model.json','summary.json','plotted-data.json',
+                 'capacity.png','widths.png','decision-cost.png'):
+        if (decision/name).exists():paths.append(decision/name)
+    manifest=dict(pages=pages,research_date=RESEARCH_DATE,source_words=len(SOURCE.read_text().split()),
         dependencies={p:importlib.metadata.version(p) for p in ('reportlab','mistune','matplotlib','Pillow','charset-normalizer')},
         sha256={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
         fonts={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in fontfiles})
