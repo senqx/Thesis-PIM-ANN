@@ -1,10 +1,5 @@
 # Paired results and decision quality
 
-> **Historical results:** these tables were generated before the preparation/accounting
-> corrections documented in [CHANGELOG](CHANGELOG.md). They remain preserved for audit
-> and are not results for the corrected implementation. Regenerate native timings and
-> dependent reports before using these values in the final thesis.
-
 The tables below are generated from retained records. Positive cycle savings mean fewer
 complete simulated cycles than stream512 on the same input and width. These are
 deterministic model results, not hardware speedups or statistical confidence intervals.

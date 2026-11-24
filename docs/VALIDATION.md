@@ -13,7 +13,49 @@ claim hardware speedup, measured energy or complete application acceleration.
 The [gap-closure record](GAP_CLOSURE.md) maps the research concerns to evidence
 and explains the remaining scope limits.
 
-## Current decision-study evidence
+## Corrected preparation and accounting checkpoint
+
+The current thesis uses the [corrected artifact](../experiments/decision-study/corrected/README.md)
+and its [manifest](../experiments/decision-study/corrected/manifest.json).
+The original experiment remains independently auditable. This is a post-freeze
+correction on already observed inputs; model coefficients, thresholds and DPU
+kernels were not changed. The original kernel test split remains valid, while
+the corrected host-cost analysis must not be described as fresh confirmation.
+
+Completed for this correction:
+
+- **446 new native preparation cases**, each with 31 samples after three
+  warmups (13,826 retained sample rows). GCC 15.1.0 and `-O3 -std=c++17` match
+  the declared environment. Cases ran sequentially without concurrent simulation.
+- Regenerated metadata, feature values, arguments and expected outputs match
+  **all 511 archived invocations** exactly. Original cycles are reused on that
+  basis; this does not add 485 new simulation runs.
+- Four representative replay records (six invocations) reproduce every counter,
+  non-path option and complete output. The record names are listed below.
+- **28 boundary/changed-structure native cases** pass AddressSanitizer,
+  LeakSanitizer and UndefinedBehaviorSanitizer. The sandbox's ptrace environment
+  prevented leak checking, so that check was rerun successfully outside it.
+- **Seven accounting regression tests** cover unavailable full residency,
+  rejected fixed candidates, early stopping, fallback, unconstrained direct
+  dispatch and preservation of the original selected policies.
+- Both artifact verifiers pass. The corrected verifier checks raw timing
+  medians, decoded representations, all 23,040 unique scenarios, paired margins,
+  payback thresholds, timing envelopes, success criteria and plotted data.
+- The optimized native binary retains preparation and inspection calls inside
+  their timer boundaries. Assembly inspection shows the hot refresh `memcpy`
+  loop between the refresh timestamps, with an identity branch bypassing it.
+- Final Python prediction arithmetic was timed after replay completed. Simple-
+  rule dispatch remains outside the measured interval, as disclosed in the paper.
+
+The corrected selector still fails at all eight lifetimes. At 1/16/1,024 uses,
+its mean accounted regrets are 89.71%/12.76%/5.22%. Native payback remains one use
+for 15 of 16 narrow SpMM cases and two for one; only 9/16 retain a positive
+first-use margin across observed sample extremes. Current results replace old
+accounted values without deleting them. The
+[protocol](../experiments/decision-study/corrected/PROTOCOL.md) discloses the
+inspection-accounting amendment made after the first timing report.
+
+## Preserved decision-study simulator evidence
 
 The [manifest](../experiments/decision-study/manifest.json) contains **485 distinct
 simulation records and 511 kernel invocations**. The difference is thirteen
@@ -49,11 +91,9 @@ does not increase the independent evidence count.
 - All 23,040 accounted scenarios against the frozen rules and retained costs,
   plus plotted values, point counts and numeric x-axis order.
 
-Native preparation also passed AddressSanitizer, LeakSanitizer and undefined-
-behavior checks on fourteen boundary combinations. The optimized binary was
-inspected to confirm that preparation, inspection and refresh execute inside
-the timed regions, including the refresh copies. These tests complement, rather
-than replace, the independent CPU output/representation checks.
+The original native implementation previously passed sanitizer checks on
+fourteen boundary combinations. The corrected source has the 28-case check
+reported above. These complement the independent representation/output checks.
 
 Four fresh frozen-image replays passed:
 
@@ -72,8 +112,9 @@ rebuilds, selected-record replay and full-inventory replay commands.
 
 ## Preserved historical evidence
 
-All five historical audits passed again on 24 November against the unchanged
-retained evidence:
+The five earlier artifact audits were recorded as passing on 24 November
+before this correction. Their evidence is unchanged; those unrelated campaigns
+were not rerun for the correction:
 
 | Artifact | Retained records | Check |
 | --- | ---: | --- |
@@ -105,7 +146,7 @@ python3 scripts/decision_artifact.py verify
   invented; no additional university formatting requirement was supplied.
 - Every page was reviewed for layout, with separate inspection of the numerical
   plots, diagrams and bibliography. Captions stay with their figures/tables.
-- Text extracted from the final PDF contains all 222 source prose, heading,
+- Text extracted from the final PDF contains all 225 source prose, heading,
   code and caption blocks checked after whitespace normalization and removal
   of page headers/footers. The numeric tables are checked through their retained
   data and generated source.
@@ -124,11 +165,14 @@ python3 scripts/decision_artifact.py verify
 - The framing revision identifies local reuse as the completed Stage 1 study,
   with access prediction and heterogeneous coordination as future directions.
   It distinguishes performance-choice errors from incorrect output. The
-  experiment sources, frozen model and retained evidence are unchanged.
-- Local Markdown links, Python syntax and Git whitespace checks passed. Links
+  frozen cycle model and original retained evidence are unchanged. Current
+  native source and cost accounting are separately versioned and validated.
+- All 254 checked live local Markdown links, Python syntax and Git whitespace
+  checks passed. Immutable source snapshots retain original relative-link context
+  and are excluded from the live-link audit. Links
   embedded in the standalone PDF resolve to repository URLs.
-- A second build reproduced identical reports, figures, archived evidence, PDF
-  and build record in the pinned local environment. Source rebuilds of DPU
+- A second build reproduced identical corrected reports, figures, PDF and
+  build record in the pinned local environment; the original evidence stays fixed. Source rebuilds of DPU
   instructions remain a separate check because the upstream linker can vary
   instruction layout with map iteration order.
 

@@ -17,19 +17,21 @@
     "/usr/share/fonts/liberation-serif/LiberationSerif-Italic.ttf": "c23ca5028f0cb4436099308a2a802b816206cf19186b193643230e021e86c324",
     "/usr/share/fonts/liberation-serif/LiberationSerif-Regular.ttf": "2285a75558b44324237d78660b272e24460892559dae8695f9b3728f88cab2cc"
   },
-  "pages": 24,
+  "pages": 25,
+  "repository_ref": "review/fair-preparation-costs",
   "research_date": "24 November 2026",
   "sha256": {
     "experiments/access-plan-fivepoint/manifest.json": "bcb3d1b0196e94587438280449fa441c7a513d5a26de1e123c44fc2836840a9e",
     "experiments/baseline-gates/manifest.json": "8b66cbb6ef3a3d57b3fef7ea318e6a0839d098f095aa5251e987f91dcc2083f9",
-    "experiments/decision-study/capacity.png": "fbcdf894d4d7458e1ee409a63d5296452258c5268e7b83534f3eba47b51161b0",
-    "experiments/decision-study/decision-cost.png": "98b1c987479254a350eb07fd67f2452b2c4faeed2f1f191ae08aaa519aa0a00a",
-    "experiments/decision-study/frozen-model.json": "5e0cfa6c29d0cbdeede8064990d07ecbad80fdb2780b11c8966f3b3bb879931c",
+    "experiments/decision-study/corrected/capacity.png": "fbcdf894d4d7458e1ee409a63d5296452258c5268e7b83534f3eba47b51161b0",
+    "experiments/decision-study/corrected/decision-cost.png": "a740a90dcb42b0fdf5e971b9487ae682bb355765295b1b21c7fdf24524b1c268",
+    "experiments/decision-study/corrected/frozen-model.json": "5e0cfa6c29d0cbdeede8064990d07ecbad80fdb2780b11c8966f3b3bb879931c",
+    "experiments/decision-study/corrected/manifest.json": "86e7db207d5ea6ad15744c08853103eca764bb0548c6a43e927c9441a0a54b93",
+    "experiments/decision-study/corrected/plotted-data.json": "819dc70ffdc1d7ba35cb56d9eb1d95ae6769e3bf623bc38221eb29448cad37d9",
+    "experiments/decision-study/corrected/summary.json": "ad4a3d9f88efa16f77ab840ffd14b8f61ff887369f66c77a153a9197d677cec6",
+    "experiments/decision-study/corrected/widths.png": "82353193d4779f017d20fc69479e7792fd79b9ba1efba4db39cf6f2fa0c67372",
     "experiments/decision-study/manifest.json": "c5b95581c46c7679a2be4539218282467567422ff482acf299861a618f909fe2",
-    "experiments/decision-study/plotted-data.json": "c0213488cd3b931c0662342b488943e9086adabfb10a5be57a2b1a343fce743b",
-    "experiments/decision-study/summary.json": "73ccd9a11a4e16a99716f5a315fe92348fb9866a82e4e808fc81b18686f4bb47",
-    "experiments/decision-study/widths.png": "82353193d4779f017d20fc69479e7792fd79b9ba1efba4db39cf6f2fa0c67372",
-    "scripts/build_short_thesis.py": "b25a3037e6eaeb2c56ea636b3e7658f13222aa080c34528dc39f73eb7f6412a7",
+    "scripts/build_short_thesis.py": "13d9a065774007e1d5c70125c2041f66af281f3d3f1cb0ffaddbe0a6b4d61fbc",
     "scripts/thesis_figures.py": "e986f6f024605cf803a41148d9295b73b7c606186e40c4e3a1768b42d0c9c6bc",
     "thesis/figures/architecture.pdf": "9207c297b9074e4e123596b5034000baf4b5c4a1a8b4b5d8e62ca08de1695904",
     "thesis/figures/architecture.png": "deceefbe4215ee4adcad9b57db29c6f94397610df825d1fa25f8ab61a86b9445",
@@ -43,8 +45,8 @@
     "thesis/figures/performance.png": "5ce4a44327dc7809593e047b97b0ad7e53654f99c57d1f43ef4c2c9465f06b83",
     "thesis/figures/plotted-data.json": "8807df3a801ecb12cec877a3ac457fc7fe9928b60c1f155283c81975ac533190",
     "thesis/requirements.txt": "6bf4b91057112e426ccd8386af465aef1d9aba210a6484d40ae1342de6c6e38f",
-    "thesis/short-thesis.md": "376f9d19de4f1f821c369d973027706726c213d6228c4cc60096dfacf868d50f",
-    "thesis/short-thesis.pdf": "c47c1e1dc73244f55f688a212cbd6b3759c01ceb7024b146f061891882ef99a5"
+    "thesis/short-thesis.md": "2442493affbdacb65bffce2b1952d507f49da584f8fae2d04dc1b1e3f281eb5b",
+    "thesis/short-thesis.pdf": "994fc61aea5d0e5d6b9c7b5744634d28876c6fe202801f6adbf3feff46afff10"
   },
-  "source_words": 11555
+  "source_words": 11838
 }

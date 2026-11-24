@@ -1,0 +1,7 @@
+{
+  "experiments/decision-study/corrected/PROTOCOL.md": "599ff5d3a8ed1c77f1f5fe256b5f82c665d85f29349f59376751449501eaf72a",
+  "experiments/decision-study/frozen-model.json": "5e0cfa6c29d0cbdeede8064990d07ecbad80fdb2780b11c8966f3b3bb879931c",
+  "experiments/decision-study/manifest.json": "c5b95581c46c7679a2be4539218282467567422ff482acf299861a618f909fe2",
+  "experiments/decision-study/prepare.cpp": "24be92ba0bff08238f954297dc963620aaaae663d8190afd7da5f7bd769d2c0b",
+  "scripts/decision_analysis.py": "056b1939ca38fb4fa56542826a3efc1c825479163fb551186de8c65dd064b4bb"
+}

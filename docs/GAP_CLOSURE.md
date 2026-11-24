@@ -5,6 +5,8 @@
 [standard sparse-operation study](../experiments/decision-study/README.md).
 The scope is one simulated UPMEM DPU and local representation choice. It does
 not revive the original proposal for a general adaptive prefetching framework.
+Current accounted results use the [post-freeze preparation correction](../experiments/decision-study/corrected/README.md);
+all original kernel results and source snapshots remain available.
 
 ## Completed work and what it establishes
 
@@ -21,7 +23,7 @@ not revive the original proposal for a general adaptive prefetching framework.
 | Assuming an adaptive rule works | Freeze model/rules/input hashes before held-out timings; compare against fixed, capacity and reuse rules | Model finds an equally fastest feasible kernel in 8/24 conditions and fails the practical criterion at all eight lifetimes |
 | Lifetimes assume valid state | Thirteen records with three changed-feature invocations each; fourteen structural/empty-input checks | All outputs and traffic pass; triple-run cycles differ from 3×single by −0.391% to +0.194%, so linearity is an approximation |
 | Dependence on one DRAM setting | Five joint timing scales on the same images; 52 new runs and 13 reused comparators | The narrow-retention/wide-streaming ranking persists on this subset; this is sensitivity, not hardware validation |
-| Fragile payback thresholds | Recompute margins using extreme combinations of observed native samples | Ten of sixteen 8–64-byte cases retain a positive first-use margin; six span zero. These are descriptive envelopes |
+| Fragile payback thresholds | Recompute margins using extreme combinations of observed native samples | Nine of sixteen 8–64-byte cases retain a positive first-use margin; seven span zero after corrected native timing. These are descriptive envelopes |
 | Unclear originality | Explicit comparisons with SparseP, DRIM-ANN, PyGim, ATiM and related preprocessing work | Contribution is scoped comparative evidence and a negative selector result; no new mechanism or universal priority claim |
 | Results cannot be independently checked | Exact images, inputs, outputs, raw timings, counters, options and frozen hashes; independent decoding and fresh replay | See the [validation record](VALIDATION.md) for executed checks and the current PDF/build record |
 

@@ -154,6 +154,7 @@ def verify():
         'experiments/decision-study/prepare.cpp':'experiments/decision-study/archive/pre-change/prepare.cpp',
         'scripts/decision_analysis.py':'scripts/archive/pre-change/decision_analysis.py',
         'scripts/decision_artifact.py':'scripts/archive/pre-change/decision_artifact.py',
+        'scripts/decision_report.py':'scripts/archive/pre-change/decision_report.py',
         'experiments/decision-study/README.md':'experiments/decision-study/archive/pre-change/README.md',
         'experiments/decision-study/results.md':'experiments/decision-study/archive/pre-change/results.md',
     }

@@ -2,42 +2,42 @@
 
 ## 24 November 2026 — fair preparation and deployment accounting
 
-This branch corrects two implementation/accounting issues found during independent review.
-It deliberately preserves the original raw samples, frozen model, replay archive and
-historical result tables.
+The reviewed correction is now backed by new native measurements, complete
+input-equivalence checks, representative simulation replay and regenerated
+reports. Current evidence lives in [corrected/](corrected/README.md); the
+historical manifest, raw samples and model remain unchanged.
 
-### Native preparation
+### What was corrected
 
-- Only the frequency-based `hot` policy allocates and sorts a source permutation.
-- Only `hot` constructs the inverse permutation used to rewrite sparse column IDs.
-- Identity policies write original column IDs directly.
-- Feature refresh now writes into an output buffer only when reordering is required.
-  For identity policies, refresh is a no-op and the existing feature buffer is used
-  directly; the previous return-by-value copied the complete feature array.
+- Only `hot` allocates/sorts a source permutation, builds its inverse and copies
+  source values into reordered storage. Identity policies keep original column
+  IDs and use the existing source buffer. Their measured refresh interval is
+  timer/dispatch overhead, not a full-array copy.
+- Corrected decisions charge preparation and inspection separately. They count
+  rejected candidates, include streaming references when used, skip absent full
+  retention and stop the reuse search when it accepts a candidate. Direct
+  dispatch pays no unused inspection. Original `choose()` and `total()` remain
+  unchanged for historical verification.
+- Review also fixed an absent-full crash and rejected-fixed undercount in the
+  initial draft. Original documentation snapshots now preserve exact bytes.
 
-The hot policy's permutation and feature reorder remain measured.
+### Timing and research status
 
-### Decision accounting
+446 distinct preparations were remeasured, each with 31 samples after three
+warmups. They reproduce the input data, arguments and reference outputs of all
+511 archived invocations exactly. The 485 original simulation records and
+cycle-model coefficients are reused, not retimed or refitted. Four fresh replay
+records check six invocations and all simulator counters.
 
-- Each rule is charged for the candidates it must prepare and inspect to make its
-  decision, including the streaming reference used for per-input feasibility checks.
-- The fixed rule pays for its selected policy and stream512 reference.
-- The capacity rule pays for full and stream512 feasibility candidates.
-- The reuse rule pays for full, hot, batch and stream512 structural candidates.
-- The model continues to pay preparation and inspection for every candidate, including
-  rejected candidates, plus prediction overhead.
+This is a correction using already observed inputs, not fresh confirmation.
+A final accounting review after initial native timing removed unnecessary
+inspection for capacity-forced fallback and unconstrained direct dispatch;
+[the protocol](corrected/PROTOCOL.md) discloses that amendment. Final Python
+prediction timing was collected after simulator replay had finished. None of
+these steps changes policy thresholds or fits to evaluation outcomes. The
+separate one-time calibration total also includes native structural inspection;
+the original fit-time measurement is retained.
 
-The original `choose()` function remains unchanged as the frozen historical rule.
-The corrected analysis uses `choose_corrected()`.
-
-### Required rerun before updated claims
-
-1. Rebuild the native preparation executable with `g++ -O3 -std=c++17`.
-2. Regenerate native preparation samples into a new run directory.
-3. Re-run affected calibration, held-out and controlled preparation measurements.
-4. Rebuild paired reports and the complete decision scenario grid.
-5. Re-check the selector success criterion and thesis tables/figures against new samples.
-
-The current branch has not executed these measurements. Until that rerun completes, the
-old numeric tables are historical and must not be presented as updated results. DPU
-kernels are unchanged, so this correction does not itself imply different simulator cycles.
+The tested selector still fails the original practical-success criterion at all
+eight lifetimes. Corrected totals and host timing envelopes replace the old
+values in the current thesis. Original reports remain available for audit.

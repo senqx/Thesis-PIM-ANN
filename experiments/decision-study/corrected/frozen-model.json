@@ -1,0 +1,136 @@
+{
+  "bandwidth_mb_s": [
+    20,
+    40,
+    80,
+    160,
+    320
+  ],
+  "calibration_sha256": "92fd2bde1e95df783ff30aa0bf8c5c0a6d0660478daca698dd7e818c4cade6cb",
+  "capacity_rule": "full if it fits, otherwise stream512",
+  "claim_threshold": "repay inspection, improve over simple rules; no >5% primary regression",
+  "decision_rule_sha256": "6746f2e7af9d7108c7cfb003d0fb288613453618dab34666d37e01a658e5fa7c",
+  "features": [
+    "constant",
+    "max_tasklet_products",
+    "total_read_bytes_div8",
+    "max_tasklet_dma_calls",
+    "output_values"
+  ],
+  "fit_seconds": 0.11496577830985188,
+  "fixed": "hot",
+  "fixed_training_scores": {
+    "batch": 1.1067679505811394,
+    "bcsr2": 1.0,
+    "bcsr4": 1.0,
+    "hot": 0.9410999780412241,
+    "stream128": 1.002201074724331,
+    "stream512": 1.0
+  },
+  "frequency_mhz": 350,
+  "heldout_inputs": {
+    "1138_bus": "6b3113f897ecdf8802f6e48e41997b767cce7411958f584cb1a1ea9c7cf9ac86",
+    "494_bus": "66800f394f9921690d59617edab19374102550ef67348786cf4a01dbf123e418",
+    "can__144": "cddda33629ba79a655ed11ec6a51d8a08fd9a2821a902715b362ad8a86a76165",
+    "can__256": "de322a4a763b0c4980de558168f86b1cf7ae62e13940661583d616a9c30c3eb1"
+  },
+  "kernel_sha256": "92631d05f4ef9286c9305836e64fead4976598bc65cf9ddc5da798940b32e4cd",
+  "launch_us": [
+    0,
+    10,
+    100
+  ],
+  "models": {
+    "batch": {
+      "coefficients": [
+        1040.5936297032513,
+        205.68952821077235,
+        0.0,
+        423.8671128834098,
+        0.0
+      ],
+      "records": 18,
+      "training_rmse_cycles": 34185.44410002464
+    },
+    "bcsr2": {
+      "coefficients": [
+        0.0,
+        196.95352045566096,
+        4.885672326127822,
+        0.0,
+        8.266193021847668
+      ],
+      "records": 18,
+      "training_rmse_cycles": 71303.2963959008
+    },
+    "bcsr4": {
+      "coefficients": [
+        2349.366624566443,
+        209.73813733582097,
+        8.445788647125427,
+        0.0,
+        0.0
+      ],
+      "records": 18,
+      "training_rmse_cycles": 22124.194054316024
+    },
+    "full": {
+      "coefficients": [
+        0.0,
+        195.39464480653592,
+        4.64579499112537,
+        271.5576495041534,
+        12.142056049931638
+      ],
+      "records": 13,
+      "training_rmse_cycles": 5945.376403210501
+    },
+    "hot": {
+      "coefficients": [
+        0.0,
+        105.317736348847,
+        24.91560485403198,
+        0.0,
+        67.33765055117375
+      ],
+      "records": 18,
+      "training_rmse_cycles": 93747.5209630211
+    },
+    "stream128": {
+      "coefficients": [
+        0.0,
+        198.80432635931265,
+        3.8700079496181465,
+        0.0,
+        9.258417396180333
+      ],
+      "records": 18,
+      "training_rmse_cycles": 90178.10431868031
+    },
+    "stream512": {
+      "coefficients": [
+        0.0,
+        201.8169489022831,
+        2.9957173558086394,
+        0.0,
+        9.133686825895984
+      ],
+      "records": 18,
+      "training_rmse_cycles": 96421.85236454514
+    }
+  },
+  "native_source_sha256": "7ebc1d461790ec364478e4f8386b73d9bb807c20cad8859812116c43f6feb480",
+  "protocol_sha256": "0eb82c056c8aa57eab59cad6dbd108264ce5c13bc3a91e05d7edfc798e5cddcd",
+  "reuse_rule": "full if feasible; otherwise hot if top-capacity frequency >= 0.5; otherwise batch if total local reads <= half of streaming; otherwise stream512",
+  "script_sha256": "9c8b56c6da80dc4c2ae0f8c19e4b54d65bec8005b2c9b1e97cd0e1de929a1bf7",
+  "valid_uses": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    64,
+    256,
+    1024
+  ]
+}

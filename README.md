@@ -24,6 +24,13 @@ criterion; the thesis reports that result alongside useful static-retention
 regimes. Hardware speedup, energy savings and complete application acceleration
 have not been demonstrated.
 
+**Preparation/accounting correction:** current totals use freshly measured native
+costs and decision paths that include rejected candidates while skipping
+unnecessary inspection. All 511 archived invocation inputs match the corrected
+preparation byte for byte. The DPU cycles and frozen model are reused; the
+[correction record](experiments/decision-study/corrected/README.md) separates this
+post-freeze correction from the historical measurements.
+
 ## What the experiments show
 
 UPMEM is a near-memory form of processing-in-memory. Each DPU has a large
@@ -48,7 +55,7 @@ The contribution is **a reproducible comparison of when established choices
 help, lose or violate a resource budget, and a held-out negative result for the
 tested selector**. The algorithms themselves are credited to prior work.
 The [novelty audit](docs/NOVELTY_AUDIT.md) states that distinction explicitly;
-the [paired results](experiments/decision-study/results.md) provide the numbers.
+the [paired results](experiments/decision-study/corrected/results.md) provide the numbers.
 The model's failure does not prove that every adaptive policy must fail.
 
 ## Current study and future directions
@@ -75,7 +82,7 @@ the failure concerns the quality and cost of the recommendation.
 | Document | What it gives you |
 | --- | --- |
 | [Thesis draft](thesis/short-thesis.pdf) | Concepts, worked example, prior work, RQs, completed evidence, costs and limitations |
-| [Standard-workload results](experiments/decision-study/results.md) | Measured boundaries, native-cost accounting and held-out selection results |
+| [Standard-workload results](experiments/decision-study/corrected/results.md) | Measured boundaries, native-cost accounting and held-out selection results |
 | [Study protocol](experiments/decision-study/PROTOCOL.md) | Questions, frozen split, resource budgets and success criterion |
 | [Novelty audit](docs/NOVELTY_AUDIT.md) | Established mechanisms, the completed empirical contribution and limits of the originality claim |
 | [Five-size experiment](experiments/access-plan-fivepoint/README.md) | Original batching curves, CPU preparation timings and replay instructions |
@@ -99,6 +106,7 @@ Run the retained-record audits with Python 3, from the repository root:
 python3 scripts/access_plan_fivepoint.py verify
 python3 scripts/access_plan_gates.py verify
 python3 scripts/decision_artifact.py verify
+python3 scripts/decision_correction.py verify
 ```
 
 These commands check hashes, counters, matched work and output records.
@@ -127,7 +135,9 @@ experiments. Earlier pilot artifacts remain separately identified.
 The new decision-study artifact contains **485 distinct simulation records** and
 **511 kernel invocations**, including correctness and robustness checks. Its
 23,040 cost scenarios are calculations over retained evidence, not additional
-simulator experiments. The [inventory](experiments/decision-study/README.md)
+simulator experiments. The correction adds **446 native preparation cases**,
+with 31 retained timing samples each; it does not add independent workloads.
+Four representative records were replayed again. The [inventory](experiments/decision-study/README.md)
 and [gap-closure record](docs/GAP_CLOSURE.md) give the breakdown and remaining limits.
 
 ## Scope and provenance

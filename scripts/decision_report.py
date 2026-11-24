@@ -83,7 +83,7 @@ def robustness(held):
         'confidence intervals or bounds on future host timings. A margin spanning zero makes',
         'the reported median-based payback sensitive to observed host timing variation.',
         f'{sum(r["observed_envelope_low_margin_us"]>0 for r in narrow)}/16 SpMM cases at 8–64 bytes retain a positive first-use margin across this envelope.',
-        'The six others span zero; median-based first-use payback is not robust for those cases.','',
+        f'{sum(r["observed_envelope_low_margin_us"]<=0 for r in narrow)}/16 do not retain a strictly positive first-use margin across the envelope.','',
         '## Feasible concurrency','',
         '[concurrency.json](concurrency.json) adds 50 executions at four/twelve tasklets.',
         'The twelve-tasklet, 128-byte batch image requires 70,096 WRAM bytes and is excluded.',
@@ -92,6 +92,8 @@ def robustness(held):
     (OUT/'robustness.md').write_text('\n'.join(lines))
 
 def build():
+    if OUT.name!='corrected':
+        raise RuntimeError('Preserve historical results: use decision_correction.py analyze.')
     held=json.loads((OUT/'heldout-t8.json').read_text());allrows=[]
     for phase in ('calibration-t8','heldout-t8','controlled-t8'):allrows+=json.loads((OUT/f'{phase}.json').read_text())
     comparisons=[]
@@ -155,6 +157,10 @@ def build():
                 source_bytes=rs[0]['source_feature_bytes'],largest_native_process_rss_kib=max(r['process_peak_rss_kib'] for r in rs)))
     write_table(OUT/'host-storage.csv',storage)
     lines=['# Paired results and decision quality','',
+        'Current results use corrected native preparation and decision-path accounting.',
+        'The [correction record](README.md) explains provenance and reproduction.',
+        'DPU cycles and the fitted model are inherited unchanged; this is a post-freeze',
+        'correction on already observed inputs, not a new untouched confirmation.','',
         'The tables below are generated from retained records. Positive cycle savings mean fewer',
         'complete simulated cycles than stream512 on the same input and width. These are',
         'deterministic model results, not hardware speedups or statistical confidence intervals.','',

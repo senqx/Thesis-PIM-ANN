@@ -12,6 +12,10 @@ contribution is scoped comparative evidence and a negative result for this
 selector, alongside positive static-retention regimes. It does not establish
 a new algorithm or a successful general adaptive framework. The audit below
 preserves the assessment and obligations that motivated that experiment.
+The [post-freeze correction](../experiments/decision-study/corrected/README.md)
+updates native costs and decision accounting without changing the cycle model,
+workloads or this scoped contribution claim. Corrected host-cost results are
+not a new untouched confirmation.
 
 ## What the completed follow-up adds
 

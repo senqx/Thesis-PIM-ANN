@@ -46,7 +46,7 @@ def choose(rs,model,k,bw,launch,constrained=True):
                 capacity=(capacity,allrows[capacity]['prepare_ns']),reuse=(reuse,reuse_setup)),prediction
 
 def choose_corrected(rs,model,k,bw,launch,constrained=True):
-    """Corrected deployment accounting; fixed dispatch pays no unused inspection."""
+    """Frozen choices with corrected, short-circuit candidate accounting."""
     s=next(r for r in rs if r['policy']=='stream512')
     eligible={r['policy']:r for r in rs if not constrained or feasible(r,s)}
     allrows={r['policy']:r for r in rs}
@@ -64,18 +64,41 @@ def choose_corrected(rs,model,k,bw,launch,constrained=True):
     # Each rule pays for exactly the candidate representations it must construct
     # and inspect to make its decision, including the streaming reference used by
     # the per-input feasibility test.
-    def candidate_cost(policies):
-        return sum(allrows[p]['prepare_ns']+allrows[p]['inspect_ns']
-                   for p in dict.fromkeys(policies))
-    model_setup=candidate_cost([r['policy'] for r in rs])
-    fixed_setup=candidate_cost((fixed,'stream512'))
-    capacity_setup=candidate_cost(('full','stream512'))
-    reuse_setup=candidate_cost(('full','hot','batch','stream512'))
-    return dict(model=(pmodel,model_setup),fixed=(fixed,fixed_setup),
-                capacity=(capacity,capacity_setup),reuse=(reuse,reuse_setup)),prediction
+    work=candidate_work(rs,model,reuse,constrained)
+    setup={rule:sum(allrows[p]['prepare_ns'] for p in steps['prepare'])+
+                sum(allrows[p]['inspect_ns'] for p in steps['inspect'])
+           for rule,steps in work.items()}
+    return {rule:(p,setup[rule]) for rule,p in
+            dict(model=pmodel,fixed=fixed,capacity=capacity,reuse=reuse).items()},prediction
+
+def candidate_work(rs,model,reuse,constrained=True):
+    """Representations prepared and inspected along the actual decision path.
+
+    Absence of full residency is known from dimensions and configured capacity;
+    no impossible representation is constructed. Direct dispatch needs only
+    preparation; structural or byte-budget decisions also need inspection.
+    Dimension checks and rule dispatch remain outside the timed interval.
+    """
+    present={r['policy'] for r in rs}
+    def unique(ps):return list(dict.fromkeys(p for p in ps if p in present))
+    def direct(p):return dict(prepare=[p],inspect=[])
+    def inspected(ps):
+        path=unique(ps);return dict(prepare=path,inspect=path)
+    fixed=model['fixed'] if model['fixed'] in present else 'stream512'
+    fixed_work=inspected(('stream512',fixed)) if constrained and fixed!='stream512' else direct(fixed)
+    capacity=(inspected(('stream512','full')) if constrained else direct('full')) if 'full' in present else direct('stream512')
+    path=unique(('stream512','full')) if constrained else ['stream512']
+    if reuse!='full':
+        path.append('hot')
+        if reuse!='hot':path.append('batch')
+    reuse_work=capacity if reuse=='full' else inspected(path)
+    return dict(model=inspected([r['policy'] for r in rs]),
+                fixed=fixed_work,capacity=capacity,reuse=reuse_work)
 
 
 def evaluate():
+    if OUT.name!='corrected':
+        raise RuntimeError('Preserve historical results: use decision_correction.py analyze.')
     model=json.loads((OUT/'frozen-model.json').read_text())
     rows=json.loads((OUT/'heldout-t8.json').read_text())
     results=[];kernel=[]
@@ -129,15 +152,16 @@ def evaluate():
           right_choices=sum(r['chosen_cycles']==r['best_cycles'] for r in kernel if r['constrained']==c),conditions=24) for c in (True,False)}
     train=json.loads((OUT/'calibration-t8.json').read_text())
     summary['calibration']={'simulated_cycles':sum(r['cycles'] for r in train),
-        'modelled_serial_seconds_at_80MB_s':sum(total(r,1,80,0) for r in train),
+        'modelled_serial_seconds_at_80MB_s':sum(total(r,1,80,0,setup=r['prepare_ns']+r['inspect_ns']) for r in train),
         'fit_seconds':model.get('fit_seconds'),
-        'note':'One-time calibration excluded from deployed-rule totals; add this and fit time for a cold deployment. The fixed rule also uses calibration; capacity/reuse do not.'}
+        'note':'Includes native preparation and structural inspection. One-time calibration excluded from deployed-rule totals; add this and original fit time for a cold deployment. The fixed rule also uses calibration; capacity/reuse do not.'}
     dump(OUT/'summary.json',summary)
     print(json.dumps(summary,indent=2))
 
 def figures():
     import sys
-    sys.path.insert(0,str(OUT.parents[1]/'.deps/thesis-pdf'))
+    from decision_study import ROOT
+    sys.path.insert(0,str(ROOT/'.deps/thesis-pdf'))
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
