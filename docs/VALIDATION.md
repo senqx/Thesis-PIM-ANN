@@ -1,5 +1,12 @@
 # Document and artifact validation
 
+**Subsequent review of revision `67bb4be`:** the
+[independent cost review](DECISION_COST_REVIEW.md) found avoidable simple-rule
+charges and a per-input timing-information assumption that require resolution
+before merging PR #1. Both retained-artifact verifiers still pass. The validation
+counts and document checks below describe that retained checkpoint; they establish
+reproduction and internal consistency, not that every charged operation is necessary.
+
 **Current checkpoint: 24 November 2026.** The follow-up adds a completed
 standard sparse-operation study to the preserved 23 November graph pilot.
 The [current PDF](../thesis/short-thesis.pdf) and

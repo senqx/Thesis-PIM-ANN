@@ -7,6 +7,12 @@ Master's research by **Artashes Atanesyan**.
 [Research questions](docs/CONTRIBUTION_PLAN.md) ·
 [Validation record](docs/VALIDATION.md)
 
+**Review status:** [PR #1](https://github.com/senqx/Thesis-PIM-ANN/pull/1) remains
+a draft. The [independent cost review](docs/DECISION_COST_REVIEW.md) identifies
+avoidable charges for simple rules and an uncharged profiling assumption to
+resolve before merging. The retained results remain reproducible; their
+setup-inclusive accounting is under review.
+
 When does keeping indexed data in a DPU's small working memory save more time
 than it costs to manage? This project investigates that question using
 compiled UPMEM programs, reproducible simulations and explicit accounting
