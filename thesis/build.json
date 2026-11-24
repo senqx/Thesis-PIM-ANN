@@ -17,7 +17,7 @@
     "/usr/share/fonts/liberation-serif/LiberationSerif-Italic.ttf": "c23ca5028f0cb4436099308a2a802b816206cf19186b193643230e021e86c324",
     "/usr/share/fonts/liberation-serif/LiberationSerif-Regular.ttf": "2285a75558b44324237d78660b272e24460892559dae8695f9b3728f88cab2cc"
   },
-  "pages": 23,
+  "pages": 24,
   "research_date": "24 November 2026",
   "sha256": {
     "experiments/access-plan-fivepoint/manifest.json": "bcb3d1b0196e94587438280449fa441c7a513d5a26de1e123c44fc2836840a9e",
@@ -43,8 +43,8 @@
     "thesis/figures/performance.png": "5ce4a44327dc7809593e047b97b0ad7e53654f99c57d1f43ef4c2c9465f06b83",
     "thesis/figures/plotted-data.json": "8807df3a801ecb12cec877a3ac457fc7fe9928b60c1f155283c81975ac533190",
     "thesis/requirements.txt": "6bf4b91057112e426ccd8386af465aef1d9aba210a6484d40ae1342de6c6e38f",
-    "thesis/short-thesis.md": "e74cf02eb8921d8112656b6e8cfe968c8443bd9cddbffce52288e41bfa252cf4",
-    "thesis/short-thesis.pdf": "f8eb21a109f90e2a2cf075c21bd2b37a8dd8867bd9c48af49b6cbef9e1244c33"
+    "thesis/short-thesis.md": "376f9d19de4f1f821c369d973027706726c213d6228c4cc60096dfacf868d50f",
+    "thesis/short-thesis.pdf": "c47c1e1dc73244f55f688a212cbd6b3759c01ceb7024b146f061891882ef99a5"
   },
-  "source_words": 11279
+  "source_words": 11555
 }

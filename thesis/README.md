@@ -16,7 +16,8 @@ The reading path is:
 3. Sections 7–10: the historical pilot, stronger controls and initial preparation costs.
 4. Sections 11–12: cost accounting and the completed standard-workload methodology.
 5. Section 13: capacity/width results, payback, failed selection and robustness checks.
-6. Sections 14–15: practical guidance, limitations and an explicit answer to each RQ.
+6. Sections 14–15: practical guidance, the boundary between this study and later
+   research stages, and an explicit answer to each RQ.
 
 The appendices provide a reproduction path and glossary. PDF bookmarks follow
 the section/subsection hierarchy. Three schematics explain the architecture,

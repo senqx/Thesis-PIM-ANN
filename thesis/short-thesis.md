@@ -41,6 +41,11 @@ than it costs, and which approach should an engineer choose?** “Worthwhile”
 means lower total accounted time within declared memory and traffic limits.
 It does not mean merely fewer reads or a faster inner loop.
 
+This thesis is an experimental investigation of the costs and benefits of local
+data reuse on UPMEM. It establishes a foundation for studying future-access
+prediction and system-level coordination, while answering the local reuse
+question within the stated experimental scope.
+
 The discussion builds from the machine to the computation, then to the choices
 and their costs. Sections 2–3 explain the required terms and connect graph,
 matrix and machine-learning examples. Sections 4–6 distinguish established
@@ -1114,6 +1119,8 @@ outside the evidence. No robustness result is used to retune the frozen selector
 
 ## 14. What the evidence lets an engineer do today
 
+### 14.1. Use the local cost evidence
+
 The evidence supports a practical order of checks. First calculate usable WRAM
 from the actual linked allocation, including stacks and buffers. Compare the
 simplest feasible retention and streaming implementations, and allow meaningful
@@ -1154,6 +1161,27 @@ helps identify when additional inspection and adaptation are unjustified. It
 also prevents the stronger but unsupported claim that a general adaptive
 framework has been validated. Established algorithms remain credited to prior work.
 
+### 14.2. Possible next stages
+
+**Stage 1, understanding when local retention is worthwhile, is this thesis.**
+It accounts for movement, retention, preparation and method selection. The
+selector predicts implementation cost for an available worklist; it does not
+predict which addresses a traversal will request next.
+
+**Stage 2, predicting future requirements, is possible next research.** Graph
+topology and current traversal state could supply information about accesses
+that have not yet been revealed. A useful predictor would need to make that
+information available early enough to help, while accounting for its execution
+cost, unused fetches, extra traffic and WRAM occupancy. This requires new
+evaluation on evolving traversals.
+
+**Stage 3, coordinating heterogeneous data movement, is a longer-term direction.**
+It would consider placement, assignment of work to DPUs or other processors,
+and transfer timing, including load imbalance, synchronization, communication
+and migration costs at system level. These later stages motivate future work;
+the present contribution is the local-reuse study and its positive and negative
+findings.
+
 ## 15. Conclusion
 
 Local reuse is worthwhile only when saved execution exceeds management and
@@ -1181,6 +1209,13 @@ Its 8/24 equally optimal kernel choices, inspection overhead and remaining
 long-lifetime regret do not justify replacing the simpler rules. This answers
 the question for this concrete model; it does not prove that every possible
 adaptive strategy fails.
+
+The engineering lesson is that two decisions have separate costs: whether an
+optimization is useful, and whether an adaptive mechanism is worth using to
+select it. Retention can reduce movement and repay preparation in a tested
+regime while the selector still makes costly mistakes and loses to a simple
+fixed policy. Correct output is preserved; the negative result concerns
+performance decisions. This distinction is a central finding of the thesis.
 
 The contribution is an experimentally supported account of when established
 local-memory methods help, lose or violate a budget, together with a reproducible

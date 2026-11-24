@@ -18,6 +18,15 @@ published methods and selected official implementations. It finds substantial
 overlap. The follow-up supplies empirical comparisons, not an established novel
 algorithm or a successful general selection rule.
 
+The completed thesis is **Stage 1: an experimental investigation of the costs
+and benefits of local data reuse on UPMEM**. Its selector chooses how to serve
+known accesses. **Stage 2**, predicting future requirements from topology and
+traversal state, is possible next research. **Stage 3**, coordinating placement,
+work assignment and transfers across heterogeneous resources, is a longer-term
+direction. Neither later stage is claimed as a completed contribution or a
+required extension of this paper. The failed-selector result remains a central
+Stage 1 finding. Section 14 of the thesis separates these stages explicitly.
+
 ## The engineering question
 
 An engineer has assigned work to a UPMEM DPU. Should the program stream data

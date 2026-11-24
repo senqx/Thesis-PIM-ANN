@@ -12,6 +12,10 @@ than it costs to manage? This project investigates that question using
 compiled UPMEM programs, reproducible simulations and explicit accounting
 for preparation, memory capacity and data movement.
 
+The thesis is **an experimental investigation of the costs and benefits of local
+data reuse on UPMEM**. Its central question is whether a saving survives the
+work required to obtain it.
+
 **Research revision — 24 November 2026:** the follow-up implements standard
 integer SpMV/SpMM, stronger baselines, native preparation and a cost model
 frozen before held-out evaluation. It asks **when each approach is worth using,
@@ -46,6 +50,25 @@ tested selector**. The algorithms themselves are credited to prior work.
 The [novelty audit](docs/NOVELTY_AUDIT.md) states that distinction explicitly;
 the [paired results](experiments/decision-study/results.md) provide the numbers.
 The model's failure does not prove that every adaptive policy must fail.
+
+## Current study and future directions
+
+| Stage | Question | Status |
+| --- | --- | --- |
+| 1. Understand local retention | When do saved transfers repay execution, retention and access-plan preparation costs? | Current thesis; tested within the declared simulator and accounting scope |
+| 2. Predict future requirements | Can topology and traversal state predict useful accesses before they are revealed? | Possible next research; requires new workloads and evaluation |
+| 3. Coordinate heterogeneous movement | Where should data reside, which processor should execute the work, and when should transfers occur? | Longer-term direction; requires system-level placement, scheduling and communication evidence |
+
+The tested selector belongs to Stage 1: it chooses an implementation for a known
+worklist. Predicting its execution cost is different from predicting future
+addresses. The later stages are research directions, not deliverables established
+by this paper.
+
+The failed-selector result is central: **an optimization can reduce movement and
+repay preparation, while an adaptive mechanism for selecting it still costs more
+than a simple fixed policy**. In this study, both inspection overhead and wrong
+performance rankings contribute. All tested methods preserve correct outputs;
+the failure concerns the quality and cost of the recommendation.
 
 ## Read in this order
 

@@ -105,7 +105,7 @@ python3 scripts/decision_artifact.py verify
   invented; no additional university formatting requirement was supplied.
 - Every page was reviewed for layout, with separate inspection of the numerical
   plots, diagrams and bibliography. Captions stay with their figures/tables.
-- Text extracted from the final PDF contains all 215 source prose, heading,
+- Text extracted from the final PDF contains all 222 source prose, heading,
   code and caption blocks checked after whitespace normalization and removal
   of page headers/footers. The numeric tables are checked through their retained
   data and generated source.
@@ -121,6 +121,10 @@ python3 scripts/decision_artifact.py verify
 - README, manuscript, experiment inventory and novelty/gap records distinguish
   the historical pilot from the new completed evaluation. All RQs are answered
   explicitly in the conclusion, including the unsuccessful selector result.
+- The framing revision identifies local reuse as the completed Stage 1 study,
+  with access prediction and heterogeneous coordination as future directions.
+  It distinguishes performance-choice errors from incorrect output. The
+  experiment sources, frozen model and retained evidence are unchanged.
 - Local Markdown links, Python syntax and Git whitespace checks passed. Links
   embedded in the standalone PDF resolve to repository URLs.
 - A second build reproduced identical reports, figures, archived evidence, PDF
