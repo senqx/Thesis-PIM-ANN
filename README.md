@@ -2,14 +2,14 @@
 
 Master's research by **Artashes Atanesyan**.
 
-**[Read the thesis draft (PDF)](thesis/short-thesis.pdf)** ·
+**[Read the thesis (PDF)](thesis/short-thesis.pdf)** ·
 [Markdown version](thesis/short-thesis.md) ·
 [Research questions](docs/CONTRIBUTION_PLAN.md) ·
 [Validation record](docs/VALIDATION.md)
 
 **Review status:** the accounting review found no remaining conceptual blocker.
-[PR #1](https://github.com/senqx/Thesis-PIM-ANN/pull/1) is prepared for final review
-and merge checks. The
+[PR #1](https://github.com/senqx/Thesis-PIM-ANN/pull/1) was merged into `main`;
+the reviewed changes are part of the current thesis. The
 [independent cost review](docs/DECISION_COST_REVIEW.md) led to direct feasibility
 checks for simple policies and an explicit optimistic timing-information assumption.
 Both the charged selector and the zero-selection-overhead diagnostic fail at all
