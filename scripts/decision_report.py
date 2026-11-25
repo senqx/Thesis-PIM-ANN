@@ -83,7 +83,7 @@ def robustness(held):
         'confidence intervals or bounds on future host timings. A margin spanning zero makes',
         'the reported median-based payback sensitive to observed host timing variation.',
         f'{sum(r["observed_envelope_low_margin_us"]>0 for r in narrow)}/16 SpMM cases at 8–64 bytes retain a positive first-use margin across this envelope.',
-        'The six others span zero; median-based first-use payback is not robust for those cases.','',
+        f'{sum(r["observed_envelope_low_margin_us"]<=0 for r in narrow)}/16 do not retain a strictly positive first-use margin across the envelope.','',
         '## Feasible concurrency','',
         '[concurrency.json](concurrency.json) adds 50 executions at four/twelve tasklets.',
         'The twelve-tasklet, 128-byte batch image requires 70,096 WRAM bytes and is excluded.',
@@ -92,6 +92,8 @@ def robustness(held):
     (OUT/'robustness.md').write_text('\n'.join(lines))
 
 def build():
+    if OUT.name!='corrected':
+        raise RuntimeError('Preserve historical results: use decision_correction.py analyze.')
     held=json.loads((OUT/'heldout-t8.json').read_text());allrows=[]
     for phase in ('calibration-t8','heldout-t8','controlled-t8'):allrows+=json.loads((OUT/f'{phase}.json').read_text())
     comparisons=[]
@@ -139,13 +141,22 @@ def build():
     for k in frozen['valid_uses']:
         group=[r for r in primary if int(r['uses'])==k]
         means={rule:statistics.mean(float(r['total_seconds']) for r in group if r['rule']==rule) for rule in ('model','fixed','capacity','reuse')}
-        worst=0
+        worst=0;zero_worst=0;zero_times=[]
         for n in TEST:
             for w in WORDS:
                 paired={r['rule']:float(r['total_seconds']) for r in group if r['input']==n and int(r['words'])==w}
-                worst=max(worst,100*(paired['model']/min(paired[p] for p in ('fixed','capacity','reuse'))-1))
+                simple=min(paired[p] for p in ('fixed','capacity','reuse'))
+                worst=max(worst,100*(paired['model']/simple-1))
+                chosen=next(r['chosen'] for r in group if r['rule']=='model' and r['input']==n and int(r['words'])==w)
+                row=next(r for r in held if (r['input'],r['words'],r['policy'])==(n,w,chosen))
+                zero=total(row,k,80,0)
+                zero_times.append(zero)
+                zero_worst=max(zero_worst,100*(zero/simple-1))
         criteria.append(dict(uses=k,model_mean_seconds=means['model'],best_simple_mean_seconds=min(means[p] for p in ('fixed','capacity','reuse')),
-            worst_slowdown_vs_best_simple_pct=worst,passes=means['model']<min(means[p] for p in ('fixed','capacity','reuse')) and worst<=5))
+            worst_slowdown_vs_best_simple_pct=worst,passes=means['model']<min(means[p] for p in ('fixed','capacity','reuse')) and worst<=5,
+            zero_overhead_model_mean_seconds=statistics.mean(zero_times),
+            zero_overhead_worst_slowdown_vs_best_simple_pct=zero_worst,
+            zero_overhead_passes=statistics.mean(zero_times)<min(means[p] for p in ('fixed','capacity','reuse')) and zero_worst<=5))
     write_table(OUT/'success-criteria.csv',criteria)
     storage=[]
     for n in TEST:
@@ -155,6 +166,10 @@ def build():
                 source_bytes=rs[0]['source_feature_bytes'],largest_native_process_rss_kib=max(r['process_peak_rss_kib'] for r in rs)))
     write_table(OUT/'host-storage.csv',storage)
     lines=['# Paired results and decision quality','',
+        'Current results use corrected native preparation and decision-path accounting.',
+        'The [correction record](README.md) explains provenance and reproduction.',
+        'DPU cycles and the fitted model are inherited unchanged; this is a post-freeze',
+        'correction on already observed inputs, not a new untouched confirmation.','',
         'The tables below are generated from retained records. Positive cycle savings mean fewer',
         'complete simulated cycles than stream512 on the same input and width. These are',
         'deterministic model results, not hardware speedups or statistical confidence intervals.','',
@@ -183,11 +198,22 @@ def build():
         lines.append(f'| {k:,} | '+' | '.join(f'{summary[p][str(k)]["mean_regret_pct"]:.2f}%' for p in ('model','fixed','capacity','reuse'))+' |')
     lines+=['','Regret is excess accounted time relative to the best feasible method for that condition.',
         'These are arithmetic means of paired percentages at 80 MB/s and zero extra launch cost.',
-        'The totals include rejected-candidate construction and inspection, prediction, native refresh,',
+        'Fixed and capacity rules use direct header feasibility checks and prepare only the selected',
+        'representation. Reuse checks full from the header, then inspects hot/batch only as needed;',
+        'its streaming reference is computed analytically. The model constructs and inspects all',
+        'available candidates. Visited rejected candidates are charged; skipped ones are not.',
+        'All policies use the same measured encoder/refresh costs, transfer equation and byte budgets.',
+        'Simple dispatch and teardown are excluded throughout. Model prediction arithmetic is charged.',
+        'Per-input refresh estimates used to select a policy are granted free of collection cost:',
+        '**an optimistic information assumption**, not offline calibration or runtime profiling.',
+        'The totals include native refresh,',
         'metadata installation, feature upload and output retrieval. Program loading and application',
         'integration remain outside this interval. One-time calibration is separate.','',
         '![Setup and prediction errors affect different plan lifetimes.](decision-cost.png)','',
         f'The model passes the frozen practical-success criterion at {sum(r["passes"] for r in criteria)}/{len(criteria)} tested lifetimes.',
+        f'Against these same corrected baselines, granting the model zero selection overhead still passes at {sum(r["zero_overhead_passes"] for r in criteria)}/{len(criteria)} lifetimes.',
+        'That diagnostic pays only for its selected encoder, execution, refresh and transfers;',
+        'it preserves the chosen policy. Both criteria are recomputed from the current alternatives.',
         '**The tested adaptive selector is not justified by this evaluation.** This rejects this',
         'implementation under these conditions; it does not prove that every possible selector fails.',
         'Long reuse can amortize construction, but it cannot repair repeated poor choices.','',

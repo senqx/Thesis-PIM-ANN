@@ -1,0 +1,202 @@
+{
+  "accounting_scenarios_not_new_timings": true,
+  "avoidable_capacity_charge_us": [
+    0.0,
+    0.0
+  ],
+  "capacity_full_present_conditions": 11,
+  "diagnostic_scenario": {
+    "bandwidth_mb_s": 80,
+    "constrained": true,
+    "launch_us": 0,
+    "simple_dispatch_timing_included": false
+  },
+  "exhaustive_frequency_cases": 7736,
+  "formula_checks": {
+    "hot_rows": 52,
+    "streaming_and_full_rows": 134
+  },
+  "header_decisions_match_all_24_conditions": true,
+  "input_sha256": {
+    "experiments/decision-study/corrected/calibration-t8.json": "c6fcccbca9719582875c19cde575ea3585a58ae9fc8cd057aee8d84809e428d2",
+    "experiments/decision-study/corrected/controlled-t8.json": "38e15a1fb1fca33a58522a4d246c000a0eefb921822ae3fdf2aad805af72022a",
+    "experiments/decision-study/corrected/frozen-model.json": "5e0cfa6c29d0cbdeede8064990d07ecbad80fdb2780b11c8966f3b3bb879931c",
+    "experiments/decision-study/corrected/heldout-t8.json": "14ad8c266c581e250a1a60846e0e09c76fd58ea138950bc837d08d69de3c6f65",
+    "experiments/decision-study/corrected/scenarios.csv.gz": "0b62f2f6761e914adb960264a0257e260c481a95d73b884ca49d974ebd77fe68",
+    "experiments/decision-study/inputs/1138_bus.json": "6b3113f897ecdf8802f6e48e41997b767cce7411958f584cb1a1ea9c7cf9ac86",
+    "experiments/decision-study/inputs/494_bus.json": "66800f394f9921690d59617edab19374102550ef67348786cf4a01dbf123e418",
+    "experiments/decision-study/inputs/bcsstk01.json": "80557714a74a049b0208b3eca27368e9904de486171f10420925d3a3cf21aa76",
+    "experiments/decision-study/inputs/bcsstk06.json": "837072dbb1291431c57d6636717df23fcf7b7786ef9d42361e9ba2446793cf0f",
+    "experiments/decision-study/inputs/can__144.json": "cddda33629ba79a655ed11ec6a51d8a08fd9a2821a902715b362ad8a86a76165",
+    "experiments/decision-study/inputs/can__256.json": "de322a4a763b0c4980de558168f86b1cf7ae62e13940661583d616a9c30c3eb1",
+    "experiments/decision-study/inputs/clustered-c1024.json": "9b43926f9317cafe3a84c7fd2d1998f6ee02d907c0103a85a285b0dc1ccc23b3",
+    "experiments/decision-study/inputs/clustered-c2048.json": "8ff2cd4b5b54d3a7daf79d2f08ef705cfe6b65d8a644f58f3160ad4a1f5da284",
+    "experiments/decision-study/inputs/clustered-c256.json": "14e6635d01a50545f32be8a7be5c88f0a6de3304032d85f98b31783b216decb4",
+    "experiments/decision-study/inputs/clustered-c4096.json": "4dd70f856f3a015c0f265722a054a919d5a214b1989663126014e049e358bf3e",
+    "experiments/decision-study/inputs/clustered-c512.json": "fa63d703dcc45b6325b9b9fa8f7c45d5e989ab1c4abcd54958227bca98661c3f",
+    "experiments/decision-study/inputs/edgecase.json": "8df8269339fc95f2569da2e9040abecbf41166655c215a5306bf4617f113abc9",
+    "experiments/decision-study/inputs/edgecase_changed.json": "fd7c282678bc75d10234d3ef67f235684e33af5f55343cf7ddb820b759b17c33",
+    "experiments/decision-study/inputs/edgecase_empty.json": "5c8c09885d13daae0ac7b30c88245465815e17ab5e2673bb24d3d163262742bd",
+    "experiments/decision-study/inputs/uniform-c1024.json": "5fa8d8df047c643e342d02bad2257eef53a730992525a6dc4ebf3ad0cb06f134",
+    "experiments/decision-study/inputs/uniform-c2048.json": "4adbd00846e26cd81862b1e0327c962da38b0fce52ef86058112fbc8ed9d1cc7",
+    "experiments/decision-study/inputs/uniform-c256.json": "97f3c2920af55c738bf20cddb111800646e2f0bc72f576f97501d7ecdec98ab0",
+    "experiments/decision-study/inputs/uniform-c4096.json": "448323f289602a151aa94ee153db27d4f1b4552a0f0ca62b9687e6b6caf3b887",
+    "experiments/decision-study/inputs/uniform-c512.json": "4e1b89738b32b2cc41b3969a79ef54e46380f81ea901003ac014f6754b591e88",
+    "experiments/decision-study/inputs/west0067.json": "0d14f99d47210a1b79f405b7b69b881f7c49b06f055734aa1a37146a424b4bc8",
+    "experiments/decision-study/prepare.cpp": "24be92ba0bff08238f954297dc963620aaaae663d8190afd7da5f7bd769d2c0b",
+    "experiments/decision-study/task.c": "92631d05f4ef9286c9305836e64fead4976598bc65cf9ddc5da798940b32e4cd",
+    "scripts/decision_analysis.py": "f687de6b3482d7224cdc61fa7957abb27495a183f20ec108f02c4ba07ecd6e43",
+    "scripts/review_decision_costs.py": "12f461e18dbcb48bf8b48cf2ff4c8ff923fcadefb53461acd4df4570d2ee60bf"
+  },
+  "model_choice_checks": 1920,
+  "reviewed_commit": "current-sources-pinned-below",
+  "simple_rule_accounting": [
+    {
+      "capacity": {
+        "one_encoder": 1.9692661184676432,
+        "reported": 1.9692661184676432
+      },
+      "fixed": {
+        "one_encoder": 1.8985603835868596,
+        "reported": 1.8985603835868596
+      },
+      "uses": 1
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.1570509052728957,
+        "reported": 2.1570509052728957
+      },
+      "fixed": {
+        "one_encoder": 1.6224300616393452,
+        "reported": 1.6224300616393452
+      },
+      "uses": 2
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.4145237837546203,
+        "reported": 2.4145237837546203
+      },
+      "fixed": {
+        "one_encoder": 1.6261365387528417,
+        "reported": 1.6261365387528417
+      },
+      "uses": 4
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.559683999534257,
+        "reported": 2.559683999534257
+      },
+      "fixed": {
+        "one_encoder": 1.641869669003307,
+        "reported": 1.641869669003307
+      },
+      "uses": 8
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.647638241443975,
+        "reported": 2.647638241443975
+      },
+      "fixed": {
+        "one_encoder": 1.6656096844495418,
+        "reported": 1.6656096844495418
+      },
+      "uses": 16
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.716178444035669,
+        "reported": 2.716178444035669
+      },
+      "fixed": {
+        "one_encoder": 1.6866532921742357,
+        "reported": 1.6866532921742357
+      },
+      "uses": 64
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.733676803778134,
+        "reported": 2.733676803778134
+      },
+      "fixed": {
+        "one_encoder": 1.6924096832312698,
+        "reported": 1.6924096832312698
+      },
+      "uses": 256
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.7380747250935884,
+        "reported": 2.7380747250935884
+      },
+      "fixed": {
+        "one_encoder": 1.6938819707802626,
+        "reported": 1.6938819707802626
+      },
+      "uses": 1024
+    }
+  ],
+  "zero_refresh_changed_choices": [],
+  "zero_selection_overhead": [
+    {
+      "best_simple_mean_ms": 3.288101779761905,
+      "model_mean_ms": 3.291290357142857,
+      "passes": false,
+      "uses": 1,
+      "worst_slowdown_pct": 11.04028338781422
+    },
+    {
+      "best_simple_mean_ms": 6.23000630952381,
+      "model_mean_ms": 6.247478214285714,
+      "passes": false,
+      "uses": 2,
+      "worst_slowdown_pct": 11.040020242181203
+    },
+    {
+      "best_simple_mean_ms": 12.093368952380953,
+      "model_mean_ms": 12.159853928571428,
+      "passes": false,
+      "uses": 4,
+      "worst_slowdown_pct": 12.619586859747267
+    },
+    {
+      "best_simple_mean_ms": 23.820094238095237,
+      "model_mean_ms": 23.984605357142858,
+      "passes": false,
+      "uses": 8,
+      "worst_slowdown_pct": 13.996787400466747
+    },
+    {
+      "best_simple_mean_ms": 47.27354480952381,
+      "model_mean_ms": 47.63410821428572,
+      "passes": false,
+      "uses": 16,
+      "worst_slowdown_pct": 14.824653561474044
+    },
+    {
+      "best_simple_mean_ms": 187.93142946428574,
+      "model_mean_ms": 189.53112535714286,
+      "passes": false,
+      "uses": 64,
+      "worst_slowdown_pct": 15.551429522048576
+    },
+    {
+      "best_simple_mean_ms": 750.2828226071429,
+      "model_mean_ms": 757.1191939285715,
+      "passes": false,
+      "uses": 256,
+      "worst_slowdown_pct": 15.750786974889696
+    },
+    {
+      "best_simple_mean_ms": 2999.6883951785717,
+      "model_mean_ms": 3027.471468214286,
+      "passes": false,
+      "uses": 1024,
+      "worst_slowdown_pct": 15.801065074892652
+    }
+  ]
+}

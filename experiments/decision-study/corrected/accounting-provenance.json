@@ -1,0 +1,9 @@
+{
+  "native_measurements_changed": false,
+  "prediction_intervals": 1920,
+  "prediction_timing": "retained",
+  "refresh_estimates": "Per-input retained medians granted free of collection cost; optimistic information assumption.",
+  "simulation_records_changed": false,
+  "source_commit": "898052a9acfc09ddcefcab73662feb62d76b2456",
+  "source_scenarios_sha256": "8657976e66271ae4296d57c09341da6094ac7f09b6e69fc0a8b6f14ce2de53c9"
+}

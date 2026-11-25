@@ -29,6 +29,7 @@ SOURCE=THESIS/'short-thesis.md'
 PDF=THESIS/'short-thesis.pdf'
 WIDTH=A4[0]-40*mm
 TITLE='When Is WRAM Reuse Worth It?'
+REPOSITORY_REF='review/fair-preparation-costs'
 RESEARCH_DATE='24 November 2026'
 
 
@@ -86,7 +87,7 @@ def refresh_table():
     text,count=re.subn(r'(?s)(<!-- begin:control-table -->\n).*?(<!-- end:control-table -->)',
                       lambda m:m[1]+'\n'.join(lines)+'\n'+m[2],text)
     assert count==1
-    decision=ROOT/'experiments/decision-study'
+    decision=ROOT/'experiments/decision-study/corrected'
     if (decision/'decision-table.md').exists():
         new_table=(decision/'decision-table.md').read_text().rstrip()
         text,count=re.subn(r'(?s)(<!-- begin:decision-table -->\n).*?(<!-- end:decision-table -->)',
@@ -112,7 +113,7 @@ def pdf_link(url):
     target=(THESIS/path).resolve()
     assert target.exists(),url
     relative=target.relative_to(ROOT)
-    return 'https://github.com/senqx/Thesis-PIM-ANN/blob/main/'+str(relative)+(sep+anchor if sep else '')
+    return 'https://github.com/senqx/Thesis-PIM-ANN/blob/'+REPOSITORY_REF+'/'+str(relative)+(sep+anchor if sep else '')
 
 
 def inline(nodes):
@@ -248,13 +249,13 @@ def build():
     pages=int(re.search(r'^Pages:\s+(\d+)',info,re.M)[1])
     paths=[SOURCE,PDF,ROOT/'scripts/build_short_thesis.py',ROOT/'scripts/thesis_figures.py',
            ROOT/'experiments/access-plan-fivepoint/manifest.json',
-           ROOT/'experiments/baseline-gates/manifest.json',THESIS/'requirements.txt']
+           ROOT/'experiments/baseline-gates/manifest.json',ROOT/'experiments/decision-study/manifest.json',THESIS/'requirements.txt']
     paths+=sorted((THESIS/'figures').glob('*'))
-    decision=ROOT/'experiments/decision-study'
+    decision=ROOT/'experiments/decision-study/corrected'
     for name in ('manifest.json','frozen-model.json','summary.json','plotted-data.json',
                  'capacity.png','widths.png','decision-cost.png'):
         if (decision/name).exists():paths.append(decision/name)
-    manifest=dict(pages=pages,research_date=RESEARCH_DATE,source_words=len(SOURCE.read_text().split()),
+    manifest=dict(pages=pages,research_date=RESEARCH_DATE,repository_ref=REPOSITORY_REF,source_words=len(SOURCE.read_text().split()),
         dependencies={p:importlib.metadata.version(p) for p in ('reportlab','mistune','matplotlib','Pillow','charset-normalizer')},
         sha256={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
         fonts={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in fontfiles})

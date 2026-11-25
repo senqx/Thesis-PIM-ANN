@@ -5,6 +5,8 @@
 [standard sparse-operation study](../experiments/decision-study/README.md).
 The scope is one simulated UPMEM DPU and local representation choice. It does
 not revive the original proposal for a general adaptive prefetching framework.
+Current accounted results use the [post-freeze preparation correction](../experiments/decision-study/corrected/README.md);
+all original kernel results and source snapshots remain available.
 
 ## Completed work and what it establishes
 
@@ -17,11 +19,11 @@ not revive the original proposal for a general adaptive prefetching framework.
 | Unequal WRAM assumptions | Every linked image checked, including the upstream 49,152-byte stack reservation | A 70,096-byte twelve-tasklet batch image is excluded; no impossible allocation receives a timing |
 | One concurrency setting | Fifty additional four/twelve-tasklet runs, compared with the eight-tasklet baseline | Concurrency and feasible retention capacity can change the winner; not isolated causation or exhaustive tuning |
 | Python-only setup costs | Native preparation, structural inspection and feature refresh; 31 samples after three warmups | Practical margins now describe the native implementation; old Python results remain historical |
-| Ignoring setup, host work or extra traffic | Charge rejected-candidate construction, inspection, selection, installation, refresh and modelled transfers; enforce byte budgets per input | A fast but over-budget choice cannot pass by averaging; host candidate storage is reported separately |
+| Ignoring setup, host work or extra traffic | Use header checks for simple policies; charge visited candidate construction, inspection, selection, installation, refresh and modelled transfers; enforce byte budgets per input | A fast but over-budget choice cannot pass by averaging; host candidate storage is reported separately |
 | Assuming an adaptive rule works | Freeze model/rules/input hashes before held-out timings; compare against fixed, capacity and reuse rules | Model finds an equally fastest feasible kernel in 8/24 conditions and fails the practical criterion at all eight lifetimes |
 | Lifetimes assume valid state | Thirteen records with three changed-feature invocations each; fourteen structural/empty-input checks | All outputs and traffic pass; triple-run cycles differ from 3×single by −0.391% to +0.194%, so linearity is an approximation |
 | Dependence on one DRAM setting | Five joint timing scales on the same images; 52 new runs and 13 reused comparators | The narrow-retention/wide-streaming ranking persists on this subset; this is sensitivity, not hardware validation |
-| Fragile payback thresholds | Recompute margins using extreme combinations of observed native samples | Ten of sixteen 8–64-byte cases retain a positive first-use margin; six span zero. These are descriptive envelopes |
+| Fragile payback thresholds | Recompute margins using extreme combinations of observed native samples | Nine of sixteen 8–64-byte cases retain a positive first-use margin; seven span zero after corrected native timing. These are descriptive envelopes |
 | Unclear originality | Explicit comparisons with SparseP, DRIM-ANN, PyGim, ATiM and related preprocessing work | Contribution is scoped comparative evidence and a negative selector result; no new mechanism or universal priority claim |
 | Results cannot be independently checked | Exact images, inputs, outputs, raw timings, counters, options and frozen hashes; independent decoding and fresh replay | See the [validation record](VALIDATION.md) for executed checks and the current PDF/build record |
 
@@ -33,7 +35,10 @@ traffic/storage limits, then include setup and refresh costs. They show where
 this order changes the answer. In the tested held-out 16-byte cases, static
 frequency retention saves 11.97–15.71% of complete simulated cycles; at 128 bytes,
 streaming wins under the primary budget. Building and inspecting every candidate
-makes the tested adaptive model unattractive, even when preparation is amortized.
+adds substantial cost. Even with that selection overhead removed, the model
+fails the criterion against the corrected direct baselines at all eight reference
+lifetimes. Per-input refresh estimates are granted free of collection cost, an
+optimistic assumption; this is not a demonstrated runtime profiling mechanism.
 
 These are usable conditional findings and reproducible counterexamples to an
 unsupported general recommendation. They are not an empirical basis for saying

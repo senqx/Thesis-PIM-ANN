@@ -1,0 +1,7 @@
+{
+  "command": "python3 scripts/test_decision_correction.py",
+  "result": "pass",
+  "scope": "Header feasibility, lazy encoder calls, retained-counter equivalence and all 1,920 frozen choices; no native timing or simulation.",
+  "test_source_sha256": "5e80411344a61dff2dfddac00161d87dd4fcf10a8c5102de4094e7299c6521e8",
+  "tests": 14
+}

@@ -148,13 +148,25 @@ def verify():
     import io
     import statistics as native_statistics
     manifest=json.loads((OUT/'manifest.json').read_text())
-    for name,digest in manifest['sha256'].items():assert sha((ROOT/name).read_bytes())==digest,name
+    # Retained measurements were produced by pre-correction sources. Verify those
+    # exact historical files from immutable archive copies, not the working sources.
+    historical_sources={
+        'experiments/decision-study/prepare.cpp':'experiments/decision-study/archive/pre-change/prepare.cpp',
+        'scripts/decision_analysis.py':'scripts/archive/pre-change/decision_analysis.py',
+        'scripts/decision_artifact.py':'scripts/archive/pre-change/decision_artifact.py',
+        'scripts/decision_report.py':'scripts/archive/pre-change/decision_report.py',
+        'experiments/decision-study/README.md':'experiments/decision-study/archive/pre-change/README.md',
+        'experiments/decision-study/results.md':'experiments/decision-study/archive/pre-change/results.md',
+    }
+    for name,digest in manifest['sha256'].items():
+        archived=historical_sources.get(name,name)
+        assert sha((ROOT/archived).read_bytes())==digest,name
     frozen=json.loads((OUT/'frozen-model.json').read_text())
     assert sha((OUT/'calibration-t8.json').read_bytes())==frozen['calibration_sha256']
     assert sha((OUT/'PROTOCOL.md').read_bytes())==frozen['protocol_sha256']
     assert sha((ROOT/'scripts/decision_study.py').read_bytes())==frozen['script_sha256']
     assert sha((OUT/'task.c').read_bytes())==frozen['kernel_sha256']
-    assert sha((OUT/'prepare.cpp').read_bytes())==frozen['native_source_sha256']
+    assert sha((ROOT/'experiments/decision-study/archive/pre-change/prepare.cpp').read_bytes())==frozen['native_source_sha256']
     assert sha((inspect.getsource(choose)+inspect.getsource(total)).encode())==frozen['decision_rule_sha256']
     for name,digest in frozen['heldout_inputs'].items():assert sha((OUT/'inputs'/f'{name}.json').read_bytes())==digest
     with zipfile.ZipFile(OUT/'replay.zip') as z:

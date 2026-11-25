@@ -5,7 +5,14 @@ then develops the question: when do local reuse and its preparation pay off?
 It preserves the original graph-aggregation pilot and adds a completed
 [standard sparse-operation evaluation](../experiments/decision-study/README.md).
 The frozen selector failed its practical-success criterion; the text reports
-that negative result alongside useful static-retention regimes.
+that negative result alongside useful static-retention regimes. Current accounted
+totals use the validated [preparation correction](../experiments/decision-study/corrected/README.md).
+Direct header checks now remove unnecessary simple-policy preparation. The
+selector receives refresh-time estimates at no collection cost, explicitly an
+optimistic assumption. Both its charged and zero-overhead versions fail against
+the corrected baselines at all eight reference lifetimes. The original model,
+native samples, prediction timings and DPU evidence remain unchanged. The PDF currently links
+to the review branch; its exact repository reference is in the build record.
 
 Start with [short-thesis.pdf](short-thesis.pdf), or read the same text in
 [short-thesis.md](short-thesis.md). The filenames are retained for existing links.
@@ -38,8 +45,7 @@ isolated environment, or the ignored local dependency directory:
 ```sh
 python3 -m pip install --target .deps/thesis-pdf -r thesis/requirements.txt
 MPLCONFIGDIR=build/matplotlib PYTHONPATH=.deps/thesis-pdf python3 scripts/thesis_figures.py
-MPLCONFIGDIR=build/matplotlib PYTHONPATH=.deps/thesis-pdf python3 scripts/decision_analysis.py figures
-python3 scripts/decision_report.py
+MPLCONFIGDIR=build/matplotlib python3 scripts/decision_correction.py render
 python3 scripts/build_short_thesis.py
 pdfinfo thesis/short-thesis.pdf
 ```
@@ -50,7 +56,7 @@ ReportLab produces the PDF with embedded fonts and numbered references.
 Four result tables are refreshed from retained data during the build. Figure
 scripts generate PNGs and standalone vector PDFs. Their plotted values are in
 [figures/plotted-data.json](figures/plotted-data.json) and the
-[decision-study plot record](../experiments/decision-study/plotted-data.json).
+[decision-study plot record](../experiments/decision-study/corrected/plotted-data.json).
 
 [build.json](build.json) records the actual PDF page count, dependency versions
 and source/PDF/figure/evidence hashes. It is the authoritative page-count record;
@@ -65,6 +71,7 @@ includes no fabricated supervisor or university information. The
 python3 scripts/access_plan_fivepoint.py verify
 python3 scripts/access_plan_gates.py verify
 python3 scripts/decision_artifact.py verify
+python3 scripts/decision_correction.py verify
 python3 scripts/decision_artifact.py replay
 ```
 

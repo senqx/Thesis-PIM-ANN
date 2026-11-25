@@ -7,6 +7,14 @@ Master's research by **Artashes Atanesyan**.
 [Research questions](docs/CONTRIBUTION_PLAN.md) ·
 [Validation record](docs/VALIDATION.md)
 
+**Review status:** the accounting review found no remaining conceptual blocker.
+[PR #1](https://github.com/senqx/Thesis-PIM-ANN/pull/1) is prepared for final review
+and merge checks. The
+[independent cost review](docs/DECISION_COST_REVIEW.md) led to direct feasibility
+checks for simple policies and an explicit optimistic timing-information assumption.
+Both the charged selector and the zero-selection-overhead diagnostic fail at all
+eight reference lifetimes against the corrected baselines.
+
 When does keeping indexed data in a DPU's small working memory save more time
 than it costs to manage? This project investigates that question using
 compiled UPMEM programs, reproducible simulations and explicit accounting
@@ -23,6 +31,13 @@ and in which scenarios**. The tested selector fails its practical-success
 criterion; the thesis reports that result alongside useful static-retention
 regimes. Hardware speedup, energy savings and complete application acceleration
 have not been demonstrated.
+
+**Preparation/accounting correction:** current totals reuse the corrected native
+measurements and original prediction timings. Fixed and capacity-first construct
+only the selected representation; reuse charges only visited candidates. All 511 archived invocation inputs match the corrected
+preparation byte for byte. The DPU cycles and frozen model are reused; the
+[correction record](experiments/decision-study/corrected/README.md) separates this
+post-freeze correction from the historical measurements.
 
 ## What the experiments show
 
@@ -48,7 +63,7 @@ The contribution is **a reproducible comparison of when established choices
 help, lose or violate a resource budget, and a held-out negative result for the
 tested selector**. The algorithms themselves are credited to prior work.
 The [novelty audit](docs/NOVELTY_AUDIT.md) states that distinction explicitly;
-the [paired results](experiments/decision-study/results.md) provide the numbers.
+the [paired results](experiments/decision-study/corrected/results.md) provide the numbers.
 The model's failure does not prove that every adaptive policy must fail.
 
 ## Current study and future directions
@@ -75,7 +90,7 @@ the failure concerns the quality and cost of the recommendation.
 | Document | What it gives you |
 | --- | --- |
 | [Thesis draft](thesis/short-thesis.pdf) | Concepts, worked example, prior work, RQs, completed evidence, costs and limitations |
-| [Standard-workload results](experiments/decision-study/results.md) | Measured boundaries, native-cost accounting and held-out selection results |
+| [Standard-workload results](experiments/decision-study/corrected/results.md) | Measured boundaries, native-cost accounting and held-out selection results |
 | [Study protocol](experiments/decision-study/PROTOCOL.md) | Questions, frozen split, resource budgets and success criterion |
 | [Novelty audit](docs/NOVELTY_AUDIT.md) | Established mechanisms, the completed empirical contribution and limits of the originality claim |
 | [Five-size experiment](experiments/access-plan-fivepoint/README.md) | Original batching curves, CPU preparation timings and replay instructions |
@@ -99,6 +114,7 @@ Run the retained-record audits with Python 3, from the repository root:
 python3 scripts/access_plan_fivepoint.py verify
 python3 scripts/access_plan_gates.py verify
 python3 scripts/decision_artifact.py verify
+python3 scripts/decision_correction.py verify
 ```
 
 These commands check hashes, counters, matched work and output records.
@@ -127,7 +143,9 @@ experiments. Earlier pilot artifacts remain separately identified.
 The new decision-study artifact contains **485 distinct simulation records** and
 **511 kernel invocations**, including correctness and robustness checks. Its
 23,040 cost scenarios are calculations over retained evidence, not additional
-simulator experiments. The [inventory](experiments/decision-study/README.md)
+simulator experiments. The correction adds **446 native preparation cases**,
+with 31 retained timing samples each; it does not add independent workloads.
+Four representative records were replayed again. The [inventory](experiments/decision-study/README.md)
 and [gap-closure record](docs/GAP_CLOSURE.md) give the breakdown and remaining limits.
 
 ## Scope and provenance

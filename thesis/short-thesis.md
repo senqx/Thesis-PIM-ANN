@@ -20,8 +20,8 @@ complete simulated cycles by 11.97–15.71% on the four held-out matrices withou
 increasing installed metadata or local traffic. At 128 bytes it loses on all
 four. A simple cost selector, frozen before evaluation, finds an equally
 fastest feasible kernel in 8 of 24 matrix/shape conditions. It fails the declared
-practical-success criterion at all tested lifetimes after inspection and
-preparation are included. The contribution is a reproducible characterization
+practical-success criterion against the corrected direct baselines at all
+reference lifetimes, even when selection overhead is removed. The contribution is a reproducible characterization
 of these decision boundaries and a scoped negative result for the selector,
 with established mechanisms credited to prior work. Native host measurements,
 simulated DPU execution and assumed communication costs remain distinguished.
@@ -772,9 +772,12 @@ A full-residency failure is not proof that batching will succeed.
 
 ![A recommendation requires feasibility, full-cost estimates and an independent test.](figures/decision.png)
 
-*Figure 5. Evaluated decision process. Observation and inspection costs count
-even when streaming is retained. A hindsight best choice assesses the recommendation
-afterward. Testing this process does not guarantee that its predictor succeeds.*
+*Figure 5. Evaluation process with distinct preparation paths. The model constructs
+and inspects all physically available candidates; fixed/capacity use header tests
+and build only the chosen encoder; reuse constructs and inspects as needed.
+Each method pays for work it performs, including visited rejected candidates.
+Hindsight comparison evaluates the recommendation; it does not guarantee a
+successful predictor.*
 
 ## 12. Testing the decision on standard sparse operations
 
@@ -863,6 +866,23 @@ representations become the DPU inputs. Raw timing samples and process peak
 resident memory are retained; the latter includes runtime and input/output
 storage, not just temporary allocations.
 
+A post-freeze review found unnecessary identity permutations and source-array
+copies in the original native implementation. The corrected implementation
+allocates permutations and reorders refreshed values only for frequency-based
+retention. Identity policies use the existing values; their tiny measured
+refresh intervals reflect timer and dispatch overhead, not an array copy.
+The revised results use 446 newly timed preparations. Regenerated metadata,
+features, arguments and reference outputs match all 511 archived invocations
+byte for byte, so the original DPU cycles remain applicable. Original sources,
+samples and reports are preserved separately.
+
+This correction uses already observed inputs. It is not a new untouched
+confirmatory evaluation. The cycle-model coefficients, alternatives and
+selection thresholds were not retuned. The [correction protocol](../experiments/decision-study/corrected/PROTOCOL.md)
+also discloses the later accounting amendment for unnecessary inspection.
+Only native costs and deployment accounting change; the original kernel-choice
+test remains frozen.
+
 For each policy, a nonnegative linear model predicts cycles from five features:
 a constant term, the maximum products assigned to a tasklet, total read bytes,
 the maximum DMA-call count assigned to a tasklet, and the number of output
@@ -871,13 +891,53 @@ The model is fitted only on the three calibration matrices. Model coefficients,
 feature definitions, rules, source hashes and held-out input hashes are frozen
 before the first held-out timing. Prediction errors do not trigger retuning.
 
-The selector first excludes infeasible choices, predicts their accounted costs
-for a declared plan lifetime, and selects the minimum. Its costs include native
-construction and inspection of all candidates, including rejected ones, plus
-prediction time. We compare it with a capacity-first rule, a reuse-only rule,
+The **tested model** constructs and inspects every physically available candidate
+to obtain its counters. It then excludes choices that violate the byte budgets,
+predicts accounted costs for a declared plan lifetime, and selects the minimum.
+It pays for candidate construction and inspection, including budget-rejected
+candidates, plus prediction time. The simple baselines use the distinct paths
+shown in Figure 5 and detailed below. We compare the model with a capacity-first rule, a reuse-only rule,
 and a fixed policy selected on calibration data, with a streaming fallback
 when that policy violates a budget. The best feasible choice found after
 measuring every alternative is a hindsight comparator, not a deployable rule.
+
+The simple baselines first use facts already known from the host matrix header.
+Let `M` be the number of source records, `Z` the number of stored contributions,
+`F` the bytes per source record, and `C` the configured residency capacity.
+Streaming loads `Z × F` source bytes; full retention loads `M × F`.
+Their metadata and output traffic are equal. Full retention therefore passes
+when `M × F <= C` and, under the no-growth budget, `M <= Z`. No candidate
+construction or structural inspection is needed to decide those conditions.
+
+Fixed hot retention keeps the `H = min(M, floor(C/F))` most frequently used
+records. Its source traffic is `(H + Z − hits) × F`, where `hits` counts
+contributions served by retained records. Its traffic test is exactly `Z >= H`.
+If fewer than `H` contributions exist, preloading `H` records already exceeds
+streaming. Otherwise the top `H` frequencies sum to at least `H`: either each
+retained record is referenced, or the retained prefix covers all contributions.
+Thus fixed hot and capacity-first build only their selected representation.
+Hot still pays to rank records and encode the matrix when it is selected.
+
+Reuse-only applies the same direct full-retention test. If that fails, it
+constructs and inspects hot to test the reuse threshold, provided the header
+does not already reject it. If spreading the references as evenly as possible
+across source records would still give at least 50% hits, the header already
+proves the reuse threshold and inspection is skipped. Empty inputs or zero
+resident capacity cannot yield hot hits. It then visits batch if necessary and constructs
+streaming only if neither is accepted. Its streaming byte reference comes from
+header arithmetic. Visited rejected candidates count; skipped candidates do
+not. The lazy decision path is implemented separately from the retained-cost
+adapter. These changes preserve the original choices on every evaluated input;
+they reduce the work charged to the simple baselines.
+
+The cycle model is calibrated offline, but its selection score also uses each
+evaluation input's measured feature-refresh time. We grant these refresh-time
+estimates **free of collection cost**, an optimistic information assumption.
+No runtime profiling or calibrated refresh-time estimator has been implemented.
+The chosen policy's refresh execution is still charged on every use. Setting
+all selection refresh estimates to zero changes none of the 1,920 choices
+across shapes, budgets, lifetimes and bandwidths. This limits the effect on
+these results; it does not establish that such information is free in deployment.
 
 This evaluates a concrete simple model; it does not test every possible predictor.
 The declared practical criterion is evaluated separately at each lifetime:
@@ -894,6 +954,13 @@ upload and output retrieval. The primary illustrative effective bandwidth is
 80 MB/s per DPU. Sensitivity uses 20, 40, 80, 160 and 320 MB/s and launch costs
 of 0, 10 and 100 microseconds. No overlap is assumed. Lifetimes 1, 2, 4, 8, 16,
 64, 256 and 1,024 are modelled scenarios, not measured application repetitions.
+
+Every policy uses this same cost equation, effective bandwidth, launch cost,
+lifetime and no-growth budget. Preparation and inspection charges differ only
+according to the executed decision path. The zero-overhead diagnostic explicitly
+relaxes those selection charges for the model alone; the primary comparison does
+not. All new totals reuse the retained native and prediction timings and device
+cycles. The earlier accounting checkpoint remains archived.
 
 The interval starts with a host CSR matrix and compiled, loaded device code.
 Parsing, SDK/program loading, multi-DPU partitioning and application integration
@@ -930,7 +997,7 @@ Table 5 shows the best feasible tested kernel for each held-out SpMM width.
 The comparison is paired: every percentage uses stream512 on the same matrix
 and record width. These are hindsight choices, not the model's recommendations.
 All absolute cycles and per-policy results are preserved in the
-[paired table](../experiments/decision-study/comparisons.csv).
+[paired table](../experiments/decision-study/corrected/comparisons.csv).
 
 <!-- begin:decision-table -->
 | Input | 8 bytes | 16 bytes | 32 bytes | 64 bytes | 128 bytes |
@@ -967,7 +1034,7 @@ retained prefix. The saved transfers do not offset the complete execution cost.
 These counters support that accounting explanation; they do not isolate the
 causal contribution of each instruction or scheduling effect.
 
-![Complete cycle ratios on the four held-out matrices at five record widths.](../experiments/decision-study/widths.png)
+![Complete cycle ratios on the four held-out matrices at five record widths.](../experiments/decision-study/corrected/widths.png)
 
 *Figure 6. Five actual SpMM widths per non-residency policy. Ratios below one
 beat stream512. The plot includes unconstrained methods; some faster BCSR
@@ -991,7 +1058,7 @@ inspectable worklists. Its success does not imply that future dynamic requests
 can be predicted for free: the experiment knows the fixed sparse matrix and
 charges for inspecting it.
 
-![Five controlled source-table sizes relative to configured retention capacity.](../experiments/decision-study/capacity.png)
+![Five controlled source-table sizes relative to configured retention capacity.](../experiments/decision-study/corrected/capacity.png)
 
 *Figure 7. Complete cycles divided by matched stream512 cycles. Six non-full
 policies have five executed points; full retention has the three feasible points.
@@ -1009,18 +1076,19 @@ or show that all preprocessing is cheap. Near-zero margins are sensitive to
 host timing variation and omitted deployment work.
 
 For example, on 1138_bus with 16-byte records, including native preparation,
-refresh and modelled transfers leaves about 88 microseconds of saving for one
+refresh and modelled transfers leaves about 83 microseconds of saving for one
 use. An additional cost exceeding that margin would erase the benefit. Program
 loading and application integration have not been measured. Combining the most
 favorable and unfavorable observed native timing samples gives a descriptive
-first-use margin from about −30 to +142 microseconds for this example. Across
-the sixteen 8–64-byte SpMM cases, ten retain a positive first-use margin throughout
-that observed envelope; six span zero. These ranges are not confidence intervals
+first-use margin from about −7 to +158 microseconds for this example. Across
+the sixteen 8–64-byte SpMM cases, nine retain a positive first-use margin throughout
+that observed envelope; seven span zero. These ranges are not confidence intervals
 or bounds on future host timings. At 128 bytes,
 retention has no positive repeated-use payback against streaming in these
 cases: repeating a per-use regression cannot repair it.
 
-The selector builds and inspects every candidate. Across the held-out shapes,
+The tested model builds and inspects every physically available candidate.
+Across the held-out shapes,
 those candidate metadata occupy approximately 72–388 kB in total on the host,
 compared with retaining only the selected representation. The primary byte
 budget constrains installed device metadata and local traffic; it does not
@@ -1044,37 +1112,56 @@ features summarize work counts rather than the complete instruction sequence
 and timing interactions. This example demonstrates a prediction failure; it
 does not establish that adding one particular feature would fix the model.
 
-The complete accounting is less favorable because rejected candidates also
-cost time. Table 6 reports arithmetic means of paired regrets at 80 MB/s and
+The model pays for every constructed and inspected candidate, while the
+simple baselines follow the direct decision paths above. Table 6 reports
+arithmetic means of paired regrets at 80 MB/s and
 zero added launch cost. The fixed policy, selected before evaluation, is
 frequency-based retention with a streaming fallback if it violates a budget.
+
+The one-use **89.71%** is the average percentage by which the model's accounted
+time exceeds each condition's feasible hindsight comparator. These costs combine
+native CPU timings, simulated DPU cycles and assumed transfers. This is not a
+prediction-error percentage or a measured slowdown of an integrated controller.
 
 <!-- begin:regret-table -->
 | Valid uses | Model | Fixed rule | Capacity-first | Reuse-only |
 | ---: | ---: | ---: | ---: | ---: |
-| 1 | 99.70% | 4.29% | 1.83% | 10.55% |
-| 16 | 13.79% | 1.93% | 2.72% | 2.34% |
-| 1,024 | 5.31% | 1.71% | 2.80% | 1.60% |
+| 1 | 89.71% | 1.90% | 1.97% | 3.78% |
+| 16 | 12.76% | 1.67% | 2.65% | 1.70% |
+| 1,024 | 5.22% | 1.69% | 2.74% | 1.57% |
 <!-- end:regret-table -->
 
 *Table 6. Mean excess accounted time over the feasible hindsight choice.
-The model pays for construction, inspection and prediction; the rules pay their
-own required preparation. One-time calibration is reported separately.
+The model pays for construction, inspection and prediction. Fixed and capacity
+build only the selected encoder; reuse pays for visited candidates. All share
+the same transfer and per-use cost equation. Refresh-time information is granted
+free; simple dispatch and cleanup are excluded. One-time calibration is separate.
 Percentages are means of paired ratios, not ratios of aggregate mean times.*
 
-![The model's overhead falls with reuse, but prediction errors remain.](../experiments/decision-study/decision-cost.png)
+![The model's overhead falls with reuse, but prediction errors remain.](../experiments/decision-study/corrected/decision-cost.png)
 
 *Figure 8. Modelled lifetimes using measured native costs and simulated kernel
-cycles, with 80 MB/s effective host transfers and no added launch cost. Both
-axes use logarithmic spacing. The eight lifetime points are calculated scenarios,
+cycles against the corrected direct baselines, with 80 MB/s effective host
+transfers and no added launch cost. Both axes use logarithmic spacing. The eight
+lifetime points are calculated scenarios,
 not eight new application experiments.*
 
 The model fails the predeclared practical-success criterion at all eight
-lifetimes. At 1,024 uses, its setup cost is heavily amortized, yet simpler rules
+lifetimes against the corrected fixed, capacity and reuse alternatives. We also
+recompute the criterion after granting the model zero selection overhead:
+no candidate inspection, rejected-candidate construction or prediction cost,
+while retaining its choices and charging the selected encoder, execution,
+refresh and transfers. It still fails at all eight reference lifetimes. This
+optimistic calculation isolates recommendation quality from selection overhead;
+it is not a new timing experiment or a proof against other selectors.
+
+At 1,024 uses, its setup cost is heavily amortized, yet simpler rules
 still have lower mean regret. Longer reuse pays back preparation; it cannot
 correct repeatedly choosing a slower implementation. Calibration itself adds
-about 0.366 seconds in the serial 80 MB/s scenario, plus 0.115 seconds of host
-fitting, before unmeasured deployment costs. Those one-time costs are excluded
+about 0.370 seconds for preparation, inspection and the serial 80 MB/s
+execution scenario, plus 0.115 seconds of host
+fitting, before unmeasured deployment costs. The fitting time is the original
+measurement; the model was not fitted again for this correction. Those one-time costs are excluded
 from Table 6 and would further penalize a cold model deployment.
 
 This is a negative result for the implemented linear model and its candidate
@@ -1113,7 +1200,7 @@ Joint scaling checks dependence on the timing model; it does not isolate one
 parameter or validate the model against hardware.
 
 Exact counters and derived comparisons accompany the
-[robustness record](../experiments/decision-study/robustness.md). Hardware timing
+[robustness record](../experiments/decision-study/corrected/robustness.md). Hardware timing
 error, energy, large distributed inputs and a complete application remain
 outside the evidence. No robustness result is used to retune the frozen selector.
 
@@ -1204,8 +1291,10 @@ be erased by additional costs. Per-use regressions cannot be amortized away.
 Code loading, application integration and actual host transfer performance are
 not established by these calculations.
 
-**RQ3:** the tested linear selector fails its declared practical-success criterion.
-Its 8/24 equally optimal kernel choices, inspection overhead and remaining
+**RQ3:** the tested linear selector fails its declared practical-success criterion
+against the corrected direct baselines at all eight reference lifetimes, even
+when selection overhead is set to zero. Its per-input refresh-time estimates
+are granted free of collection cost, making this an optimistic check. Its 8/24 equally optimal kernel choices, inspection overhead and remaining
 long-lifetime regret do not justify replacing the simpler rules. This answers
 the question for this concrete model; it does not prove that every possible
 adaptive strategy fails.
@@ -1226,7 +1315,9 @@ energy savings or a complete PIM accelerator.
 ## Appendix A. Reproduce and trace a result
 
 Start with the [decision-study artifact](../experiments/decision-study/README.md)
-for the standard kernels, frozen model and held-out results. The
+for the standard kernels and original frozen model, then the
+[corrected artifact](../experiments/decision-study/corrected/README.md) for current
+native costs and accounted results. Historical reports remain available. The
 [five-size artifact](../experiments/access-plan-fivepoint/README.md)
 preserves the original batch curves, paired comparisons and CPU preparation samples.
 Use the [baseline-control artifact](../experiments/baseline-gates/README.md)
@@ -1245,6 +1336,7 @@ Run these audits from the repository root:
 python3 scripts/access_plan_fivepoint.py verify
 python3 scripts/access_plan_gates.py verify
 python3 scripts/decision_artifact.py verify
+python3 scripts/decision_correction.py verify
 ```
 
 These commands audit retained data and internal consistency; they do not run

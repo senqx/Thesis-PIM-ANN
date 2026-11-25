@@ -6,9 +6,18 @@ DPU timings. The [protocol](PROTOCOL.md) specifies the hypothesis, split, byte
 budgets and failure criterion. It tests one simulated UPMEM DPU; it does not
 measure hardware, energy, multi-DPU execution or a complete ML application.
 
-**[Read the paired results and figures](results.md).** The tested linear selector
+**[Read the current paired results and figures](corrected/results.md).** The tested linear selector
 fails its declared practical-success criterion. Static retention still has useful
 regimes; the results distinguish those two findings.
+
+**Current correction:** native preparation no longer creates identity permutations
+or copies unchanged source arrays. Fixed and capacity-first use header
+checks and prepare only the selected representation. Reuse charges visited
+candidates; the model inspects every available candidate. Its refresh-time
+estimates are granted free of collection cost as an optimistic assumption. Current timings,
+reports and validation are in the [corrected artifact](corrected/README.md).
+This is a disclosed post-freeze correction on already observed inputs. The
+original model, DPU cycles and historical samples remain unchanged.
 
 ## Evidence inventory
 
@@ -25,7 +34,7 @@ The [manifest](manifest.json) identifies **485 distinct simulation records and
 | Three-invocation feature updates | 13 |
 | Additional DRAM timing settings | 52 |
 
-The [robustness report](robustness.md) includes repeated execution, structural
+The [robustness report](corrected/robustness.md) includes repeated execution, structural
 updates, feasible concurrency, five DRAM settings and host timing variation.
 Its DRAM table has 65 rows because it reuses 13 primary records; those are not
 additional runs. The 23,040 transfer/launch/lifetime combinations are analytical
@@ -96,8 +105,8 @@ policies have five executed points in each capacity and SpMM-width sweep.
 
 Native C++ preparation, inspection and feature refresh are timed separately,
 with 31 samples after three warmups. Feature synthesis and filesystem output
-are outside those timings; refresh copies or permutes an already available
-source matrix. The same executable supplies the representations actually used
+are outside those timings. Hot retention permutes already available source
+values; identity policies use the source buffer directly without a refresh copy. The same executable supplies the representations actually used
 by the DPU. Raw samples and process peak RSS are preserved; process RSS includes
 runtime/input/output storage and is not a precise allocator-level peak.
 Native sample intervals exclude destruction of the timed representation.
@@ -132,6 +141,7 @@ replay require no new dataset download or compiler:
 
 ```sh
 python3 scripts/decision_artifact.py verify
+python3 scripts/decision_correction.py verify
 python3 scripts/decision_artifact.py replay
 ```
 
@@ -152,7 +162,7 @@ python3 scripts/decision_artifact.py replay --all --replay-directory runs/decisi
 Full replay can take hours; it reproduces every retained parameter setting and
 compares every simulator counter. It needs no native preparation. To regenerate
 the derived tables from retained native samples and simulator records, run
-`python3 scripts/decision_report.py`. Plot generation uses the pinned
+`MPLCONFIGDIR=build/matplotlib python3 scripts/decision_correction.py render`. Plot generation uses the pinned
 [document dependencies](../../thesis/requirements.txt). Do not rerun `evaluate`
 just to rebuild a figure: it measures prediction overhead anew.
 
@@ -177,6 +187,12 @@ are needed only to regenerate them. Existing retained phase tables are preserved
 new phase tables go into the selected run directory. Do not overwrite the frozen
 model after inspecting evaluation timings. The source build uses DPU `-O2` and
 native `-O3 -std=c++17`. Native timing varies with the host and its load.
+
+For new native measurements, use the separate output and run directories in
+the [correction instructions](corrected/README.md). Files directly in this
+directory retain historical costs unless explicitly marked as current. The
+[historical results](results.md) and exact [source snapshots](archive/README.md)
+remain auditable against the original manifest.
 
 The [novelty audit](../../docs/NOVELTY_AUDIT.md) distinguishes established mechanisms
 from the empirical contribution. This study can establish a scoped decision or

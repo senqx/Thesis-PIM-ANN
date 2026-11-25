@@ -1,0 +1,178 @@
+{
+  "accounting_scenarios_not_new_timings": true,
+  "avoidable_capacity_charge_us": [
+    37.72,
+    210.936
+  ],
+  "capacity_full_present_conditions": 11,
+  "diagnostic_scenario": {
+    "bandwidth_mb_s": 80,
+    "constrained": true,
+    "launch_us": 0,
+    "simple_dispatch_timing_included": false
+  },
+  "exhaustive_frequency_cases": 7736,
+  "formula_checks": {
+    "hot_rows": 52,
+    "streaming_and_full_rows": 134
+  },
+  "header_decisions_match_all_24_conditions": true,
+  "input_sha256": {
+    "experiments/decision-study/corrected/manifest.json": "86e7db207d5ea6ad15744c08853103eca764bb0548c6a43e927c9441a0a54b93",
+    "experiments/decision-study/prepare.cpp": "24be92ba0bff08238f954297dc963620aaaae663d8190afd7da5f7bd769d2c0b",
+    "experiments/decision-study/task.c": "92631d05f4ef9286c9305836e64fead4976598bc65cf9ddc5da798940b32e4cd",
+    "scripts/decision_analysis.py": "056b1939ca38fb4fa56542826a3efc1c825479163fb551186de8c65dd064b4bb",
+    "scripts/review_decision_costs.py": "bcc24bab0394a0133a1c96417bc1eeaa0233c8b653b5f86b316edc72ec1526fa"
+  },
+  "model_choice_checks": 1920,
+  "reviewed_commit": "67bb4beed2bfefb55b58fd32e84558ad10fbfb09",
+  "simple_rule_accounting": [
+    {
+      "capacity": {
+        "one_encoder": 1.9692661184676432,
+        "reported": 7.458277629274628
+      },
+      "fixed": {
+        "one_encoder": 1.8985603835868596,
+        "reported": 11.460963037592089
+      },
+      "uses": 1
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.1570509052728957,
+        "reported": 5.53997243028346
+      },
+      "fixed": {
+        "one_encoder": 1.6224300616393452,
+        "reported": 7.317578155974607
+      },
+      "uses": 2
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.4145237837546203,
+        "reported": 4.340053752441038
+      },
+      "fixed": {
+        "one_encoder": 1.6261365387528417,
+        "reported": 4.805483918059103
+      },
+      "uses": 4
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.559683999534257,
+        "reported": 3.5963137951797073
+      },
+      "fixed": {
+        "one_encoder": 1.641869669003307,
+        "reported": 3.3341882738194237
+      },
+      "uses": 8
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.647638241443975,
+        "reported": 3.18711289042035
+      },
+      "fixed": {
+        "one_encoder": 1.6656096844495418,
+        "reported": 2.540806688776845
+      },
+      "uses": 16
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.716178444035669,
+        "reported": 2.8553575752138802
+      },
+      "fixed": {
+        "one_encoder": 1.6866532921742357,
+        "reported": 1.911323446178102
+      },
+      "uses": 64
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.733676803778134,
+        "reported": 2.7687536919237044
+      },
+      "fixed": {
+        "one_encoder": 1.6924096832312698,
+        "reported": 1.7489598335435184
+      },
+      "uses": 256
+    },
+    {
+      "capacity": {
+        "one_encoder": 2.7380747250935884,
+        "reported": 2.746861787926122
+      },
+      "fixed": {
+        "one_encoder": 1.6938819707802626,
+        "reported": 1.7080436789730342
+      },
+      "uses": 1024
+    }
+  ],
+  "zero_refresh_changed_choices": [],
+  "zero_selection_overhead": [
+    {
+      "best_simple_mean_ms": 3.288101779761905,
+      "model_mean_ms": 3.291290357142857,
+      "passes": false,
+      "uses": 1,
+      "worst_slowdown_pct": 11.04028338781422
+    },
+    {
+      "best_simple_mean_ms": 6.23000630952381,
+      "model_mean_ms": 6.247478214285714,
+      "passes": false,
+      "uses": 2,
+      "worst_slowdown_pct": 11.040020242181203
+    },
+    {
+      "best_simple_mean_ms": 12.093368952380953,
+      "model_mean_ms": 12.159853928571428,
+      "passes": false,
+      "uses": 4,
+      "worst_slowdown_pct": 12.619586859747267
+    },
+    {
+      "best_simple_mean_ms": 23.820094238095237,
+      "model_mean_ms": 23.984605357142858,
+      "passes": false,
+      "uses": 8,
+      "worst_slowdown_pct": 13.996787400466747
+    },
+    {
+      "best_simple_mean_ms": 47.27354480952381,
+      "model_mean_ms": 47.63410821428572,
+      "passes": false,
+      "uses": 16,
+      "worst_slowdown_pct": 14.824653561474044
+    },
+    {
+      "best_simple_mean_ms": 187.99424823809525,
+      "model_mean_ms": 189.53112535714286,
+      "passes": false,
+      "uses": 64,
+      "worst_slowdown_pct": 15.551429522048576
+    },
+    {
+      "best_simple_mean_ms": 750.4096577738095,
+      "model_mean_ms": 757.1191939285715,
+      "passes": false,
+      "uses": 256,
+      "worst_slowdown_pct": 15.750786974889696
+    },
+    {
+      "best_simple_mean_ms": 2999.8152303452384,
+      "model_mean_ms": 3027.471468214286,
+      "passes": false,
+      "uses": 1024,
+      "worst_slowdown_pct": 15.801065074892652
+    }
+  ]
+}
